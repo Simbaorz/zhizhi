@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zhizhi-admin-api"
+version = "0.1.0"
+description = "Dedicated Zhizhi management API service"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "celery[redis]==5.6.3",
+    "gewu-agent-runtime[mysql]",
+    "gewu-core[apollo,database,http,redis]",
+    "zhizhi-application[llm-admin]",
+]
+
+[project.scripts]
+zhizhi-admin-api = "zhizhi_admin_api.__main__:main"
+
+[tool.uv.sources]
+zhizhi-application = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "gewu_agent_runtime",
+    "gewu_core",
+    "zhizhi_platform",
+    "zhizhi_admin_api",
+]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+mypy_path = "src:../../packages/zhizhi-application/src"
+packages = ["zhizhi_admin_api"]
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zhizhi_admin_api"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/README.md", "/pyproject.toml", "/src", "/tests"]

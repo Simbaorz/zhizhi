@@ -1,0 +1,72 @@
+[project]
+name = "zhizhi-backend-workspace"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "mypy>=1.19.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.0",
+]
+
+[tool.uv]
+package = false
+index-url = "https://mirrors.aliyun.com/pypi/simple"
+
+[tool.uv.workspace]
+members = [
+    "lib/python_driver",
+    "packages/zhizhi-application",
+    "apps/zhizhi-web-api",
+    "apps/zhizhi-admin-api",
+    "apps/zhizhi-worker",
+]
+
+[tool.uv.sources]
+gewu-agent-runtime = { path = "../gewu/packages/agent-runtime", editable = true }
+gewu-core = { path = "../gewu/packages/gewu-core", editable = true }
+zhizhi-application = { workspace = true }
+pymysql = { workspace = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["packages", "apps", "tests"]
+addopts = ["-ra", "--strict-config", "--strict-markers", "--import-mode=importlib"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages", "apps", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "gewu_agent_runtime",
+    "gewu_core",
+    "zhizhi",
+    "zhizhi_web_api",
+    "zhizhi_admin_api",
+    "zhizhi_platform",
+    "zhizhi_worker",
+]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+mypy_path = "packages/zhizhi-application/src:apps/zhizhi-web-api/src:apps/zhizhi-admin-api/src:apps/zhizhi-worker/src"
+packages = ["zhizhi", "zhizhi_web_api", "zhizhi_platform", "zhizhi_admin_api", "zhizhi_worker"]
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true

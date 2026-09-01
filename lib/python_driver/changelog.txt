@@ -1,0 +1,7 @@
+VERSION_STRING : python_driver_V1.0.01P6
+
+date: 2025-01-21
+修改内容：python.conect接口支持random负载均衡。
+
+date: 2024-12-10
+修改内容：loadbalance.randomcon支持入参db。

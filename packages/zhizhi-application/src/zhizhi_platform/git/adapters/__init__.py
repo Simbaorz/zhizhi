@@ -1,0 +1,1 @@
+"""Zhizhi Git infrastructure adapters."""

@@ -1,0 +1,143 @@
+# Zhizhi Admin API configuration example.
+#
+# Bootstrap values are not YAML settings. Configure PROJECT_NAME, PROJECT_HOME,
+# MODE, TIMEZONE, CONFIG_FILE, and ADMIN_SESSION_COOKIE_SECURE through .env,
+# .env.local, or process environment. Replace secret placeholders and enable the
+# secure session cookie before production deployment.
+
+blocking_io:
+  cpu:
+    max_workers: 4
+    queue_capacity: 16
+    admission_timeout_seconds: 1.0
+    execution_warn_seconds: 1.0
+  external:
+    max_workers: 8
+    queue_capacity: 32
+    admission_timeout_seconds: 2.0
+    execution_warn_seconds: 2.0
+  filesystem:
+    interactive:
+      max_workers: 8
+      queue_capacity: 32
+      admission_timeout_seconds: 2.0
+    bulk:
+      max_workers: 4
+      queue_capacity: 16
+      admission_timeout_seconds: 2.0
+    execution_warn_seconds: 2.0
+    saturation_unready_seconds: 60.0
+  upload:
+    max_concurrent_ingress: 16
+    queue_capacity: 32
+    admission_timeout_seconds: 2.0
+    body_timeout_seconds: 60.0
+    max_buffered_file_bytes: 128 MB
+  download:
+    max_concurrent_egress: 32
+    max_open_files: 64
+    max_media_bytes_in_flight: 64 MB
+    queue_capacity: 64
+    admission_timeout_seconds: 2.0
+
+log:
+  level: INFO
+  queue_capacity: 8192
+
+runtime:
+  temp_dir: /var/lib/zhizhi/runtime/temp
+
+http_ingress:
+  max_concurrent_bodies: 32
+  queue_capacity: 64
+  admission_timeout_seconds: 2.0
+  admin_json_max_bytes: 1 MB
+
+db:
+  enabled: true
+  use_sqlite: true
+  sqlite_file_name: zhizhi.db
+  # Used when use_sqlite is false.
+  url: ""
+  echo: false
+  pool_size: 10
+  max_overflow: 10
+  pool_pre_ping: true
+  pool_recycle_seconds: 300
+  pool_timeout_seconds: 10
+  connect_timeout_seconds: 5
+
+password_transport:
+  # Required in production. previous_private_key_paths_json is a JSON string.
+  private_key_path: /etc/zhizhi/secrets/admin-password-key.pem
+  previous_private_key_paths_json: "[]"
+
+jwt:
+  # Use a distinct secret of at least 32 bytes in production.
+  sk: ""
+  leeway_seconds: 300
+
+storage_encryption:
+  # Web API, Admin API, and Worker must share this key.
+  key: ""
+
+login_throttle:
+  enabled: true
+  max_failures: 5
+  window_seconds: 300
+  lockout_seconds: 900
+
+celery:
+  scene_git_queue: scene_git
+  publish_timeout_seconds: 5.0
+
+iam:
+  max_admin_session_memberships: 256
+  max_admin_authorization_rows: 4096
+  max_admin_permission_rows: 16384
+  max_area_directory_rows: 4096
+
+scene_git:
+  command_timeout_seconds: 120
+
+outbound_http:
+  max_connections: 100
+  max_keepalive_connections: 20
+  keepalive_expiry_seconds: 5.0
+  connect_timeout_seconds: 5.0
+  pool_timeout_seconds: 5.0
+
+redis:
+  enabled: true
+  connection:
+    # Supported modes: standalone, sentinel, cluster.
+    mode: standalone
+    host: 127.0.0.1
+    port: 6379
+    password: ""
+    nodes: []
+    master_name: ""
+    redis_password: ""
+    sentinel_password: ""
+    min_other_sentinels: 0
+    read_from_replicas: false
+    require_full_coverage: true
+    dynamic_startup_nodes: true
+  client:
+    # null selects the topology-specific default (100, or 32 for cluster).
+    max_connections: 4
+    socket_timeout_seconds: 3.0
+    socket_connect_timeout_seconds: 3.0
+    socket_keepalive: true
+    health_check_interval_seconds: 30
+  databases:
+    app: 1
+    celery: 0
+
+workspace:
+  # Leave empty to disable Admin-managed Skill and Scene storage.
+  storage_root: /data/zhizhi
+  max_file_bytes: 5 MB
+  max_skill_package_bytes: 50 MB
+  max_scene_package_bytes: 500 MB
+  max_listing_entries: 1000

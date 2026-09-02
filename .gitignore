@@ -86,7 +86,3 @@ celeryev.pid
 /downloads/
 
 # Version-controlled base-image build recipe; keep local state private.
-!/docker/build/
-/docker/build/.env
-/docker/build/git-credentials
-/docker/build/dist/

@@ -122,5 +122,6 @@ celeryev.pid
 /vfs/
 /workspace/
 /storage/
+/volume/
 /uploads/
 /downloads/

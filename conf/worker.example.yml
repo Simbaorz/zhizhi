@@ -58,7 +58,7 @@ log:
   queue_capacity: 8192
 
 media:
-  root: /data/zhizhi/media
+  root: volume/media
   oss_enable: false
   max_image_bytes: 5 MB
   max_images_per_message: 4
@@ -103,7 +103,7 @@ redis:
     celery: 0
 
 runtime:
-  temp_dir: /var/lib/zhizhi/runtime/temp
+  temp_dir: volume/temp
 
 scene_git:
   command_timeout_seconds: 120
@@ -111,7 +111,7 @@ scene_git:
 
 workspace:
   # Must be the same root used by Web API and Admin API.
-  storage_root: /data/zhizhi
+  storage_root: volume/workspace
   max_file_bytes: 5 MB
   max_skill_package_bytes: 50 MB
   max_scene_package_bytes: 500 MB

@@ -25,10 +25,14 @@ from zhizhi_platform.workspace.models import (
     WorkspaceSceneAssetRepository,
     WorkspaceSkillAsset,
 )
-from zhizhi_platform.workspace.settings import ZhizhiWorkspaceSettings
+from zhizhi_platform.workspace.settings import (
+    ZhizhiWorkspaceSettings,
+    resolve_workspace_storage_root,
+)
 
 __all__ = [
     "ZhizhiWorkspaceSettings",
+    "resolve_workspace_storage_root",
     "BackgroundJob",
     "BackgroundJobModel",
     "BackgroundJobRepository",

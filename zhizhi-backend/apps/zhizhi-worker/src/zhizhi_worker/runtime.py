@@ -54,6 +54,7 @@ from zhizhi_platform.workspace import (
     FilesystemManagedWorkspaceRepository,
     MysqlBackgroundJobRepository,
     MysqlWorkspaceSceneGitRepository,
+    resolve_workspace_storage_root,
 )
 from zhizhi_platform.workspace.observability import (
     install_zhizhi_filesystem_metrics,
@@ -220,6 +221,9 @@ async def _build_worker_runtime(
         )
         scene_git_sync_service = None
         if settings.workspace.storage_root.strip():
+            workspace_root = resolve_workspace_storage_root(
+                settings.workspace.storage_root, bootstrap.project_home
+            )
             shared_scene_repository = MysqlSharedSceneAssetRepository(sessions)
             scene_git_sync_service = SceneGitWorkerService(
                 git_repository=MysqlAdminGitRepository(sessions),
@@ -230,7 +234,7 @@ async def _build_worker_runtime(
                 credential_cipher=ConfiguredGitCredentialCipher(settings.storage_encryption.key),
                 org_repository=MysqlAdminOrgReadRepository(sessions),
                 workspace_repository=FilesystemManagedWorkspaceRepository(
-                    storage_root=settings.workspace.storage_root,
+                    storage_root=workspace_root,
                     max_file_bytes=settings.workspace.max_file_bytes,
                     max_skill_package_bytes=settings.workspace.max_skill_package_bytes,
                     max_scene_package_bytes=settings.workspace.max_scene_package_bytes,

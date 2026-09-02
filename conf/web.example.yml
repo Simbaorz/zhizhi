@@ -44,7 +44,7 @@ log:
   queue_capacity: 8192
 
 runtime:
-  temp_dir: /var/lib/zhizhi/runtime/temp
+  temp_dir: volume/temp
 
 http_ingress:
   max_concurrent_bodies: 32
@@ -97,7 +97,7 @@ storage_encryption:
   key: ""
 
 media:
-  root: /data/zhizhi/media
+  root: volume/media
   oss_enable: false
   max_image_bytes: 5 MB
   max_images_per_message: 4
@@ -116,7 +116,7 @@ media:
 
 workspace:
   # Required by Web API.
-  storage_root: /data/zhizhi
+  storage_root: volume/workspace
   max_file_bytes: 5 MB
   max_skill_package_bytes: 50 MB
   max_scene_package_bytes: 500 MB

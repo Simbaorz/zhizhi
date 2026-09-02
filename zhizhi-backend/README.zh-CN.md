@@ -203,17 +203,16 @@ cp .env.example .env
 cp conf/web.example.yml conf/web.yml
 cp conf/admin.example.yml conf/admin.yml
 cp conf/worker.example.yml conf/worker.yml
-mkdir -p .local
-openssl genpkey -algorithm RSA -out .local/admin-password-key.pem -pkeyopt rsa_keygen_bits:2048
+openssl genpkey -algorithm RSA -out conf/admin-password-key.pem -pkeyopt rsa_keygen_bits:2048
+chmod 600 conf/admin-password-key.pem
 ```
 
-启动前编辑三份 YAML：
+示例配置默认将临时文件、媒体和受管理 Workspace 放在根目录下被忽略的 `volume/` 中，并让
+Admin API 使用刚生成的私钥。启动前：
 
-1. 将 `password_transport.private_key_path` 指向刚生成的私钥；
-2. 为 Workspace、媒体和临时数据选择本地可写路径；
-3. 在三份配置中设置相同且非空的 `storage_encryption.key`；
-4. 设置 Admin `jwt.sk`；
-5. 确认所有进程使用同一数据库与 Redis 部署。
+1. 在三份配置中设置相同且非空的 `storage_encryption.key`；
+2. 设置 Admin `jwt.sk`；
+3. 确认所有进程使用同一数据库与 Redis 部署。
 
 启动完整本地服务：
 

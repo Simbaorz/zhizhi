@@ -49,6 +49,7 @@ from zhizhi_platform.iam.adapters.mysql import MysqlOrganizationDirectory
 from zhizhi_platform.llm import ConfiguredLLMCredentialCipher
 from zhizhi_platform.llm.capability import ZhizhiModelCapabilityBuilder
 from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.workspace import resolve_workspace_storage_root
 from zhizhi_web_api.mysql_scope import MysqlAgentScopeResolver
 from zhizhi_web_api.settings import WebApiSettings
 from zhizhi_web_api.slash_catalog import MysqlSlashCatalog
@@ -132,8 +133,11 @@ class ZhizhiApiRuntime:
         sessions: async_sessionmaker[AsyncSession],
         settings: WebApiSettings,
     ) -> None:
+        workspace_root = resolve_workspace_storage_root(
+            settings.workspace.storage_root, self.bootstrap.project_home
+        )
         workspace_backends = ZhizhiFilesystemWorkspaceBackendFactory(
-            settings.workspace.storage_root,
+            workspace_root,
             max_file_bytes=settings.workspace.max_file_bytes,
         )
         self._http_client = _build_http_client(settings)

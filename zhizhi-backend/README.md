@@ -204,17 +204,16 @@ cp .env.example .env
 cp conf/web.example.yml conf/web.yml
 cp conf/admin.example.yml conf/admin.yml
 cp conf/worker.example.yml conf/worker.yml
-mkdir -p .local
-openssl genpkey -algorithm RSA -out .local/admin-password-key.pem -pkeyopt rsa_keygen_bits:2048
+openssl genpkey -algorithm RSA -out conf/admin-password-key.pem -pkeyopt rsa_keygen_bits:2048
+chmod 600 conf/admin-password-key.pem
 ```
 
-Before starting, edit the three YAML files:
+The examples keep temporary files, media, and managed Workspaces under the ignored root `volume/`
+directory and point Admin API at the generated private key. Before starting:
 
-1. point `password_transport.private_key_path` at the generated private key;
-2. choose writable local paths for workspace, media, and temporary data;
-3. set the same non-empty `storage_encryption.key` in all three files;
-4. set an Admin `jwt.sk`;
-5. verify that all processes use the same database and Redis deployment.
+1. set the same non-empty `storage_encryption.key` in all three files;
+2. set an Admin `jwt.sk`;
+3. verify that all processes use the same database and Redis deployment.
 
 Start the complete local stack:
 

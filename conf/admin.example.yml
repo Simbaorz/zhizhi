@@ -45,7 +45,7 @@ log:
   queue_capacity: 8192
 
 runtime:
-  temp_dir: /var/lib/zhizhi/runtime/temp
+  temp_dir: volume/temp
 
 http_ingress:
   max_concurrent_bodies: 32
@@ -68,8 +68,9 @@ db:
   connect_timeout_seconds: 5
 
 password_transport:
-  # Required in production. previous_private_key_paths_json is a JSON string.
-  private_key_path: /etc/zhizhi/secrets/admin-password-key.pem
+  # Git ignores this local key. Mount and configure a managed secret in production.
+  # previous_private_key_paths_json is a JSON string.
+  private_key_path: conf/admin-password-key.pem
   previous_private_key_paths_json: "[]"
 
 jwt:
@@ -95,7 +96,7 @@ iam:
   max_admin_session_memberships: 256
   max_admin_authorization_rows: 4096
   max_admin_permission_rows: 16384
-  max_area_directory_rows: 4096
+  max_organization_directory_rows: 4096
 
 scene_git:
   command_timeout_seconds: 120
@@ -136,7 +137,7 @@ redis:
 
 workspace:
   # Leave empty to disable Admin-managed Skill and Scene storage.
-  storage_root: /data/zhizhi
+  storage_root: volume/workspace
   max_file_bytes: 5 MB
   max_skill_package_bytes: 50 MB
   max_scene_package_bytes: 500 MB

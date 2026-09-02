@@ -9,6 +9,7 @@ from zhizhi_platform.iam.adapters.mysql.models.admin_auth import (
     AdminTenantScopeModel,
     AdminUserModel,
 )
+from zhizhi_platform.iam.adapters.mysql.models.installation import InstallationModel
 from zhizhi_platform.iam.adapters.mysql.models.organization import (
     OrganizationUnitModel,
     TenantModel,
@@ -22,6 +23,7 @@ __all__ = [
     "AdminTenantRoleModel",
     "AdminTenantScopeModel",
     "AdminUserModel",
+    "InstallationModel",
     "OrganizationUnitModel",
     "TenantModel",
 ]

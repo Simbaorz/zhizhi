@@ -52,7 +52,12 @@ http://127.0.0.1:8001
 
 Override the target with `ZHIZHI_ADMIN_API_PROXY_TARGET`.
 
-The first super administrator is created from the Zhizhi repository root:
+On a fresh database, the console redirects every route to `/setup`. Set a private
+`ADMIN_BOOTSTRAP_TOKEN` in the root `.env`, enter that token on the setup page, and create the first
+super administrator. The database records completion atomically; later visits go to login. Remove
+the token and restart Admin API after setup.
+
+For browserless deployments, the backend also provides an interactive CLI:
 
 ```bash
 PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \

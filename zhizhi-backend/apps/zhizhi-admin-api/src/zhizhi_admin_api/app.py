@@ -14,6 +14,7 @@ from gewu_core.http import (
 )
 from gewu_core.http.lifecycle import HttpProcessRuntime
 from zhizhi_admin_api.auth import router as auth_router
+from zhizhi_admin_api.bootstrap import router as bootstrap_router
 from zhizhi_admin_api.data_source import router as data_source_router
 from zhizhi_admin_api.git_repositories import router as git_repositories_router
 from zhizhi_admin_api.http_policy import (
@@ -70,6 +71,7 @@ def create_admin_app(
         request_selector=is_admin_download_request,
     )
     app_.include_router(auth_router)
+    app_.include_router(bootstrap_router)
     app_.include_router(data_source_router)
     app_.include_router(users_router)
     app_.include_router(git_repositories_router)

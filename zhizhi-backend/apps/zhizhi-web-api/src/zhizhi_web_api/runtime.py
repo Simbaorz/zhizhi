@@ -16,7 +16,6 @@ from gewu_core.apollo_config import load_settings_once
 from gewu_core.config import (
     ApolloBootstrapSettings,
     BootstrapSettings,
-    DeploymentMode,
     load_settings,
 )
 from gewu_core.database import DatabaseRuntime
@@ -33,6 +32,9 @@ from zhizhi_platform import (
     ZhizhiDataSourceCapabilityBuilder,
     ZhizhiDataSourceSourceResolver,
     ZhizhiModelBindingResolver,
+    resolve_instance_namespace,
+    should_auto_create_schema,
+    should_enforce_strong_secrets,
 )
 from zhizhi_platform.adapters import build_zhizhi_chat_media_store
 from zhizhi_platform.adapters.filesystem import (
@@ -48,7 +50,8 @@ from zhizhi_platform.data_source import ConfiguredDataSourceCredentialCipher
 from zhizhi_platform.iam.adapters.mysql import MysqlOrganizationDirectory
 from zhizhi_platform.llm import ConfiguredLLMCredentialCipher
 from zhizhi_platform.llm.capability import ZhizhiModelCapabilityBuilder
-from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.schema import ensure_schema
+from zhizhi_platform.security import validate_storage_secret
 from zhizhi_platform.workspace import resolve_workspace_storage_root
 from zhizhi_web_api.mysql_scope import MysqlAgentScopeResolver
 from zhizhi_web_api.settings import WebApiSettings
@@ -110,7 +113,13 @@ class ZhizhiApiRuntime:
         self._http = HttpInfrastructureRuntime(self.bootstrap, settings=settings)
         await self._http.startup()  # noqa
         await initialize_context_token_encodings(
-            require_complete_cache=self.bootstrap.mode is DeploymentMode.PROD
+            require_complete_cache=bool(
+                getattr(self.bootstrap, "require_complete_context_token_cache", False)
+            )
+        )
+        validate_storage_secret(
+            settings.storage_encryption,
+            enforce_strong_secrets=should_enforce_strong_secrets(self.bootstrap),
         )
         self._database = DatabaseRuntime(settings.db, self.bootstrap.project_home)
         await self._database.startup()  # noqa
@@ -118,7 +127,10 @@ class ZhizhiApiRuntime:
         sessions = self._database.sessions  # noqa
         if engine is None or sessions is None:
             raise RuntimeError("Database dependencies were not initialized.")
-        await ensure_schema_for_mode(engine, self.bootstrap.mode)
+        await ensure_schema(
+            engine,
+            auto_create=should_auto_create_schema(self.bootstrap),
+        )
 
         self._redis = RedisClient(settings.redis)
         await self._redis.initialize()  # noqa
@@ -179,7 +191,10 @@ class ZhizhiApiRuntime:
         if self._redis is None:
             raise RuntimeError("Redis was not initialized.")
         redis_connection = cast(Any, self._redis.connection)
-        prefix = f"{self.bootstrap.project_name}:{self.bootstrap.mode.value}:web-agent"
+        prefix = (
+            f"{self.bootstrap.project_name}:"
+            f"{resolve_instance_namespace(self.bootstrap)}:web-agent"
+        )
         self._agent_runtime = AgentRuntime(
             store=store,
             run_lease=RedisRunLease(

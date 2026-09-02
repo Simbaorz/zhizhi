@@ -2,9 +2,8 @@ from sqlalchemy import event, inspect
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from gewu_agent_runtime.adapters.mysql import AgentRuntimeBase
-from gewu_core.config import DeploymentMode
 from zhizhi_platform.database import ZhizhiBase
-from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.schema import ensure_schema
 
 
 async def _table_names(engine: AsyncEngine) -> set[str]:
@@ -12,10 +11,10 @@ async def _table_names(engine: AsyncEngine) -> set[str]:
         return set(await connection.run_sync(lambda sync: inspect(sync).get_table_names()))
 
 
-async def test_development_schema_contains_all_application_and_runtime_tables() -> None:
+async def test_enabled_schema_creation_contains_all_application_and_runtime_tables() -> None:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     try:
-        await ensure_schema_for_mode(engine, DeploymentMode.DEV)
+        await ensure_schema(engine, auto_create=True)
 
         assert await _table_names(engine) == {
             *ZhizhiBase.metadata.tables,
@@ -25,20 +24,10 @@ async def test_development_schema_contains_all_application_and_runtime_tables() 
         await engine.dispose()
 
 
-async def test_test_mode_creates_the_schema() -> None:
+async def test_disabled_schema_creation_leaves_the_database_unchanged() -> None:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     try:
-        await ensure_schema_for_mode(engine, DeploymentMode.TEST)
-
-        assert len(await _table_names(engine)) == 31
-    finally:
-        await engine.dispose()
-
-
-async def test_production_mode_never_creates_tables() -> None:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    try:
-        await ensure_schema_for_mode(engine, DeploymentMode.PROD)
+        await ensure_schema(engine, auto_create=False)
 
         assert await _table_names(engine) == set()
     finally:
@@ -49,7 +38,7 @@ async def test_existing_schema_is_not_created_again() -> None:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     statements: list[str] = []
     try:
-        await ensure_schema_for_mode(engine, DeploymentMode.DEV)
+        await ensure_schema(engine, auto_create=True)
         event.listen(
             engine.sync_engine,
             "before_cursor_execute",
@@ -58,7 +47,7 @@ async def test_existing_schema_is_not_created_again() -> None:
             ),
         )
 
-        await ensure_schema_for_mode(engine, DeploymentMode.DEV)
+        await ensure_schema(engine, auto_create=True)
 
         assert not any(
             statement.lstrip().upper().startswith("CREATE TABLE") for statement in statements

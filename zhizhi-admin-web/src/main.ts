@@ -16,7 +16,7 @@ app.use(router);
 app.use(ElementPlus);
 registerUnauthorizedHandler(async () => {
   useAuthStore(pinia).expireSession();
-  if (router.currentRoute.value.path !== "/login") {
+  if (router.currentRoute.value.meta.auth !== false) {
     await router.replace("/login");
   }
 });

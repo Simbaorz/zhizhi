@@ -5,10 +5,11 @@ from pathlib import Path
 from pydantic import Field, model_validator
 
 from gewu_core import StorageEncryptionSettings
-from gewu_core.config import ApolloBootstrapSettings, SettingsModel
+from gewu_core.config import SettingsModel
 from gewu_core.http import HttpInfrastructureSettings
 from zhizhi_platform import (
     ChatMediaSettings,
+    ZhizhiBootstrapSettings,
     ZhizhiDatabaseSettings,
     ZhizhiRedisSettings,
 )
@@ -18,8 +19,12 @@ from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 WEB_CONFIG_FILE = Path("conf/web.yml")
 
 
-class WebApiBootstrapSettings(ApolloBootstrapSettings):
+class WebApiBootstrapSettings(ZhizhiBootstrapSettings):
     config_file: Path = Field(default=WEB_CONFIG_FILE, alias="CONFIG_FILE")
+    require_complete_context_token_cache: bool = Field(
+        default=False,
+        alias="REQUIRE_COMPLETE_CONTEXT_TOKEN_CACHE",
+    )
 
 
 class AgentSettings(SettingsModel):

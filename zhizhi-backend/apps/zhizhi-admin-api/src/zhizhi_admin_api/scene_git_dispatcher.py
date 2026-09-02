@@ -7,7 +7,8 @@ from importlib import import_module
 from typing import Any
 
 from gewu_core.blocking import run_external_task
-from gewu_core.redis import RedisSettings, celery_broker_url, celery_transport_options
+from gewu_core.redis import RedisSettings, celery_broker_url
+from zhizhi_platform.celery import celery_transport_options
 
 SCENE_GIT_SYNC_TASK = "zhizhi.scene_git.sync"
 
@@ -20,13 +21,13 @@ class CelerySceneGitSyncDispatcher:
         *,
         redis: RedisSettings,
         project_name: str,
-        mode: str,
+        instance_namespace: str,
         queue: str,
         publish_timeout_seconds: float,
     ) -> None:
         self._redis = redis
         self._project_name = project_name
-        self._mode = mode
+        self._instance_namespace = instance_namespace
         self._queue = queue
         self._publish_timeout_seconds = publish_timeout_seconds
         self._app: Any | None = None
@@ -68,7 +69,7 @@ class CelerySceneGitSyncDispatcher:
             broker_transport_options=celery_transport_options(
                 self._redis,
                 project_name=self._project_name,
-                mode=self._mode,
+                instance_namespace=self._instance_namespace,
             ),
         )
         self._app = app

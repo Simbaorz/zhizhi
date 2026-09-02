@@ -2,16 +2,17 @@
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from gewu_core import StorageEncryptionSettings
-from gewu_core.config import ApolloBootstrapSettings, SettingsModel
+from gewu_core.config import SettingsModel
 from gewu_core.http import (
     HttpInfrastructureSettings,
     HttpIngressSettings,
     PasswordTransportSettings,
 )
 from zhizhi_platform import (
+    ZhizhiBootstrapSettings,
     ZhizhiDatabaseSettings,
     ZhizhiRedisSettings,
 )
@@ -23,7 +24,7 @@ from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 ADMIN_CONFIG_FILE = Path("conf/admin.yml")
 
 
-class AdminApiBootstrapSettings(ApolloBootstrapSettings):
+class AdminApiBootstrapSettings(ZhizhiBootstrapSettings):
     """Bootstrap values and default YAML path owned by the Admin API process."""
 
     config_file: Path = Field(default=ADMIN_CONFIG_FILE, alias="CONFIG_FILE")
@@ -31,6 +32,24 @@ class AdminApiBootstrapSettings(ApolloBootstrapSettings):
         default=False,
         alias="ADMIN_SESSION_COOKIE_SECURE",
     )
+    admin_require_password_transport: bool = Field(
+        default=True,
+        alias="ADMIN_REQUIRE_PASSWORD_TRANSPORT",
+    )
+    admin_bootstrap_token: str = Field(
+        default="",
+        alias="ADMIN_BOOTSTRAP_TOKEN",
+        exclude=True,
+        repr=False,
+    )
+
+    @field_validator("admin_bootstrap_token")
+    @classmethod
+    def validate_admin_bootstrap_token(cls, value: str) -> str:
+        normalized = value.strip()
+        if normalized and len(normalized.encode("utf-8")) < 32:
+            raise ValueError("ADMIN_BOOTSTRAP_TOKEN must contain at least 32 bytes")
+        return normalized
 
 
 class AdminHttpIngressSettings(HttpIngressSettings):

@@ -155,7 +155,14 @@ Runtime 知识采用另一种组合方式：租户 Workspace 与当前完整组�
 
 常用引导变量包括：
 
-- `PROJECT_NAME`、`PROJECT_HOME`、`MODE`、`TIMEZONE`；
+- `PROJECT_NAME`、`PROJECT_HOME`、`TIMEZONE`；
+- `AUTO_CREATE_SCHEMA`：进程启动时创建缺失的致知与 Gewu 表；
+- `INSTANCE_NAMESPACE`：隔离同一部署使用的 Redis、Celery 与 Agent Runtime Key；
+- `ENFORCE_STRONG_SECRETS`：要求密钥非空且至少 32 字节；
+- `REQUIRE_COMPLETE_CONTEXT_TOKEN_CACHE`：Web API 启动时要求完整的上下文 Token 编码缓存；
+- `ADMIN_REQUIRE_PASSWORD_TRANSPORT`：要求配置 Admin RSA 密码传输密钥；
+- `ADMIN_BOOTSTRAP_TOKEN`：启用受保护的一次性浏览器初始化；
+- `ADMIN_SESSION_COOKIE_SECURE`：启用后只通过 HTTPS 发送 Admin Cookie；
 - `CONFIG_SOURCE`：`local` 或 `apollo`；
 - `CONFIG_FILE`：显式指定 YAML；
 - 使用 `CONFIG_SOURCE=apollo` 时所需的 Apollo 连接变量。
@@ -178,7 +185,7 @@ Web API、Admin API 与 Worker 必须使用兼容的：
 - 媒体文件系统或对象存储配置；
 - `storage_encryption.key`。
 
-生产环境中，JWT 签名密钥与存储加密密钥必须不同，管理员 Session Cookie 应启用 Secure，并通过 TLS 暴露服务。
+当 `ENFORCE_STRONG_SECRETS=true` 时，JWT 签名密钥与存储加密密钥必须不同，且都不少于 32 字节。对外部署时应启用管理员 Secure Cookie，并通过 TLS 暴露服务。
 
 ## 本地开发
 
@@ -212,7 +219,8 @@ Admin API 使用刚生成的私钥。启动前：
 
 1. 在三份配置中设置相同且非空的 `storage_encryption.key`；
 2. 设置 Admin `jwt.sk`；
-3. 确认所有进程使用同一数据库与 Redis 部署。
+3. 在 `.env` 中生成并设置私密的 `ADMIN_BOOTSTRAP_TOKEN`；
+4. 确认所有进程使用同一数据库与 Redis 部署。
 
 启动完整本地服务：
 
@@ -228,14 +236,18 @@ Admin API 使用刚生成的私钥。启动前：
 - `http://127.0.0.1:5173` 的 Admin Web；
 - `http://127.0.0.1:5174` 的致知 Web。
 
-在另一个终端创建一次性的超级管理员：
+访问 `http://127.0.0.1:5173`。全新数据库会自动跳转到 `/setup`，输入
+`ADMIN_BOOTSTRAP_TOKEN` 后创建首个超级管理员。初始化状态会写入数据库且无法重复执行。
+完成后应从 `.env` 删除该令牌并重启 Admin API。
+
+不使用浏览器时，可以改用等价的交互式 CLI：
 
 ```bash
 PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
   uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
-如果没有显式提供命令行参数，该命令会交互式询问账号和密码。
+该命令始终通过隐藏输入读取密码，也不会打印密码。
 
 ### 分别启动进程
 
@@ -248,11 +260,11 @@ PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
   uv --directory zhizhi-backend run zhizhi-worker worker --beat --loglevel=INFO
 ```
 
-## 数据结构与生产行为
+## 数据结构启动策略
 
-在 `dev` 和 `test` 模式下，启动过程会通过 SQLAlchemy Metadata 创建缺失的致知与 Gewu 表。这只是本地开发便利机制，不是迁移系统。
-
-在 `prod` 模式下，进程不会执行任何表结构 DDL，必须在服务启动前准备完整 Schema。项目当前不承诺兼容旧表结构。
+`AUTO_CREATE_SCHEMA=true` 会在启动时通过 SQLAlchemy Metadata 创建缺失的致知与 Gewu 表，
+这是默认的首次运行体验，与任何部署标签无关。只有在其他流程已经准备好完整 Schema 时，才应设置为
+`false`。Metadata 建表不是版本化迁移系统，项目当前也不承诺兼容旧表结构。
 
 ## 验证
 

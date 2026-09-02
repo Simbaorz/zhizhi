@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
+import { useBootstrapStore } from "@/stores/bootstrap";
 import { useNavigationStore } from "@/stores/navigation";
 import DataSourceView from "@/views/DataSourceView.vue";
 import AccountsView from "@/views/AccountsView.vue";
@@ -11,12 +12,24 @@ import LoginView from "@/views/LoginView.vue";
 import ModelManagementView from "@/views/ModelManagementView.vue";
 import OrganizationView from "@/views/OrganizationView.vue";
 import RolesView from "@/views/RolesView.vue";
+import RecoveryView from "@/views/RecoveryView.vue";
 import ScenesView from "@/views/ScenesView.vue";
 import SkillsView from "@/views/SkillsView.vue";
+import SetupView from "@/views/SetupView.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    {
+      path: "/setup",
+      component: SetupView,
+      meta: { title: "系统初始化", auth: false },
+    },
+    {
+      path: "/recovery",
+      component: RecoveryView,
+      meta: { title: "安装状态恢复", auth: false },
+    },
     {
       path: "/login",
       component: LoginView,
@@ -81,8 +94,30 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
+  const bootstrapStore = useBootstrapStore();
   const authStore = useAuthStore();
   const navigationStore = useNavigationStore();
+  if (!bootstrapStore.checked && !bootstrapStore.loading) {
+    try {
+      await bootstrapStore.refresh();
+    } catch {
+      return to.path === "/setup" ? true : "/setup";
+    }
+  }
+
+  if (bootstrapStore.state === "setup_required") {
+    return to.path === "/setup" ? true : "/setup";
+  }
+  if (bootstrapStore.state === "recovery_required") {
+    return to.path === "/recovery" ? true : "/recovery";
+  }
+  if (bootstrapStore.state === null) {
+    return to.path === "/setup" ? true : "/setup";
+  }
+  if (["/setup", "/recovery"].includes(to.path)) {
+    return "/login";
+  }
+
   const requiresAuth = to.meta.auth !== false;
 
   if (!authStore.sessionChecked && !authStore.loading) {

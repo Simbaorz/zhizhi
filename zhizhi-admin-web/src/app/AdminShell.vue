@@ -86,7 +86,7 @@ const passwordForm = reactive({
 const sidebarTextVisible = ref(!uiRefs.sidebarCollapsed.value);
 let sidebarTextTimer: number | undefined;
 
-const isLoginRoute = computed(() => route.path === "/login");
+const isPublicRoute = computed(() => route.meta.auth === false);
 function normalizedNavigationLabel(item: { key: string; label: string }): string {
   if (item.key === "skills") return "技能管理";
   if (item.key === "scenes") return "业务场景管理";
@@ -429,7 +429,7 @@ watch(
 watch(
   () => route.path,
   async (path) => {
-    if (path === "/login") {
+    if (route.meta.auth === false) {
       resetAccountSettingsPanel();
       return;
     }
@@ -454,7 +454,7 @@ watch(
 );
 
 onMounted(async () => {
-  if (!authStore.sessionChecked) {
+  if (route.meta.auth !== false && !authStore.sessionChecked) {
     await refreshAll();
   }
 });
@@ -463,7 +463,7 @@ onMounted(async () => {
 <template>
   <NoticeStack />
 
-  <RouterView v-if="isLoginRoute" />
+  <RouterView v-if="isPublicRoute" />
 
   <el-container
     v-else

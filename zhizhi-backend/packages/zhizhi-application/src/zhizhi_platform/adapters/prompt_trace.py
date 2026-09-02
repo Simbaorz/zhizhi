@@ -13,23 +13,20 @@ from gewu_core.file_tasks import FileTaskLane, run_file_mutation
 from zhizhi_platform.iam.identity import AccessScope
 
 logger = logging.getLogger(__name__)
-TRACE_MODE_ALLOWLIST = frozenset({"dev", "test"})
 
 
 class ZhizhiPromptTraceController:
-    """Apply 致知 actor and deployment policy before creating a trace sink."""
+    """Apply the explicit 致知 actor policy before creating a trace sink."""
 
     def __init__(
         self,
         project_home: str | Path,
         *,
-        mode: str,
         enabled: bool = False,
         tenant_id: str = "",
         user_id: str = "",
     ) -> None:
         self._project_home = Path(project_home).expanduser()
-        self._mode = mode
         self._enabled = enabled
         self._tenant_id = tenant_id
         self._user_id = user_id
@@ -49,8 +46,7 @@ class ZhizhiPromptTraceController:
 
     def _enabled_for(self, scope: AccessScope) -> bool:
         return (
-            self._mode in TRACE_MODE_ALLOWLIST
-            and self._enabled
+            self._enabled
             and bool(self._tenant_id)
             and bool(self._user_id)
             and self._tenant_id == scope.tenant_id

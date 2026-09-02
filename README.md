@@ -116,6 +116,12 @@ root:
 cp .env.example .env
 ```
 
+Set strong, distinct secrets in the YAML files and place a private one-time
+`ADMIN_BOOTSTRAP_TOKEN` in `.env`. After the stack starts, open Admin Web at
+`http://127.0.0.1:5173`; a fresh deployment is routed to the one-time setup page, which creates
+the first super administrator. Remove the bootstrap token from `.env` after setup and restart the
+Admin API.
+
 ```bash
 ./scripts/start-local.sh
 ```

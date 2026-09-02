@@ -14,7 +14,6 @@ from gewu_agent_runtime.adapters.mysql.models import ConversationCompactionRow
 from gewu_agent_runtime.domain import Conversation, ConversationCompaction, StoredAttachment
 from gewu_agent_runtime.identity import PrincipalRef, PrincipalType
 from gewu_core import StorageEncryptionSettings
-from gewu_core.config import BootstrapSettings, DeploymentMode
 from gewu_core.logging import shutdown_logging
 from gewu_core.redis import RedisConnectionSettings, RedisMode
 from gewu_core.time import utc_now
@@ -25,16 +24,17 @@ from zhizhi_platform import (
 )
 from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 from zhizhi_worker import runtime as runtime_module
-from zhizhi_worker.settings import ZhizhiWorkerSettings
+from zhizhi_worker.settings import ZhizhiWorkerBootstrapSettings, ZhizhiWorkerSettings
 
 
 async def test_worker_runtime_cleans_expired_attachment_and_closes_resources(
     tmp_path: Path,
 ) -> None:
-    bootstrap = BootstrapSettings(
+    bootstrap = ZhizhiWorkerBootstrapSettings(
         PROJECT_NAME="zhizhi",
         PROJECT_HOME=tmp_path,
-        MODE=DeploymentMode.TEST,
+        INSTANCE_NAMESPACE="test",
+        ENFORCE_STRONG_SECRETS=False,
     )
     settings = ZhizhiWorkerSettings(
         db=ZhizhiDatabaseSettings(enabled=True, use_sqlite=True),

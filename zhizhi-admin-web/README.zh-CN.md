@@ -52,7 +52,11 @@ http://127.0.0.1:8001
 
 可以通过 `ZHIZHI_ADMIN_API_PROXY_TARGET` 修改目标。
 
-首个超级管理员需要在致知仓库根目录创建：
+全新数据库会把控制台的所有路由重定向到 `/setup`。在根 `.env` 中设置私密的
+`ADMIN_BOOTSTRAP_TOKEN`，然后在初始化页面输入该令牌并创建首个超级管理员。完成状态会原子写入数据库，
+后续访问将进入登录页。初始化后应删除令牌并重启 Admin API。
+
+无浏览器部署也可以使用后端提供的交互式 CLI：
 
 ```bash
 PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \

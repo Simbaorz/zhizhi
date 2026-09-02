@@ -55,7 +55,7 @@ def test_sentinel_broker_and_transport_options_match_application_contract() -> N
     assert celery_transport_options(
         settings,
         project_name="zhizhi",
-        mode="test",
+        instance_namespace="test",
     ) == {
         "global_keyprefix": "zhizhi:test:celery:",
         "max_connections": 21,

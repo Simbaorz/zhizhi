@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gewu_core.config import BootstrapSettings, DeploymentMode
+from gewu_core.config import BootstrapSettings
 from gewu_core.redis import RedisConnectionSettings, RedisMode
 from zhizhi_platform import ChatMediaSettings, ZhizhiRedisSettings
 from zhizhi_worker.celery_app import (
@@ -20,10 +20,10 @@ from zhizhi_worker.settings import (
 
 
 def test_celery_app_preserves_capacity_routes_and_cleanup_schedule(tmp_path: Path) -> None:
-    bootstrap = BootstrapSettings(
+    bootstrap = ZhizhiWorkerBootstrapSettings(
         PROJECT_NAME="zhizhi",
         PROJECT_HOME=tmp_path,
-        MODE=DeploymentMode.TEST,
+        INSTANCE_NAMESPACE="test",
         TIMEZONE="UTC",
     )
     settings = ZhizhiWorkerSettings(
@@ -102,7 +102,7 @@ def test_celery_parent_fetches_apollo_once_and_prepares_child_snapshot(
 
     bootstrap = ZhizhiWorkerBootstrapSettings(
         PROJECT_HOME=tmp_path,
-        MODE=DeploymentMode.TEST,
+        INSTANCE_NAMESPACE="test",
         CONFIG_SOURCE="apollo",
         APOLLO_BASE_URL="http://apollo.test",
         APOLLO_APP_ID="zhizhi-worker",

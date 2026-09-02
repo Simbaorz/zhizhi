@@ -20,7 +20,6 @@ from gewu_agent_runtime.adapters.mysql import SqlAlchemyRuntimeStore
 from gewu_core import (
     ConfiguredJsonSecretCipher,
     WorkerAsyncLoop,
-    validate_storage_encryption_configuration,
 )
 from gewu_core.apollo_config import load_settings_once
 from gewu_core.blocking import configure_blocking_task_runners
@@ -40,6 +39,10 @@ from gewu_core.runtime_temp import (
 from gewu_core.time import utc_now
 from zhizhi import MysqlSharedSceneAssetRepository
 from zhizhi_platform.adapters import build_zhizhi_chat_media_store
+from zhizhi_platform.bootstrap import (
+    should_auto_create_schema,
+    should_enforce_strong_secrets,
+)
 from zhizhi_platform.chat_media import ZhizhiChatMediaStore
 from zhizhi_platform.git import (
     ConfiguredGitCredentialCipher,
@@ -49,7 +52,8 @@ from zhizhi_platform.git import (
 from zhizhi_platform.git.adapters.mysql import MysqlAdminGitRepository
 from zhizhi_platform.iam.adapters.mysql import MysqlAdminOrgReadRepository
 from zhizhi_platform.scene import SceneGitWorkerService
-from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.schema import ensure_schema
+from zhizhi_platform.security import validate_storage_secret
 from zhizhi_platform.workspace import (
     FilesystemManagedWorkspaceRepository,
     MysqlBackgroundJobRepository,
@@ -189,9 +193,9 @@ async def _build_worker_runtime(
     db_url = resolve_async_db_url(settings.db, bootstrap.project_home)
     if not db_url:
         raise RuntimeError("Database is not configured.")
-    validate_storage_encryption_configuration(
+    validate_storage_secret(
         settings.storage_encryption,
-        bootstrap.mode.value,
+        enforce_strong_secrets=should_enforce_strong_secrets(bootstrap),
     )
 
     configure_logging(settings.log)
@@ -212,7 +216,10 @@ async def _build_worker_runtime(
             db_url,
             **build_async_engine_kwargs(settings.db, use_null_pool=True),
         )
-        await ensure_schema_for_mode(engine, bootstrap.mode)
+        await ensure_schema(
+            engine,
+            auto_create=should_auto_create_schema(bootstrap),
+        )
         sessions = async_sessionmaker(engine, expire_on_commit=False)
         background_job_repository = MysqlBackgroundJobRepository(sessions)
         await _recover_stale_scene_git_jobs(

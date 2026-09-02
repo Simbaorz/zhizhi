@@ -229,8 +229,8 @@ export interface WorkspaceSceneAsset {
   updated_at?: string | null;
 }
 
-export type LLMProvider = "openai" | "anthropic" | "unicom";
-export type LLMProtocol = "openai-chat" | "anthropic-messages" | "chinaunicom-open-service";
+export type LLMProvider = "openai" | "anthropic";
+export type LLMProtocol = "openai-chat" | "anthropic-messages";
 
 export interface ManagedLLMConfig {
   id: string;

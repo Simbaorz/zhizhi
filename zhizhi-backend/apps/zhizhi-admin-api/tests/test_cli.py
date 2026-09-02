@@ -34,7 +34,7 @@ async def test_init_super_admin_command_round_trip(
     monkeypatch.setenv("PROJECT_HOME", str(tmp_path))
     monkeypatch.setenv("CONFIG_FILE", str(config))
 
-    await _init_super_admin("root", "root-pass", "Root Admin")
+    await _init_super_admin("root", "root-password", "Root Admin")
     first_output = capsys.readouterr().out
     await _init_super_admin("ignored", "ignored", "Ignored")
     second_output = capsys.readouterr().out
@@ -49,11 +49,11 @@ async def test_init_super_admin_command_round_trip(
 
     assert "super admin initialized: root" in first_output
     assert "username: root" in first_output
-    assert "password: root-pass" in first_output
+    assert "password:" not in first_output
     assert second_output == "super admin already exists\n"
     assert len(users) == 1
     assert users[0].is_super
-    assert verify_password("root-pass", users[0].password_hash)
+    assert verify_password("root-password", users[0].password_hash)
     assert len(permissions) == len(ADMIN_PERMISSION_SEEDS)
 
 

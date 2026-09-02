@@ -70,6 +70,31 @@ def _assert_llm_admin_round_trip_matches_zhizhi_behavior(tmp_path: Path, monkeyp
                 is_super=True,
             )
         )
+        unsupported_response = client.post(
+            "/api/admin/llm/models",
+            headers=headers,
+            json={
+                "alias": "unsupported-unicom",
+                "provider": "unicom",
+                "protocol": "chinaunicom-open-service",
+                "model_name": "legacy-model",
+                "endpoint_url": "https://unicom.example.test/chat",
+                "provider_config": {
+                    "req_key": "CHAT_REQ",
+                    "role_reflect": {
+                        "system": "system",
+                        "assistant": "assistant",
+                        "user": "user",
+                    },
+                },
+                "credentials": {
+                    "app_id": "legacy-app",
+                    "app_secret": "legacy-secret",
+                },
+            },
+        )
+        assert unsupported_response.status_code == 422
+
         created_response = client.post(
             "/api/admin/llm/models",
             headers=headers,

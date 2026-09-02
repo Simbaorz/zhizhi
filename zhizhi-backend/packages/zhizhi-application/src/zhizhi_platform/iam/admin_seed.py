@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import cast
 
 from pydantic import BaseModel, ConfigDict
@@ -14,6 +15,7 @@ from zhizhi_platform.iam.adapters.mysql.models import (
     AdminPermissionModel,
     AdminRolePermissionModel,
     AdminUserModel,
+    InstallationModel,
 )
 from zhizhi_platform.iam.codes import canonical_stable_code
 from zhizhi_platform.iam.passwords import hash_password
@@ -90,6 +92,10 @@ REMOVED_ADMIN_PERMISSION_CODES = frozenset(
     }
 )
 
+INSTALLATION_ID = 1
+INSTALLATION_BOOTSTRAP_VERSION = 1
+MIN_SUPER_ADMIN_PASSWORD_LENGTH = 12
+
 
 class AdminSeedError(Exception):
     """Admin bootstrap error with a CLI-friendly status code."""
@@ -110,6 +116,23 @@ class SuperAdminBootstrapInput(BaseModel):
     display_name: str = "Super Admin"
 
 
+class InstallationState(StrEnum):
+    """Externally visible lifecycle state for one 致知 deployment."""
+
+    SETUP_REQUIRED = "setup_required"
+    READY = "ready"
+    RECOVERY_REQUIRED = "recovery_required"
+
+
+class InstallationStatus(BaseModel):
+    """Durable installation state projected without exposing account details."""
+
+    model_config = ConfigDict(frozen=True)
+
+    state: InstallationState
+    super_admin_user_id: str | None = None
+
+
 async def seed_admin_security(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
@@ -118,9 +141,11 @@ async def seed_admin_security(
     async with session_factory() as session:
         try:
             await _seed_admin_security_once(session)
+            await session.commit()
         except IntegrityError:
             await session.rollback()
             await _seed_admin_security_once(session)
+            await session.commit()
 
 
 async def _seed_admin_security_once(session: AsyncSession) -> None:
@@ -145,39 +170,74 @@ async def _seed_admin_security_once(session: AsyncSession) -> None:
         row.module = module
         row.description = permission_name
         row.status = "active"
-    await session.commit()
 
 
-async def super_admin_exists(
+async def get_installation_status(
     session_factory: async_sessionmaker[AsyncSession],
-) -> bool:
-    """Return whether the database already contains a super-admin account."""
+) -> InstallationStatus:
+    """Distinguish first setup from a damaged previously initialized deployment."""
 
     async with session_factory() as session:
-        return await _get_super_admin(session) is not None
+        installation = await session.get(InstallationModel, INSTALLATION_ID)
+        if installation is None:
+            existing_super_admin = await _get_super_admin(session)
+            return InstallationStatus(
+                state=(
+                    InstallationState.RECOVERY_REQUIRED
+                    if existing_super_admin is not None
+                    else InstallationState.SETUP_REQUIRED
+                ),
+                super_admin_user_id=(
+                    existing_super_admin.id if existing_super_admin is not None else None
+                ),
+            )
+        user = await session.get(AdminUserModel, installation.super_admin_user_id)
+        if user is None or not user.is_super or user.status != "active":
+            return InstallationStatus(
+                state=InstallationState.RECOVERY_REQUIRED,
+                super_admin_user_id=installation.super_admin_user_id,
+            )
+        return InstallationStatus(
+            state=InstallationState.READY,
+            super_admin_user_id=user.id,
+        )
 
 
-async def initialize_super_admin(
+async def initialize_installation(
     session_factory: async_sessionmaker[AsyncSession],
     bootstrap_input: SuperAdminBootstrapInput,
 ) -> AdminUserModel:
-    """Create the only super-admin account from explicit command input."""
+    """Atomically seed permissions, create the root account, and seal setup."""
 
     username = _required_super_admin_username(bootstrap_input.username)
     password = _required_value(
         bootstrap_input.password,
         "Super admin password cannot be empty.",
     )
+    if len(password) < MIN_SUPER_ADMIN_PASSWORD_LENGTH:
+        raise AdminSeedError(
+            400,
+            f"Super admin password must contain at least "
+            f"{MIN_SUPER_ADMIN_PASSWORD_LENGTH} characters.",
+        )
     display_name = _required_value(
         bootstrap_input.display_name,
         "Super admin display name cannot be empty.",
     )
     password_hash = await run_cpu_task(hash_password, password)
     async with session_factory() as session:
+        installation = await session.get(
+            InstallationModel,
+            INSTALLATION_ID,
+            with_for_update=True,
+        )
+        if installation is not None:
+            raise AdminSeedError(409, "Zhizhi is already initialized.")
         if await _get_super_admin(session) is not None:
-            raise AdminSeedError(409, "Super admin already exists.")
+            raise AdminSeedError(409, "Installation recovery is required.")
         if await _get_user_by_username(session, username) is not None:
             raise AdminSeedError(409, "Username already exists.")
+        await _seed_admin_security_once(session)
         user = AdminUserModel(
             username=username,
             normalized_username=canonical_stable_code(username),
@@ -187,7 +247,22 @@ async def initialize_super_admin(
             is_super=True,
         )
         session.add(user)
-        await session.commit()
+        try:
+            await session.flush()
+            session.add(
+                InstallationModel(
+                    id=INSTALLATION_ID,
+                    bootstrap_version=INSTALLATION_BOOTSTRAP_VERSION,
+                    super_admin_user_id=user.id,
+                )
+            )
+            await session.commit()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise AdminSeedError(
+                409,
+                "Zhizhi is already initialized or the username already exists.",
+            ) from exc
         await session.refresh(user)
         return user
 

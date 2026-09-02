@@ -191,12 +191,14 @@ class LoginThrottle:
         settings: LoginThrottleSettings,
         *,
         project_name: str,
-        mode: str,
+        instance_namespace: str,
         namespace: str,
     ) -> None:
         self._backend = backend
         self._settings = settings
-        self._prefix = f"{project_name.strip() or 'zhizhi'}:{mode.strip() or 'dev'}:auth"
+        self._prefix = (
+            f"{project_name.strip() or 'zhizhi'}:" f"{instance_namespace.strip() or 'default'}:auth"
+        )
         self._namespace = namespace
 
     async def check(self, client_ip: str, username: str) -> LoginThrottleDecision:
@@ -240,13 +242,12 @@ class LoginThrottle:
 def validate_login_throttle_configuration(
     settings: LoginThrottleSettings,
     *,
-    mode: str,
     redis_enabled: bool,
 ) -> None:
-    """Require shared counters for multi-process production throttling."""
+    """Require shared counters whenever login throttling is enabled."""
 
-    if mode.strip().lower() == "prod" and settings.enabled and not redis_enabled:
-        raise RuntimeError("Redis must be enabled for production login throttling.")
+    if settings.enabled and not redis_enabled:
+        raise RuntimeError("Redis must be enabled when login throttling is enabled.")
 
 
 def _int_value(value: object) -> int:

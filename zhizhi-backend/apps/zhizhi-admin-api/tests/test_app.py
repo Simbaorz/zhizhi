@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from gewu_core.config import BootstrapSettings, DeploymentMode
+from gewu_core.config import BootstrapSettings
 from gewu_core.database import DatabaseRuntime
 from gewu_core.http import PasswordTransportSettings
 from gewu_core.secrets import StorageEncryptionSettings
@@ -106,6 +106,8 @@ def test_admin_app_owns_a_started_runtime_and_health_contract(tmp_path: Path) ->
         "/api/admin/auth/me/profile",
         "/api/admin/auth/me/password",
         "/api/admin/auth/navigation",
+        "/api/admin/bootstrap",
+        "/api/admin/bootstrap/status",
         "/api/admin/data-sources/bindings",
         "/api/admin/data-sources/bindings/{binding_id}",
         "/api/admin/data-sources/entitlements",
@@ -231,7 +233,10 @@ async def test_admin_runtime_validates_security_before_creating_database(tmp_pat
             encryption_algorithm=serialization.NoEncryption(),
         )
     )
-    bootstrap = BootstrapSettings(PROJECT_HOME=tmp_path, MODE=DeploymentMode.PROD)
+    bootstrap = AdminApiBootstrapSettings(
+        PROJECT_HOME=tmp_path,
+        ENFORCE_STRONG_SECRETS=True,
+    )
     runtime = ZhizhiAdminApiRuntime(
         bootstrap,
         settings=AdminApiSettings(
@@ -371,7 +376,7 @@ def test_admin_mutations_publish_cookie_and_csrf_contract() -> None:
     mutations = [
         operation
         for path, path_item in openapi["paths"].items()
-        if path != "/api/admin/auth/login"
+        if path not in {"/api/admin/auth/login", "/api/admin/bootstrap"}
         for method, operation in path_item.items()
         if method in {"post", "put", "patch", "delete"}
     ]
@@ -416,6 +421,8 @@ def test_all_nonpublic_admin_routes_require_an_admin_session() -> None:
     public_paths = {
         "/api/admin/auth/password-key",
         "/api/admin/auth/login",
+        "/api/admin/bootstrap",
+        "/api/admin/bootstrap/status",
     }
     unprotected_routes = [
         route.path

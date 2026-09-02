@@ -44,16 +44,25 @@ Important settings include:
 
 Set `ADMIN_SESSION_COOKIE_SECURE=true` in production. Admin API, Web API, and Worker must use the same database, Redis deployment, Workspace root, and storage-encryption key.
 
+Startup behavior is explicit in the root `.env`: `AUTO_CREATE_SCHEMA`,
+`ENFORCE_STRONG_SECRETS`, `ADMIN_REQUIRE_PASSWORD_TRANSPORT`, and
+`ADMIN_BOOTSTRAP_TOKEN` are configured independently instead of being inferred from one environment label.
+
 ## First administrator
 
-From the Zhizhi repository root:
+Set a private `ADMIN_BOOTSTRAP_TOKEN` in the root `.env`, start the stack, and open Admin Web. A
+fresh database redirects to `/setup`, where the token authorizes creation of the one-time super
+administrator. Remove the token and restart Admin API after setup.
+
+For a browserless deployment, run this command from the Zhizhi repository root:
 
 ```bash
 PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
   uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
-The command creates the one-time super administrator and refuses to replace an existing one. Omit credential arguments to use interactive prompts.
+The command creates the one-time super administrator and refuses to replace an existing one. It
+always reads the password from a hidden prompt and never prints it.
 
 ## Run
 
@@ -66,7 +75,8 @@ PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
 
 The management console expects the service at port `8001` in local development.
 
-In `dev` and `test` modes, startup creates missing Zhizhi and Gewu tables. In `prod` mode, startup never executes schema DDL.
+With `AUTO_CREATE_SCHEMA=true`, startup creates missing Zhizhi and Gewu tables. Set it to `false`
+only when another process has provisioned the complete schema.
 
 ## Focused verification
 

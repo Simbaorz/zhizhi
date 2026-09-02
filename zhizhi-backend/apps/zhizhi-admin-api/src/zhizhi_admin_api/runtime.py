@@ -11,7 +11,6 @@ from gewu_core.apollo_config import load_settings_once
 from gewu_core.config import (
     ApolloBootstrapSettings,
     BootstrapSettings,
-    DeploymentMode,
     load_settings,
 )
 from gewu_core.database import DatabaseRuntime
@@ -22,11 +21,17 @@ from gewu_core.observability import (
 )
 from gewu_core.redis import RedisClient
 from gewu_core.runtime_health import RuntimeReadinessSnapshot
+from zhizhi_admin_api.bootstrap_service import AdminBootstrapService
 from zhizhi_admin_api.organization_references import MysqlOrganizationReferenceQuery
 from zhizhi_admin_api.scene_git_dispatcher import CelerySceneGitSyncDispatcher
 from zhizhi_admin_api.settings import AdminApiSettings
 from zhizhi_admin_api.shared_asset_admin import ZhizhiAssetAdminService
 from zhizhi_platform.audit import AdminAuditWriter, MysqlAdminAuditLogRepository
+from zhizhi_platform.bootstrap import (
+    resolve_instance_namespace,
+    should_auto_create_schema,
+    should_enforce_strong_secrets,
+)
 from zhizhi_platform.data_source import (
     ConfiguredDataSourceCredentialCipher,
     ZhizhiDataSourceAdminService,
@@ -60,7 +65,7 @@ from zhizhi_platform.llm import (
 )
 from zhizhi_platform.llm.adapters.mysql import MysqlLLMAdminRepository
 from zhizhi_platform.scene import SceneGitAdminService
-from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.schema import ensure_schema
 from zhizhi_platform.workspace import (
     FilesystemManagedWorkspaceRepository,
     MysqlBackgroundJobRepository,
@@ -92,6 +97,7 @@ class ZhizhiAdminApiRuntime:
         self._scene_git_dispatcher_override = scene_git_dispatcher
         self._owned_scene_git_dispatcher: CelerySceneGitSyncDispatcher | None = None
         self.auth_service: AdminAuthService | None = None
+        self.bootstrap_service: AdminBootstrapService | None = None
         self.admin_user_service: AdminUserAdminService | None = None
         self.role_service: RoleAdminService | None = None
         self.organization_service: OrganizationAdminService | None = None
@@ -140,7 +146,9 @@ class ZhizhiAdminApiRuntime:
             self.bootstrap,
             settings=settings,
             password_transport_settings=settings.password_transport,
-            require_password_transport=self.bootstrap.mode is DeploymentMode.PROD,
+            require_password_transport=bool(
+                getattr(self.bootstrap, "admin_require_password_transport", False)
+            ),
         )
         self._database = DatabaseRuntime(settings.db, self.bootstrap.project_home)
         self._redis = RedisClient(settings.redis)
@@ -149,12 +157,11 @@ class ZhizhiAdminApiRuntime:
         await self._http.startup()
         validate_security_configuration(
             settings.jwt,
-            self.bootstrap.mode.value,
+            enforce_strong_secrets=should_enforce_strong_secrets(self.bootstrap),
             storage_encryption=settings.storage_encryption,
         )
         validate_login_throttle_configuration(
             settings.login_throttle,
-            mode=self.bootstrap.mode.value,
             redis_enabled=settings.redis.enabled,
         )
         await self._database.startup()
@@ -171,7 +178,10 @@ class ZhizhiAdminApiRuntime:
             login_throttle_backend=login_backend,
         )
         await self._iam.startup()
-        await ensure_schema_for_mode(engine, self.bootstrap.mode)
+        await ensure_schema(
+            engine,
+            auto_create=should_auto_create_schema(self.bootstrap),
+        )
         if (
             self._iam.admin_user_repository is None
             or self._iam.admin_session_repository is None
@@ -185,6 +195,11 @@ class ZhizhiAdminApiRuntime:
         ):
             raise RuntimeError("Admin API authentication dependencies were not initialized.")
         await seed_admin_security(sessions)
+        self.bootstrap_service = AdminBootstrapService(
+            sessions,
+            self.password_transport,
+            str(getattr(self.bootstrap, "admin_bootstrap_token", "")),
+        )
         self.audit_writer = AdminAuditWriter(MysqlAdminAuditLogRepository(sessions))
         self.auth_service = AdminAuthService(
             user_repository=self._iam.admin_user_repository,
@@ -266,7 +281,7 @@ class ZhizhiAdminApiRuntime:
                 self._owned_scene_git_dispatcher = CelerySceneGitSyncDispatcher(
                     redis=settings.redis,
                     project_name=self.bootstrap.project_name,
-                    mode=self.bootstrap.mode.value,
+                    instance_namespace=resolve_instance_namespace(self.bootstrap),
                     queue=settings.celery.scene_git_queue,
                     publish_timeout_seconds=settings.celery.publish_timeout_seconds,
                 )
@@ -302,6 +317,7 @@ class ZhizhiAdminApiRuntime:
         if previous_recorder is not None:
             configure_filesystem_scan_recorder(previous_recorder)
         self.auth_service = None
+        self.bootstrap_service = None
         self.admin_user_service = None
         self.role_service = None
         self.organization_service = None

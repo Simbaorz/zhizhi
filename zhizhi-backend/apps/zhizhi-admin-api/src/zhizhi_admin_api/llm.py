@@ -30,8 +30,8 @@ class LLMConfigCreateRequest(BaseModel):
 
     alias: str = Field(min_length=1)
     display_name: str = ""
-    provider: str
-    protocol: str
+    provider: Literal["openai", "anthropic"]
+    protocol: Literal["openai-chat", "anthropic-messages"]
     model_name: str = Field(min_length=1)
     endpoint_url: str = ""
     status: str = "active"
@@ -141,7 +141,7 @@ async def list_models(
     service: LLMAdminServiceDep,
     search: SearchQuery = "",
     status: str = "all",
-    provider: str = "all",
+    provider: Literal["all", "openai", "anthropic"] = "all",
     page: PageQuery = 1,
     page_size: PageSizeQuery = 20,
     tenant_id: str | None = None,

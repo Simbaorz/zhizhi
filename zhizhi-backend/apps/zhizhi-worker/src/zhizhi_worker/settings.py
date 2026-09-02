@@ -7,12 +7,13 @@ from pathlib import Path
 from pydantic import Field, model_validator
 
 from gewu_core.blocking import BlockingTaskSettings
-from gewu_core.config import ApolloBootstrapSettings, SettingsModel
+from gewu_core.config import SettingsModel
 from gewu_core.file_tasks import FileTaskSettings
 from gewu_core.logging import LoggingSettings
 from gewu_core.secrets import StorageEncryptionSettings
 from zhizhi_platform import (
     ChatMediaSettings,
+    ZhizhiBootstrapSettings,
     ZhizhiDatabaseSettings,
     ZhizhiRedisSettings,
 )
@@ -22,7 +23,7 @@ from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 WORKER_CONFIG_FILE = Path("conf/worker.yml")
 
 
-class ZhizhiWorkerBootstrapSettings(ApolloBootstrapSettings):
+class ZhizhiWorkerBootstrapSettings(ZhizhiBootstrapSettings):
     """Bootstrap values and default YAML path owned by the Worker process."""
 
     config_file: Path = Field(default=WORKER_CONFIG_FILE, alias="CONFIG_FILE")

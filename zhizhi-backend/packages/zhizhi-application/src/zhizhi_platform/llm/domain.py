@@ -14,7 +14,6 @@ class LLMProvider(StrEnum):
 
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    UNICOM = "unicom"
 
 
 class ModelProtocol(StrEnum):
@@ -22,7 +21,6 @@ class ModelProtocol(StrEnum):
 
     OPENAI_CHAT = "openai-chat"
     ANTHROPIC_MESSAGES = "anthropic-messages"
-    CHINAUNICOM_OPEN_SERVICE = "chinaunicom-open-service"
 
 
 class ManagedLLMConfig(BaseModel):

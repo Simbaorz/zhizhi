@@ -15,14 +15,15 @@ from gewu_core.config import load_bootstrap_settings_as
 from gewu_core.database import build_async_engine_kwargs, resolve_async_db_url
 from gewu_core.http.runner import run_http_service
 from zhizhi_admin_api.settings import AdminApiBootstrapSettings, AdminApiSettings
+from zhizhi_platform.bootstrap import should_auto_create_schema
 from zhizhi_platform.iam import (
     AdminSeedError,
+    InstallationState,
     SuperAdminBootstrapInput,
-    initialize_super_admin,
-    seed_admin_security,
-    super_admin_exists,
+    get_installation_status,
+    initialize_installation,
 )
-from zhizhi_platform.schema import ensure_schema_for_mode
+from zhizhi_platform.schema import ensure_schema
 
 
 def main() -> None:
@@ -40,14 +41,13 @@ def main() -> None:
 def _run_init_super_admin_command(arguments: list[str]) -> None:
     parser = argparse.ArgumentParser(description="Create the one-time super admin account.")
     parser.add_argument("--username", default="", help="Super admin username.")
-    parser.add_argument("--password", default="", help="Super admin password.")
     parser.add_argument("--display-name", default="", help="Super admin display name.")
     args = parser.parse_args(arguments)
     try:
         asyncio.run(
             _init_super_admin(
                 username=args.username,
-                password=args.password,
+                password="",
                 display_name=args.display_name,
             )
         )
@@ -85,11 +85,17 @@ async def _init_super_admin(username: str, password: str, display_name: str) -> 
         **cast(dict[str, Any], build_async_engine_kwargs(settings.db, use_null_pool=True)),
     )
     try:
-        await ensure_schema_for_mode(engine, bootstrap.mode)
+        await ensure_schema(
+            engine,
+            auto_create=should_auto_create_schema(bootstrap),
+        )
         sessions = async_sessionmaker(engine, expire_on_commit=False)
-        if await super_admin_exists(sessions):
+        installation = await get_installation_status(sessions)
+        if installation.state is InstallationState.READY:
             print("super admin already exists")  # noqa: T201
             return
+        if installation.state is InstallationState.RECOVERY_REQUIRED:
+            raise AdminSeedError(409, "Installation recovery is required.")
         resolved = _resolve_super_admin_cli_input(
             username=username,
             password=password,
@@ -100,11 +106,9 @@ async def _init_super_admin(username: str, password: str, display_name: str) -> 
             password=resolved[1],
             display_name=resolved[2],
         )
-        await seed_admin_security(sessions)
-        user = await initialize_super_admin(sessions, bootstrap_input)
+        user = await initialize_installation(sessions, bootstrap_input)
         print(f"super admin initialized: {user.username}")  # noqa: T201
         print(f"username: {user.username}")  # noqa: T201
-        print(f"password: {bootstrap_input.password}")  # noqa: T201
     finally:
         await engine.dispose()
 

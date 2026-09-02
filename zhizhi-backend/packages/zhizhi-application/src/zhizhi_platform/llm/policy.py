@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-from json import JSONDecodeError
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -38,7 +36,6 @@ CONFIGURED_CREDENTIAL_STATUS = "configured"
 PROVIDER_PROTOCOLS = {
     LLMProvider.OPENAI.value: ModelProtocol.OPENAI_CHAT.value,
     LLMProvider.ANTHROPIC.value: ModelProtocol.ANTHROPIC_MESSAGES.value,
-    LLMProvider.UNICOM.value: ModelProtocol.CHINAUNICOM_OPEN_SERVICE.value,
 }
 RUNTIME_OVERRIDE_KEYS = {
     "stream",
@@ -82,48 +79,23 @@ def validate_common_config(
 
 def validate_provider_config(provider: str, provider_config: dict[str, Any]) -> None:
     context_window(provider_config)
-    if provider == LLMProvider.UNICOM.value:
-        clean_required(_unicom_req_key(provider_config), "联通请求 Key 不能为空。")
-        role_reflect = _role_reflect(provider_config)
-        for role in ("system", "assistant", "user"):
-            clean_required(role_reflect[role], "联通角色映射不完整。")
 
 
 def normalize_provider_config(provider: str, provider_config: dict[str, Any]) -> dict[str, Any]:
     configured_context_window = context_window(provider_config)
-    if provider != LLMProvider.UNICOM.value:
-        return {**dict(provider_config), "context_window": configured_context_window}
-    return {
-        "context_window": configured_context_window,
-        "req_key": _unicom_req_key(provider_config),
-        "role_reflect": _role_reflect(provider_config),
-        "chat_template_kwargs": _dict_value(provider_config.get("chat_template_kwargs")),
-        "extra_headers": unicom_extra_headers(provider_config),
-    }
+    return {**dict(provider_config), "context_window": configured_context_window}
 
 
 def normalize_credentials(provider: str, credentials: dict[str, Any]) -> dict[str, str]:
     if provider in {LLMProvider.OPENAI.value, LLMProvider.ANTHROPIC.value}:
         return {"api_key": _credential_api_key(credentials)}
-    if provider == LLMProvider.UNICOM.value:
-        return {
-            "app_id": _string_value(credentials.get("app_id")),
-            "app_secret": _string_value(credentials.get("app_secret")),
-            "nlpt_authorization": _nlpt_authorization(credentials),
-        }
     return {}
 
 
 def validate_credentials(provider: str, credentials: dict[str, Any]) -> None:
-    if provider in {LLMProvider.OPENAI.value, LLMProvider.ANTHROPIC.value}:
-        clean_required(_credential_api_key(credentials), "API Key 不能为空。")
-        return
-    if provider == LLMProvider.UNICOM.value:
-        clean_required(_string_value(credentials.get("app_id")), "联通 APP_ID 不能为空。")
-        clean_required(
-            _string_value(credentials.get("app_secret")),
-            "联通 APP_SECRET 不能为空。",
-        )
+    if provider not in {LLMProvider.OPENAI.value, LLMProvider.ANTHROPIC.value}:
+        raise ApplicationError(ApplicationErrorKind.INVALID_INPUT, "模型来源不支持。")
+    clean_required(_credential_api_key(credentials), "API Key 不能为空。")
 
 
 def credential_fields(config: ManagedLLMConfig, cipher: LLMCredentialCipher) -> list[str]:
@@ -135,15 +107,6 @@ def credential_fields(config: ManagedLLMConfig, cipher: LLMCredentialCipher) -> 
         return []
     if config.provider in {LLMProvider.OPENAI.value, LLMProvider.ANTHROPIC.value}:
         return ["api_key"] if _credential_api_key(credentials) else []
-    if config.provider == LLMProvider.UNICOM.value:
-        fields = []
-        if _string_value(credentials.get("app_id")):
-            fields.append("app_id")
-        if _string_value(credentials.get("app_secret")):
-            fields.append("app_secret")
-        if _nlpt_authorization(credentials):
-            fields.append("nlpt_authorization")
-        return fields
     return []
 
 
@@ -230,7 +193,6 @@ def llm_secret_values(
     credentials: dict[str, Any],
 ) -> tuple[str, ...]:
     values = [_string_value(value) for value in credentials.values()]
-    values.extend(unicom_extra_headers(config.provider_config).values())
     return tuple(sorted({value for value in values if value}, key=len, reverse=True))
 
 
@@ -258,15 +220,6 @@ def context_window(provider_config: dict[str, Any]) -> int:
     if value is None or value == "":
         value = DEFAULT_CONTEXT_WINDOW
     return _positive_int("context_window", value)
-
-
-def unicom_extra_headers(provider_config: dict[str, Any]) -> dict[str, str]:
-    headers = _dict_string_values(provider_config.get("extra_headers"))
-    return {
-        key: value
-        for key, value in headers.items()
-        if key.lower() not in {"nlpt-authorization", "authorization"}
-    }
 
 
 async def require_config(config_id: str, repository: LLMAdminRepository) -> ManagedLLMConfig:
@@ -615,43 +568,5 @@ def _string_value(value: Any) -> str:
     return value if isinstance(value, str) else "" if value is None else str(value)
 
 
-def _dict_value(value: Any) -> dict[str, Any]:
-    return dict(value) if isinstance(value, dict) else {}
-
-
-def _dict_string_values(value: Any) -> dict[str, str]:
-    return {
-        str(key): str(item)
-        for key, item in _dict_value(value).items()
-        if item is not None and str(item) != ""
-    }
-
-
-def _role_reflect(provider_config: dict[str, Any]) -> dict[str, str]:
-    value = provider_config.get("role_reflect")
-    if isinstance(value, str):
-        try:
-            parsed = json.loads(value)
-        except JSONDecodeError:
-            parsed = {}
-        value = parsed
-    mapping = _dict_value(value)
-    return {
-        "system": _string_value(mapping.get("system") or "system"),
-        "assistant": _string_value(mapping.get("assistant") or "assistant"),
-        "user": _string_value(mapping.get("user") or "user"),
-    }
-
-
-def _unicom_req_key(provider_config: dict[str, Any]) -> str:
-    return _string_value(provider_config.get("req_key") or provider_config.get("app_req_key"))
-
-
 def _credential_api_key(credentials: dict[str, Any]) -> str:
     return _string_value(credentials.get("api_key"))
-
-
-def _nlpt_authorization(credentials: dict[str, Any]) -> str:
-    return _string_value(
-        credentials.get("nlpt_authorization") or credentials.get("nlpt-Authorization")
-    )

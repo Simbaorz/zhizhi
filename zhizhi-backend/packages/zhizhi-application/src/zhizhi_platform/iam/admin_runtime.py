@@ -5,6 +5,10 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from gewu_core.config import BootstrapSettings
+from zhizhi_platform.bootstrap import (
+    resolve_instance_namespace,
+    should_enforce_strong_secrets,
+)
 from zhizhi_platform.iam.adapters.mysql.admin_member import (
     MysqlAdminTenantMemberRepository,
 )
@@ -59,7 +63,10 @@ class ZhizhiAdminIamRuntime:
 
         if self._started:
             return
-        validate_security_configuration(self.jwt_settings, self.bootstrap.mode.value)
+        validate_security_configuration(
+            self.jwt_settings,
+            enforce_strong_secrets=should_enforce_strong_secrets(self.bootstrap),
+        )
         if self._login_throttle_backend is None:
             raise RuntimeError("A shared Admin login throttling backend is required.")
         self.identity_security = DefaultIdentitySecurity(self.jwt_settings)
@@ -84,7 +91,7 @@ class ZhizhiAdminIamRuntime:
             self._login_throttle_backend,
             self.login_throttle_settings,
             project_name=self.bootstrap.project_name,
-            mode=self.bootstrap.mode.value,
+            instance_namespace=resolve_instance_namespace(self.bootstrap),
             namespace="admin-login",
         )
         self._started = True

@@ -12,6 +12,7 @@ from fastapi.security import APIKeyCookie
 
 from gewu_core.errors import ApplicationError
 from gewu_core.http.application_errors import application_error_status_code
+from zhizhi_admin_api.bootstrap_service import AdminBootstrapService
 from zhizhi_admin_api.mutation_audit import attach_admin_audit_context
 from zhizhi_admin_api.shared_asset_admin import ZhizhiAssetAdminService
 from zhizhi_platform.audit import AdminAuditActor, AdminAuditWriter
@@ -56,6 +57,23 @@ def get_admin_auth_service(request: Request) -> AdminAuthService:
 
 
 AdminAuthServiceDep = Annotated[AdminAuthService, Depends(get_admin_auth_service)]
+
+
+def get_admin_bootstrap_service(request: Request) -> AdminBootstrapService:
+    service = getattr(
+        getattr(request.app.state, "runtime", None),
+        "bootstrap_service",
+        None,
+    )
+    if not isinstance(service, AdminBootstrapService):
+        raise HTTPException(status_code=503, detail="Admin bootstrap service is not configured.")
+    return service
+
+
+AdminBootstrapServiceDep = Annotated[
+    AdminBootstrapService,
+    Depends(get_admin_bootstrap_service),
+]
 
 
 def get_admin_user_admin_service(request: Request) -> AdminUserAdminService:

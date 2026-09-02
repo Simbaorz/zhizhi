@@ -6,6 +6,8 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/api/admin/auth/login",
   "/api/admin/auth/me",
   "/api/admin/auth/password-key",
+  "/api/admin/bootstrap",
+  "/api/admin/bootstrap/status",
 ]);
 
 type UnauthorizedHandler = () => void | Promise<void>;
@@ -66,6 +68,9 @@ function userFacingErrorMessage(path: string, status: number, payload: unknown):
     return "登录信息已失效，请重新登录。";
   }
   if (status === 403) {
+    if (path === "/api/admin/bootstrap") {
+      return "初始化令牌无效。";
+    }
     return "当前账号没有操作权限。";
   }
   if (status >= 500 || containsHtml) {

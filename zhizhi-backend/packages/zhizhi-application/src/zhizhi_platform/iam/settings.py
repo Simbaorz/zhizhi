@@ -2,8 +2,9 @@
 
 from pydantic import Field
 
-from gewu_core import StorageEncryptionSettings, validate_storage_encryption_configuration
+from gewu_core import StorageEncryptionSettings
 from gewu_core.config import SettingsModel
+from zhizhi_platform.security import MIN_SECRET_BYTES, validate_storage_secret
 
 
 class JwtSettings(SettingsModel):
@@ -31,9 +32,6 @@ class IamLimitsSettings(SettingsModel):
     max_organization_directory_rows: int = Field(default=4096, ge=1)
 
 
-MIN_PRODUCTION_SECRET_BYTES = 32
-
-
 def require_jwt_signing_key(settings: JwtSettings) -> str:
     """Return the configured signing key or fail closed."""
 
@@ -45,29 +43,27 @@ def require_jwt_signing_key(settings: JwtSettings) -> str:
 
 def validate_security_configuration(
     settings: JwtSettings,
-    mode: str,
     *,
+    enforce_strong_secrets: bool,
     storage_encryption: StorageEncryptionSettings | None = None,
 ) -> None:
-    """Reject weak or reused production secrets."""
+    """Reject weak or reused secrets when the explicit policy is enabled."""
 
-    production = mode.strip().lower() == "prod"
     signing_key = ""
-    if production:
+    if enforce_strong_secrets:
         signing_key = require_jwt_signing_key(settings)
         _require_minimum_bytes(signing_key, "jwt.sk")
-    if storage_encryption is not None:
-        validate_storage_encryption_configuration(storage_encryption, mode)
-    if not production or storage_encryption is None:
+    if storage_encryption is None or not enforce_strong_secrets:
         return
-    if signing_key == storage_encryption.key.strip():
-        raise RuntimeError(
-            "jwt.sk and storage_encryption.key must use different secrets in production."
-        )
+    validate_storage_secret(
+        storage_encryption,
+        enforce_strong_secrets=enforce_strong_secrets,
+    )
+    storage_key = storage_encryption.key.strip()
+    if signing_key == storage_key:
+        raise RuntimeError("jwt.sk and storage_encryption.key must use different secrets.")
 
 
 def _require_minimum_bytes(value: str, name: str) -> None:
-    if len(value.encode("utf-8")) < MIN_PRODUCTION_SECRET_BYTES:
-        raise RuntimeError(
-            f"{name} must contain at least {MIN_PRODUCTION_SECRET_BYTES} bytes in production."
-        )
+    if len(value.encode("utf-8")) < MIN_SECRET_BYTES:
+        raise RuntimeError(f"{name} must contain at least {MIN_SECRET_BYTES} bytes.")

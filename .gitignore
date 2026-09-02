@@ -112,6 +112,7 @@ test-results/
 *.sqlite
 *.sqlite3
 celerybeat-schedule
+celerybeat-schedule-*
 celerybeat.pid
 celeryev.pid
 

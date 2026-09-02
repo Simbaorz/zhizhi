@@ -1,6 +1,7 @@
 import { fetchBlob, fetchJson } from "@/api/http";
 import { encryptAdminPassword } from "@/api/passwordCrypto";
 import type { LoginResponse, MeResponse } from "@/types/auth";
+import type { BootstrapStatus } from "@/types/bootstrap";
 import type {
   AdminPermission,
   AdminRole,
@@ -44,6 +45,28 @@ function scopeQuery(scope: AdminScopeRef): Record<string, string> {
     scope_tenant_id: scope.scope_tenant_id,
     scope_organization_unit_id: scope.scope_organization_unit_id ?? "",
   };
+}
+
+export async function getBootstrapStatus(): Promise<BootstrapStatus> {
+  return fetchJson<BootstrapStatus>("/api/admin/bootstrap/status");
+}
+
+export async function initializeBootstrap(payload: {
+  bootstrapToken: string;
+  username: string;
+  displayName: string;
+  password: string;
+}): Promise<BootstrapStatus> {
+  const encryptedPassword = await encryptAdminPassword(payload.password);
+  return fetchJson<BootstrapStatus>("/api/admin/bootstrap", {
+    method: "POST",
+    body: {
+      bootstrap_token: payload.bootstrapToken,
+      username: payload.username,
+      display_name: payload.displayName,
+      encrypted_password: encryptedPassword,
+    },
+  });
 }
 
 function assetScopeQuery(scope: AdminScopeRef): Record<string, string> {

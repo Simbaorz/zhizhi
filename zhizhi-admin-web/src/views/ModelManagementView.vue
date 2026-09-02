@@ -72,7 +72,15 @@ const modelForm = reactive({
   providerConfigText: "{}",
   credentialsText: "{}",
 });
+const protocolByProvider: Record<LLMProvider, LLMProtocol> = {
+  openai: "openai-chat",
+  anthropic: "anthropic-messages",
+};
 const resourceForm = reactive({ modelIds: [] as string[], modelId: "", status: "active" });
+
+watch(() => modelForm.provider, (provider) => {
+  modelForm.protocol = protocolByProvider[provider];
+});
 
 const drawerTitle = computed(() => ({
   "model-create": "新建模型配置",
@@ -380,7 +388,7 @@ onMounted(loadAll);
     <el-drawer v-model="drawerMode" :title="drawerTitle" size="500px" destroy-on-close>
       <el-form v-if="drawerMode?.startsWith('model')" label-position="top">
         <div class="form-grid"><el-form-item label="别名" required><el-input v-model="modelForm.alias" :disabled="drawerMode === 'model-edit'" /></el-form-item><el-form-item label="显示名称"><el-input v-model="modelForm.displayName" /></el-form-item></div>
-        <div class="form-grid"><el-form-item label="供应商"><el-select v-model="modelForm.provider"><el-option value="openai" label="OpenAI" /><el-option value="anthropic" label="Anthropic" /><el-option value="unicom" label="China Unicom" /></el-select></el-form-item><el-form-item label="协议"><el-select v-model="modelForm.protocol"><el-option value="openai-chat" label="OpenAI Chat" /><el-option value="anthropic-messages" label="Anthropic Messages" /><el-option value="chinaunicom-open-service" label="Unicom Open Service" /></el-select></el-form-item></div>
+        <div class="form-grid"><el-form-item label="供应商"><el-select v-model="modelForm.provider" :disabled="drawerMode === 'model-edit'"><el-option value="openai" label="OpenAI" /><el-option value="anthropic" label="Anthropic" /></el-select></el-form-item><el-form-item label="协议"><el-select v-model="modelForm.protocol" disabled><el-option value="openai-chat" label="OpenAI Chat" /><el-option value="anthropic-messages" label="Anthropic Messages" /></el-select></el-form-item></div>
         <el-form-item label="模型名称" required><el-input v-model="modelForm.modelName" /></el-form-item>
         <el-form-item label="Endpoint"><el-input v-model="modelForm.endpointUrl" /></el-form-item>
         <el-form-item label="能力"><el-checkbox v-model="modelForm.supportStream">流式</el-checkbox><el-checkbox v-model="modelForm.supportTools">工具调用</el-checkbox><el-checkbox v-model="modelForm.supportVision">视觉</el-checkbox><el-checkbox v-model="modelForm.supportThinking">思考</el-checkbox></el-form-item>

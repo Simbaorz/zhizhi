@@ -156,7 +156,14 @@ lives in the root `conf/` directory rather than inside the Python workspace.
 
 Common bootstrap variables include:
 
-- `PROJECT_NAME`, `PROJECT_HOME`, `MODE`, and `TIMEZONE`;
+- `PROJECT_NAME`, `PROJECT_HOME`, and `TIMEZONE`;
+- `AUTO_CREATE_SCHEMA`: create missing Zhizhi and Gewu tables at process startup;
+- `INSTANCE_NAMESPACE`: isolate Redis, Celery, and Agent runtime keys shared by one deployment;
+- `ENFORCE_STRONG_SECRETS`: require non-empty secrets of at least 32 bytes;
+- `REQUIRE_COMPLETE_CONTEXT_TOKEN_CACHE`: require every context-token encoding at Web API startup;
+- `ADMIN_REQUIRE_PASSWORD_TRANSPORT`: require the Admin RSA password-transport key;
+- `ADMIN_BOOTSTRAP_TOKEN`: enable protected, one-time browser initialization;
+- `ADMIN_SESSION_COOKIE_SECURE`: emit Admin cookies only over HTTPS when enabled;
 - `CONFIG_SOURCE`: `local` or `apollo`;
 - `CONFIG_FILE` for an explicit YAML path;
 - Apollo connection variables when `CONFIG_SOURCE=apollo`.
@@ -179,7 +186,7 @@ The Web API, Admin API, and Worker must use compatible values for:
 - media filesystem or object-storage configuration;
 - `storage_encryption.key`.
 
-In production, the JWT signing key and storage-encryption key must be distinct secrets. Admin session cookies should be secure and all services should run behind TLS.
+When `ENFORCE_STRONG_SECRETS=true`, the JWT signing key and storage-encryption key must be distinct secrets of at least 32 bytes. Internet-facing deployments should enable secure Admin cookies and run all services behind TLS.
 
 ## Local development
 
@@ -213,7 +220,8 @@ directory and point Admin API at the generated private key. Before starting:
 
 1. set the same non-empty `storage_encryption.key` in all three files;
 2. set an Admin `jwt.sk`;
-3. verify that all processes use the same database and Redis deployment.
+3. generate a private `ADMIN_BOOTSTRAP_TOKEN` in `.env`;
+4. verify that all processes use the same database and Redis deployment.
 
 Start the complete local stack:
 
@@ -229,14 +237,18 @@ The script starts:
 - Admin Web at `http://127.0.0.1:5173`;
 - Zhizhi Web at `http://127.0.0.1:5174`.
 
-Create the one-time super administrator in another terminal:
+Open Admin Web at `http://127.0.0.1:5173`. A fresh database is redirected to `/setup`; enter the
+`ADMIN_BOOTSTRAP_TOKEN` and create the first super administrator. Initialization is recorded in the
+database and cannot be repeated. Remove the token from `.env` and restart Admin API after setup.
+
+For non-browser deployments, the equivalent interactive CLI is:
 
 ```bash
 PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
   uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
-The command prompts for credentials unless explicit CLI values are supplied.
+The command always reads the password from a hidden prompt and never prints it.
 
 ### Run processes separately
 
@@ -249,11 +261,12 @@ PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
   uv --directory zhizhi-backend run zhizhi-worker worker --beat --loglevel=INFO
 ```
 
-## Schema and production behavior
+## Schema startup policy
 
-In `dev` and `test` modes, startup creates missing Zhizhi and Gewu tables from SQLAlchemy metadata. This is a convenience for local work, not a migration system.
-
-In `prod` mode, the services never issue schema DDL. Provision the complete schema before starting production processes. The project currently makes no legacy-schema compatibility promise.
+`AUTO_CREATE_SCHEMA=true` creates missing Zhizhi and Gewu tables from SQLAlchemy metadata at startup.
+This is the default first-run experience and is independent of any deployment label. Set it to
+`false` only when the complete schema is provisioned by another process. Metadata creation is not a
+versioned migration system, and the project currently makes no legacy-schema compatibility promise.
 
 ## Verification
 

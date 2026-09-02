@@ -13,6 +13,7 @@ from gewu_core.config import (
     load_bootstrap_settings_as,
     load_settings,
 )
+from zhizhi_platform.bootstrap import resolve_instance_namespace
 from zhizhi_worker.broker import celery_broker_url, celery_transport_options
 from zhizhi_worker.settings import (
     ZhizhiWorkerBootstrapSettings,
@@ -91,7 +92,7 @@ def create_celery_app(
         broker_transport_options=celery_transport_options(
             resolved_settings.redis,
             project_name=resolved_bootstrap.project_name,
-            mode=resolved_bootstrap.mode.value,
+            instance_namespace=resolve_instance_namespace(resolved_bootstrap),
         ),
         beat_schedule={
             "cleanup-chat-media": {

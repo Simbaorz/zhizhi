@@ -26,6 +26,8 @@ Desktop.ini
 .env.*
 !.env.example
 !.env.*.example
+conf/*.yml
+!conf/*.example.yml
 *.local
 .direnv/
 .envrc

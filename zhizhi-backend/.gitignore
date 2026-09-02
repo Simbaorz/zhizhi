@@ -53,8 +53,6 @@ pip-wheel-metadata/
 .env.*
 !.env.example
 !.env.*.example
-conf/*.yml
-!conf/*.example.yml
 *.pem
 *.key
 *.p12
@@ -84,5 +82,3 @@ celeryev.pid
 /storage/
 /uploads/
 /downloads/
-
-# Version-controlled base-image build recipe; keep local state private.

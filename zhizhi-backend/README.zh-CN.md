@@ -151,6 +151,7 @@ Runtime 知识采用另一种组合方式：租户 Workspace 与当前完整组�
 ## 配置模型
 
 每个进程从环境变量加载引导配置，再从 YAML 或 Apollo 加载服务配置。
+致知仓库根目录就是部署时的 `PROJECT_HOME`，因此共享服务配置位于根 `conf/`，不属于 Python Workspace。
 
 常用引导变量包括：
 
@@ -159,11 +160,13 @@ Runtime 知识采用另一种组合方式：租户 Workspace 与当前完整组�
 - `CONFIG_FILE`：显式指定 YAML；
 - 使用 `CONFIG_SOURCE=apollo` 时所需的 Apollo 连接变量。
 
+根目录的 [`.env.example`](../.env.example) 记录这一层后端引导变量。
+
 仓库提供以下示例：
 
-- [`conf/web.example.yml`](conf/web.example.yml)
-- [`conf/admin.example.yml`](conf/admin.example.yml)
-- [`conf/worker.example.yml`](conf/worker.example.yml)
+- [`conf/web.example.yml`](../conf/web.example.yml)
+- [`conf/admin.example.yml`](../conf/admin.example.yml)
+- [`conf/worker.example.yml`](../conf/worker.example.yml)
 
 真实配置与凭证不会提交到 Git。
 
@@ -187,15 +190,16 @@ Web API、Admin API 与 Worker 必须使用兼容的：
 - 使用 Scene Git 同步时需要 Git
 - 用于生成管理员密码传输密钥的 OpenSSL
 
-安装 Workspace：
+以下命令均从致知仓库根目录执行。安装后端 Workspace：
 
 ```bash
-uv sync --all-packages --all-extras --all-groups --frozen
+uv --directory zhizhi-backend sync --all-packages --all-extras --all-groups --frozen
 ```
 
 创建不会提交到 Git 的本地配置：
 
 ```bash
+cp .env.example .env
 cp conf/web.example.yml conf/web.yml
 cp conf/admin.example.yml conf/admin.yml
 cp conf/worker.example.yml conf/worker.yml
@@ -221,12 +225,15 @@ openssl genpkey -algorithm RSA -out .local/admin-password-key.pem -pkeyopt rsa_k
 
 - `http://127.0.0.1:8000` 的 Web API；
 - `http://127.0.0.1:8001` 的 Admin API；
-- 带 Beat 的 Celery Worker。
+- 带 Beat 的 Celery Worker；
+- `http://127.0.0.1:5173` 的 Admin Web；
+- `http://127.0.0.1:5174` 的致知 Web。
 
 在另一个终端创建一次性的超级管理员：
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
 如果没有显式提供命令行参数，该命令会交互式询问账号和密码。
@@ -234,9 +241,12 @@ CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
 ### 分别启动进程
 
 ```bash
-CONFIG_FILE=conf/web.yml uv run zhizhi-web-api --host 127.0.0.1 --port 8000
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api --host 127.0.0.1 --port 8001
-CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --beat --loglevel=INFO
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/web.yml" \
+  uv --directory zhizhi-backend run zhizhi-web-api --host 127.0.0.1 --port 8000
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api --host 127.0.0.1 --port 8001
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
+  uv --directory zhizhi-backend run zhizhi-worker worker --beat --loglevel=INFO
 ```
 
 ## 数据结构与生产行为
@@ -248,6 +258,7 @@ CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --beat --loglevel=INFO
 ## 验证
 
 ```bash
+cd zhizhi-backend
 uv run black apps packages --check
 uv run ruff check apps packages
 uv run mypy

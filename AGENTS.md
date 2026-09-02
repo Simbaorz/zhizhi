@@ -16,6 +16,10 @@ This is one Git repository containing three independently buildable and deployab
 - `zhizhi-admin-web/`: Vue management console for platform and tenant administrators.
 - `zhizhi-web/`: Lightweight Web API trial client and enterprise integration reference.
 
+The repository root is the deployment `PROJECT_HOME`. It owns shared runtime configuration under
+`conf/` and cross-project development orchestration under `scripts/`. Project-specific build and
+test commands remain inside the project that owns them.
+
 The repository root is not a Node.js workspace. It must not contain a root `package.json`, `pnpm-lock.yaml`, or `pnpm-workspace.yaml`. Each frontend owns its package manifest, lockfile, package-manager version, commands, and dependency installation.
 
 Do not create nested Git repositories. Do not commit dependency directories, virtual environments, build output, caches, credentials, real environment files, local databases, logs, or runtime data.

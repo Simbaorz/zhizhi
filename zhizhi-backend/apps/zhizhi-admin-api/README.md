@@ -30,7 +30,7 @@ Entitlements represent resources available to a scope. Bindings represent resour
 
 ## Configuration
 
-The default local file is `conf/admin.yml`. Create it from `conf/admin.example.yml` at the backend root.
+The default local file is `conf/admin.yml`. Create it from `conf/admin.example.yml` at the Zhizhi repository root.
 
 Important settings include:
 
@@ -46,20 +46,22 @@ Set `ADMIN_SESSION_COOKIE_SECURE=true` in production. Admin API, Web API, and Wo
 
 ## First administrator
 
-From the backend root:
+From the Zhizhi repository root:
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
 The command creates the one-time super administrator and refuses to replace an existing one. Omit credential arguments to use interactive prompts.
 
 ## Run
 
-From the backend root:
+From the Zhizhi repository root:
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api --host 127.0.0.1 --port 8001
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api --host 127.0.0.1 --port 8001
 ```
 
 The management console expects the service at port `8001` in local development.

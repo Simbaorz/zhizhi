@@ -34,7 +34,7 @@ A mismatch can make a successfully queued job unreadable or cause a synchronized
 
 ## Configuration
 
-Create the ignored local file at the backend root:
+Create the ignored local file at the Zhizhi repository root:
 
 ```bash
 cp conf/worker.example.yml conf/worker.yml
@@ -44,22 +44,25 @@ The process loads `conf/worker.yml` by default. Use `CONFIG_FILE` to select anot
 
 ## Run
 
-Start a worker:
+Run these commands from the Zhizhi repository root. Start a worker:
 
 ```bash
-CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --loglevel=INFO
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
+  uv --directory zhizhi-backend run zhizhi-worker worker --loglevel=INFO
 ```
 
 Start the scheduler separately:
 
 ```bash
-CONFIG_FILE=conf/worker.yml uv run zhizhi-worker beat --loglevel=INFO
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
+  uv --directory zhizhi-backend run zhizhi-worker beat --loglevel=INFO
 ```
 
 For local development, run both in one process:
 
 ```bash
-CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --beat --loglevel=INFO
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
+  uv --directory zhizhi-backend run zhizhi-worker worker --beat --loglevel=INFO
 ```
 
 On Windows, the CLI selects Celery's `solo` pool for a worker unless an explicit pool is supplied.

@@ -4,6 +4,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BACKEND_ROOT="${PROJECT_ROOT}/zhizhi-backend"
+ADMIN_WEB_ROOT="${PROJECT_ROOT}/zhizhi-admin-web"
+WEB_ROOT="${PROJECT_ROOT}/zhizhi-web"
 
 cd "${PROJECT_ROOT}"
 
@@ -78,6 +81,13 @@ start_service() {
   NAMES+=("${name}")
 }
 
+run_in_directory() {
+  local directory="$1"
+  shift
+  cd "${directory}"
+  exec "$@"
+}
+
 cleanup() {
   local exit_code=$?
   local pid
@@ -101,6 +111,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM HUP
 
 require_command uv
+require_command corepack
 if [[ "${CONFIG_SOURCE}" == "apollo" ]]; then
   require_value "APOLLO_BASE_URL" "${APOLLO_BASE_URL:-}"
   require_value "WEB_APOLLO_APP_ID" "${WEB_APOLLO_APP_ID}"
@@ -118,12 +129,29 @@ else
 fi
 
 if [[ "${SKIP_UV_SYNC:-0}" != "1" ]]; then
-  echo "Synchronizing workspace dependencies..."
-  uv sync --all-packages
+  echo "Synchronizing backend dependencies..."
+  (
+    cd "${BACKEND_ROOT}"
+    uv sync --all-packages --frozen
+  )
+fi
+
+if [[ "${SKIP_PNPM_INSTALL:-0}" != "1" ]]; then
+  echo "Installing Admin Web dependencies..."
+  (
+    cd "${ADMIN_WEB_ROOT}"
+    corepack pnpm install --frozen-lockfile
+  )
+  echo "Installing Web dependencies..."
+  (
+    cd "${WEB_ROOT}"
+    corepack pnpm install --frozen-lockfile
+  )
 fi
 
 start_service \
   "Web API (${WEB_API_HOST}:${WEB_API_PORT})" \
+  run_in_directory "${BACKEND_ROOT}" \
   env CONFIG_FILE="${WEB_CONFIG}" APOLLO_APP_ID="${WEB_APOLLO_APP_ID}" \
   uv run --no-sync zhizhi-web-api \
   --host "${WEB_API_HOST}" \
@@ -131,6 +159,7 @@ start_service \
 
 start_service \
   "Admin API (${ADMIN_API_HOST}:${ADMIN_API_PORT})" \
+  run_in_directory "${BACKEND_ROOT}" \
   env CONFIG_FILE="${ADMIN_CONFIG}" APOLLO_APP_ID="${ADMIN_APOLLO_APP_ID}" \
   uv run --no-sync zhizhi-admin-api \
   --host "${ADMIN_API_HOST}" \
@@ -138,14 +167,30 @@ start_service \
 
 start_service \
   "Celery Worker with Beat" \
+  run_in_directory "${BACKEND_ROOT}" \
   env CONFIG_FILE="${WORKER_CONFIG}" APOLLO_APP_ID="${WORKER_APOLLO_APP_ID}" \
   uv run --no-sync zhizhi-worker \
   worker \
   --beat \
   --loglevel="${WORKER_LOG_LEVEL}"
 
+start_service \
+  "Admin Web (127.0.0.1:5173)" \
+  run_in_directory "${ADMIN_WEB_ROOT}" \
+  corepack pnpm run dev
+
+start_service \
+  "Web (127.0.0.1:5174)" \
+  run_in_directory "${WEB_ROOT}" \
+  corepack pnpm run dev
+
 echo
-echo "Local services are running. Press Ctrl+C to stop all of them."
+echo "Local services are running:"
+echo "  Admin Web: http://127.0.0.1:5173"
+echo "  Web:       http://127.0.0.1:5174"
+echo "  Web API:   http://${WEB_API_HOST}:${WEB_API_PORT}"
+echo "  Admin API: http://${ADMIN_API_HOST}:${ADMIN_API_PORT}"
+echo "Press Ctrl+C to stop all of them."
 
 while true; do
   for index in "${!PIDS[@]}"; do

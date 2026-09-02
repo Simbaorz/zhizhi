@@ -52,10 +52,11 @@ http://127.0.0.1:8001
 
 可以通过 `ZHIZHI_ADMIN_API_PROXY_TARGET` 修改目标。
 
-首个超级管理员需要在后端 Workspace 中创建：
+首个超级管理员需要在致知仓库根目录创建：
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
 配置与启动方式见[后端指南](../zhizhi-backend/README.zh-CN.md)。

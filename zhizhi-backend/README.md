@@ -151,6 +151,8 @@ It does not start the Agent Runtime.
 ## Configuration model
 
 Each process loads bootstrap values from the environment and service settings from YAML or Apollo.
+The Zhizhi repository root is the deployment `PROJECT_HOME`; shared service configuration therefore
+lives in the root `conf/` directory rather than inside the Python workspace.
 
 Common bootstrap variables include:
 
@@ -159,11 +161,13 @@ Common bootstrap variables include:
 - `CONFIG_FILE` for an explicit YAML path;
 - Apollo connection variables when `CONFIG_SOURCE=apollo`.
 
+The root [`.env.example`](../.env.example) documents this backend bootstrap layer.
+
 The tracked examples are:
 
-- [`conf/web.example.yml`](conf/web.example.yml)
-- [`conf/admin.example.yml`](conf/admin.example.yml)
-- [`conf/worker.example.yml`](conf/worker.example.yml)
+- [`conf/web.example.yml`](../conf/web.example.yml)
+- [`conf/admin.example.yml`](../conf/admin.example.yml)
+- [`conf/worker.example.yml`](../conf/worker.example.yml)
 
 Real configuration files and credentials are ignored by Git.
 
@@ -187,15 +191,16 @@ Requirements:
 - Git when using Scene Git synchronization
 - OpenSSL for generating the local Admin password-transport key
 
-Install the workspace:
+Run the following commands from the Zhizhi repository root. Install the backend workspace:
 
 ```bash
-uv sync --all-packages --all-extras --all-groups --frozen
+uv --directory zhizhi-backend sync --all-packages --all-extras --all-groups --frozen
 ```
 
 Create ignored local configuration:
 
 ```bash
+cp .env.example .env
 cp conf/web.example.yml conf/web.yml
 cp conf/admin.example.yml conf/admin.yml
 cp conf/worker.example.yml conf/worker.yml
@@ -221,12 +226,15 @@ The script starts:
 
 - Web API at `http://127.0.0.1:8000`;
 - Admin API at `http://127.0.0.1:8001`;
-- Celery Worker with Beat.
+- Celery Worker with Beat;
+- Admin Web at `http://127.0.0.1:5173`;
+- Zhizhi Web at `http://127.0.0.1:5174`.
 
 Create the one-time super administrator in another terminal:
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
 The command prompts for credentials unless explicit CLI values are supplied.
@@ -234,9 +242,12 @@ The command prompts for credentials unless explicit CLI values are supplied.
 ### Run processes separately
 
 ```bash
-CONFIG_FILE=conf/web.yml uv run zhizhi-web-api --host 127.0.0.1 --port 8000
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api --host 127.0.0.1 --port 8001
-CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --beat --loglevel=INFO
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/web.yml" \
+  uv --directory zhizhi-backend run zhizhi-web-api --host 127.0.0.1 --port 8000
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api --host 127.0.0.1 --port 8001
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/worker.yml" \
+  uv --directory zhizhi-backend run zhizhi-worker worker --beat --loglevel=INFO
 ```
 
 ## Schema and production behavior
@@ -248,6 +259,7 @@ In `prod` mode, the services never issue schema DDL. Provision the complete sche
 ## Verification
 
 ```bash
+cd zhizhi-backend
 uv run black apps packages --check
 uv run ruff check apps packages
 uv run mypy

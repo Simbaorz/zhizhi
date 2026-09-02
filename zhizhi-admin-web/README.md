@@ -52,10 +52,11 @@ http://127.0.0.1:8001
 
 Override the target with `ZHIZHI_ADMIN_API_PROXY_TARGET`.
 
-The first super administrator is created from the backend workspace:
+The first super administrator is created from the Zhizhi repository root:
 
 ```bash
-CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/admin.yml" \
+  uv --directory zhizhi-backend run zhizhi-admin-api init-super-admin
 ```
 
 See the [Backend guide](../zhizhi-backend/README.md) for configuration and startup.

@@ -45,7 +45,7 @@ Runtime Workspace access is read-only. The ToolSet contains file discovery/read 
 
 ## Configuration
 
-The default local configuration is `conf/web.yml`, created from `conf/web.example.yml`.
+The default local configuration is `conf/web.yml`, created from `conf/web.example.yml` at the Zhizhi repository root.
 
 The process requires:
 
@@ -58,10 +58,11 @@ The process requires:
 
 ## Run
 
-From the backend root:
+From the Zhizhi repository root:
 
 ```bash
-CONFIG_FILE=conf/web.yml uv run zhizhi-web-api --host 127.0.0.1 --port 8000
+PROJECT_HOME="$PWD" CONFIG_FILE="$PWD/conf/web.yml" \
+  uv --directory zhizhi-backend run zhizhi-web-api --host 127.0.0.1 --port 8000
 ```
 
 Check process and Runtime state:

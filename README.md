@@ -106,6 +106,22 @@ Requirements:
 - Node.js 22 with Corepack
 - Redis for the backend processes
 
+The repository root is the deployment `PROJECT_HOME`. Shared backend configuration lives in
+`conf/`, while `scripts/` contains cross-project development orchestration. After preparing the
+backend bootstrap environment and three local YAML files as described in the
+[Backend guide](zhizhi-backend/README.md), then start the complete local stack from the repository
+root:
+
+```bash
+cp .env.example .env
+```
+
+```bash
+./scripts/start-local.sh
+```
+
+This starts both APIs, the Worker, Admin Web, and the integration workbench.
+
 Start with the [Backend guide](zhizhi-backend/README.md), then choose the interface you need:
 
 - use [Admin Web](zhizhi-admin-web/README.md) to configure tenants, organizations, models, knowledge, and resources;

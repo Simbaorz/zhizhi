@@ -106,6 +106,21 @@ Agent 可以通过文件工具发现并阅读挂载的知识，调用 Skill，�
 - Node.js 22 与 Corepack
 - 后端进程使用的 Redis
 
+仓库根目录就是部署时的 `PROJECT_HOME`。共享后端配置位于 `conf/`，跨工程的本地开发编排位于
+`scripts/`。按照[后端指南](zhizhi-backend/README.zh-CN.md)准备后端引导环境和三份本地 YAML：
+
+```bash
+cp .env.example .env
+```
+
+随后在仓库根目录启动完整服务：
+
+```bash
+./scripts/start-local.sh
+```
+
+该脚本会同时启动两个 API、Worker、Admin Web 和试用接入端。
+
 建议先阅读[后端指南](zhizhi-backend/README.zh-CN.md)，再选择需要的界面：
 
 - 使用 [Admin Web](zhizhi-admin-web/README.zh-CN.md) 配置租户、组织、模型、知识和资源；

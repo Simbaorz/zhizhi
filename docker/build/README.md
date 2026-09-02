@@ -1,4 +1,4 @@
-# Zhizhi Admin Web image
+# 致知 Admin Web image
 
 This directory builds a Node.js, pnpm, and Nginx image with the locked frontend dependencies.
 Run from the repository root:

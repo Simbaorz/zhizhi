@@ -43,9 +43,9 @@ async function submit(): Promise<void> {
       <div class="login-brand">
         <div class="brand-lockup">
           <div class="brand-orb">
-            <img class="brand-mascot" :src="assistantIconUrl" alt="知知" />
+            <img class="brand-mascot" :src="assistantIconUrl" alt="致知" />
           </div>
-          <div class="brand-title">知知</div>
+          <div class="brand-title">致知</div>
           <div class="brand-subtitle">管理后台</div>
         </div>
       </div>

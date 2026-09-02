@@ -1,8 +1,8 @@
-# Zhizhi Web
+# 致知 Web
 
 [English](README.md)
 
-Zhizhi Web 是 Zhizhi Agent Web API 的轻量试用界面和接入参考，演示可信会话上下文、流式输出、Scene 与 Skill 调用、图片附件、`ask_user` 续答、当前会话恢复和中断输出。
+致知 Web 是致知 Agent Web API 的轻量试用界面和接入参考，演示可信会话上下文、流式输出、Scene 与 Skill 调用、图片附件、`ask_user` 续答、当前会话恢复和中断输出。
 
 它不是完整的企业聊天产品：不包含登录、用户管理、会话列表或资源管理。企业可以复用其中的 API 交互方式，同时继续使用已有的身份体系和业务界面。
 

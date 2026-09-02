@@ -1,8 +1,8 @@
-# Zhizhi Web
+# 致知 Web
 
 [简体中文](README.zh-CN.md)
 
-Zhizhi Web is a lightweight trial client and integration reference for the Zhizhi Agent Web API. It demonstrates trusted session context, streaming responses, Scene and Skill invocation, image attachments, `ask_user` continuation, current-conversation recovery, and interrupt.
+致知 Web is a lightweight trial client and integration reference for the 致知 Agent Web API. It demonstrates trusted session context, streaming responses, Scene and Skill invocation, image attachments, `ask_user` continuation, current-conversation recovery, and interrupt.
 
 It is intentionally not a complete enterprise chat product: there is no login, user management, conversation list, or resource administration. Production systems can copy the API interaction patterns while keeping their existing identity and product UI.
 

@@ -132,13 +132,13 @@ function scrollToBottom(): void {
             <template #header>
               <header class="chat-header">
                 <div class="chat-brand-lockup">
-                  <img :src="assistantIconUrl" alt="知知助手" />
+                  <img :src="assistantIconUrl" alt="致知助手" />
                   <div>
                     <p class="chat-kicker">
                       <el-icon><Connection /></el-icon>
                       企业知识问答工作台
                     </p>
-                    <h1>{{ session?.conversation_id || "知知助手" }}</h1>
+                    <h1>{{ session?.conversation_id || "致知助手" }}</h1>
                   </div>
                 </div>
 

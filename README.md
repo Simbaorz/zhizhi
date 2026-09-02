@@ -1,82 +1,118 @@
-# 致知
+# Zhizhi (致知)
 
 [简体中文](README.zh-CN.md)
 
-致知 is an enterprise knowledge-question-answering Agent stack built on the [Gewu Agent Runtime](https://github.com/Simbaorz/gewu). It combines a governed backend, a dedicated management console, and a lightweight Web API workbench so enterprises can add Agent capabilities without replacing their existing identity system or product UI.
+> Turn enterprise knowledge into governed Agent capabilities without replacing the systems that already run the business.
 
-## Components
+## Every enterprise already knows a great deal
 
-- `zhizhi-backend/`: tenant isolation, arbitrary-depth organizations, resource governance, Agent Web API, Admin API, persistence, and background workers.
-- `zhizhi-admin-web/`: administrator console for organizations, models, data sources, Git knowledge, Scenes, Skills, entitlements, and bindings.
-- `zhizhi-web/`: lightweight Web API trial client and integration reference.
+Policies live in documents. Operating experience lives in wikis. Procedures live in the heads of experienced employees. Definitions live in data dictionaries, while the facts needed to answer today's question live in business systems.
 
-All three components live in this repository and are versioned together. They remain independently buildable and deployable.
+The usual answer is to place all of this behind a search box. Documents are split into chunks, retrieved by similarity, and handed to a model. That can be useful, but it also creates a fragile chain: structure is lost during chunking, retrieval can miss the decisive rule, and another layer of intent detection, query rewriting, and clarification is often added to compensate.
+
+Zhizhi starts from a different premise: a reliable enterprise answer needs more than retrieval. It needs the right knowledge structure, the right live facts, the right execution context, and the right permissions to be assembled for this user, in this organization, for this conversation.
+
+## From a question to a governed answer
+
+When an employee asks a question, the enterprise host first authenticates the caller and supplies a trusted tenant, organization, and principal context. Zhizhi then:
+
+1. validates the tenant and the active path through an arbitrary-depth organization tree;
+2. resolves the nearest authorized model and business-data source;
+3. mounts tenant and organization knowledge as a read-only workspace;
+4. exposes the Scenes and Skills visible to the current scope;
+5. creates an explicit, server-safe ToolSet;
+6. asks [Gewu](https://github.com/Simbaorz/gewu) to run the Agent turn with persistent conversation, context, memory, and compaction support;
+7. streams the answer back to the enterprise application, including clarification and interruption flows.
+
+The result is not another isolated chatbot. It is an Agent capability that can sit behind an enterprise's existing portal, application, or workflow.
+
+## Knowledge keeps its shape
+
+Zhizhi does not begin by turning every document into anonymous vector fragments. Knowledge can remain in files and directories, be reviewed in Git, and be packaged with explicit meaning:
+
+- **Scenes** organize the context for a recognizable business situation.
+- **Skills** describe reusable procedures and ways of working.
+- **Workspace files** preserve policies, dictionaries, explanations, and supporting material in their authored structure.
+- **Data sources** provide governed access to current facts through a bounded, read-only gateway capability.
+
+The Agent can discover and read the mounted knowledge with file tools, invoke a Skill, request clarification with `ask_user`, and query a bound data source when the answer requires live evidence. Retrieval can still be added where it helps; it is not the only organizing principle.
+
+## Governance follows the enterprise
+
+A tenant is the isolation boundary. Inside a tenant, organization units form a recursive tree rather than a fixed hierarchy such as region, province, city, or department.
+
+Administrators separate two decisions:
+
+- an **entitlement** says which resource a tenant or organization unit may use or delegate;
+- a **binding** says which authorized resource is selected at that scope.
+
+For models and data sources, resolution starts at the active organization unit and walks toward the tenant. The nearest valid binding wins. Knowledge is mounted from the tenant and the complete active organization path, so the same runtime can serve different organizations without flattening their boundaries.
 
 ## Architecture
 
 ```text
-Enterprise host application
-  ├─ authentication and business authorization
-  ├─ existing product UI
-  └─ trusted tenant / organization / principal context
-                    │
-                    ▼
-              致知 Web API
-                    │
-          capability and policy resolution
-      ┌─────────────┼─────────────┐
-      ▼             ▼             ▼
-   Models       Data sources   Scenes / Skills
-      └─────────────┼─────────────┘
-                    ▼
-             Gewu Agent Runtime
+Enterprise application
+  ├─ authenticates the user
+  ├─ owns business authorization and product UI
+  └─ sends trusted tenant / organization / principal context
+                         │
+                         ▼
+                  Zhizhi Web API
+                         │
+             scope and capability resolution
+       ┌─────────────────┼─────────────────┐
+       ▼                 ▼                 ▼
+   model binding    data-source binding   knowledge workspace
+                                             │
+                                      Scenes and Skills
+       └─────────────────┬─────────────────┘
+                         ▼
+                  Gewu Agent Runtime
+                         │
+       conversation · context · memory · compaction · tools
 ```
 
-Tenant is the isolation boundary, and organization units form an arbitrary-depth tree. Entitlements define what a scope may use or delegate; bindings define what the Runtime selects. Requests resolve from the active organization unit toward its ancestors and tenant, with the nearest valid model binding winning.
+Zhizhi is the governed enterprise application layer. Gewu remains a separate, business-neutral Agent Runtime dependency.
 
-Gewu remains an independent project and is not vendored into this repository. The backend locks its Gewu packages to a published Git revision until regular package releases are available.
+## Repository guide
 
-## Development
+| Project | Role | Documentation |
+| --- | --- | --- |
+| `zhizhi-backend` | Tenant and organization governance, Admin API, Agent Web API, persistence, resource resolution, and background jobs | [README](zhizhi-backend/README.md) · [中文](zhizhi-backend/README.zh-CN.md) |
+| `zhizhi-admin-web` | Management console for organizations, models, data sources, Git knowledge, Scenes, Skills, entitlements, and bindings | [README](zhizhi-admin-web/README.md) · [中文](zhizhi-admin-web/README.zh-CN.md) |
+| `zhizhi-web` | Lightweight API workbench that demonstrates how an existing enterprise UI can integrate the Agent service | [README](zhizhi-web/README.md) · [中文](zhizhi-web/README.zh-CN.md) |
+
+The three projects share one Git history but remain independently buildable and deployable.
+
+## Technical shape
+
+- Python 3.12+, FastAPI, Pydantic V2, SQLAlchemy, Redis, Celery, and `uv` on the backend.
+- Vue 3, TypeScript, Vite, Element Plus, Pinia, and pnpm for the management console.
+- Vue 3, TypeScript, Vite, and Server-Sent Events for the integration workbench.
+- Filesystem-backed managed workspaces, optional object storage for chat media, and Git-backed Scene synchronization.
+- A read-only Runtime ToolSet: `list`, `read`, `glob`, `grep`, `skill`, `ask_user`, and an optional bound `query_data_source`.
+
+## Deliberate boundaries
+
+Zhizhi does not try to replace an enterprise identity provider, employee directory, business authorization service, or mature product UI. The included Web project is a workbench, not a complete chat product.
+
+The first open-source release also keeps Runtime workspaces read-only and does not expose shell execution or unrestricted file mutation. It does not yet provide subagents. These constraints trade terminal-agent breadth for a smaller and more controllable server-side security surface.
+
+## Start exploring
 
 Requirements:
 
-- Python 3.12+
-- `uv`
-- Node.js 22+
-- Corepack with pnpm
+- Python 3.12 and `uv`
+- Node.js 22 with Corepack
+- Redis for the backend processes
 
-Install and verify each frontend application in its own directory:
+Start with the [Backend guide](zhizhi-backend/README.md), then choose the interface you need:
 
-```bash
-cd zhizhi-admin-web
-corepack pnpm install --frozen-lockfile
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run build
+- use [Admin Web](zhizhi-admin-web/README.md) to configure tenants, organizations, models, knowledge, and resources;
+- use [Zhizhi Web](zhizhi-web/README.md) to observe the integration contract and streaming conversation lifecycle.
 
-cd ../zhizhi-web
-corepack pnpm install --frozen-lockfile
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run build
-```
-
-Run `corepack pnpm run dev` inside the frontend you want to start. Admin Web uses port 5173; Web uses port 5174.
-
-Install and verify the backend:
-
-```bash
-cd zhizhi-backend
-uv sync --all-packages --all-extras --all-groups --frozen
-uv run black apps packages --check
-uv run ruff check apps packages
-uv run mypy
-uv run pytest
-uv lock --check
-```
-
-See each component README for local configuration and startup details.
+This repository is an early open-source baseline. APIs and schemas may evolve without legacy compatibility until the project declares a stable release line.
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+[MIT](LICENSE)

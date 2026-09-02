@@ -2,81 +2,117 @@
 
 [English](README.md)
 
-致知是构建在 [Gewu Agent Runtime](https://github.com/Simbaorz/gewu) 之上的企业知识问答 Agent 体系。它由支持治理的后端、独立管理控制台和轻量 Web API 试用端组成，使企业可以在保留现有身份体系与业务界面的前提下，接入安全、可配置的 Agent 能力。
+> 不替换企业已有系统，把企业知识转化为可治理、可接入的 Agent 能力。
 
-## 工程组成
+## 企业其实已经知道很多
 
-- `zhizhi-backend/`：租户隔离、任意层级组织、资源治理、Agent Web API、Admin API、持久化与后台任务。
-- `zhizhi-admin-web/`：组织、模型、数据源、Git 知识源、Scene、Skill、可用资源和绑定资源的管理控制台。
-- `zhizhi-web/`：轻量 Web API 试用端与接入参考。
+制度写在文档里，经验沉淀在 Wiki 中，流程掌握在熟练员工手里，字段含义放在数据字典里，而回答今天这个问题所需的事实，则实时存在于业务系统中。
 
-三个工程统一保存在本仓库中并共同版本化，同时保持独立构建和独立部署。
+常见做法是把这些内容都放进一个搜索框：先切片，再向量化，然后召回相似片段交给模型。这种方式有价值，但也带来一条脆弱的链路——切片可能破坏原始结构，召回可能漏掉决定性规则，于是系统又需要意图识别、查询重写和澄清流程来弥补信息损失。
+
+致知选择了另一条起点：可靠的企业回答不能只依赖“搜到一段相似文字”，而应该为当前用户、当前组织和当前会话，组合出正确的知识结构、实时事实、执行上下文与权限。
+
+## 一个问题如何变成受治理的答案
+
+员工发起问题时，企业宿主系统先完成身份认证，并向致知提供可信的租户、组织与调用方上下文。随后，致知会：
+
+1. 校验租户以及任意深度组织树中的当前组织路径；
+2. 解析距离当前组织最近且已授权的模型和业务数据源；
+3. 将租户与完整组织路径上的知识挂载为只读 Workspace；
+4. 暴露当前范围可见的 Scene 与 Skill；
+5. 组合一组显式、适合服务端运行的安全工具；
+6. 交给 [Gewu](https://github.com/Simbaorz/gewu) 执行 Agent 回合，并使用其会话、上下文、记忆和压缩能力；
+7. 将回答以流式方式返回企业应用，同时支持澄清续答与中断。
+
+最终得到的不是另一个孤立聊天机器人，而是一项能够放进企业现有门户、应用或业务流程中的 Agent 能力。
+
+## 让知识保留原来的形状
+
+致知不会先把所有文档都变成失去结构的向量碎片。知识可以继续保存在文件和目录中，通过 Git 审核，并以明确的业务语义组织：
+
+- **Scene**：组织某类业务场景所需的上下文。
+- **Skill**：描述可以重复使用的处理流程与工作方式。
+- **Workspace 文件**：保留制度、字典、说明和辅助资料的原始结构。
+- **数据源**：通过受限制的只读网关能力提供实时业务事实。
+
+Agent 可以通过文件工具发现并阅读挂载的知识，调用 Skill，使用 `ask_user` 请求澄清，也可以在需要事实依据时查询已绑定的数据源。需要时仍然可以引入检索，但检索不再是唯一的知识组织方式。
+
+## 治理方式跟随企业结构
+
+租户是数据隔离边界。租户内部使用递归组织树，不把省、市、部门、团队或项目等具体层级写死在模型中。
+
+管理时区分两个决定：
+
+- **可用资源（entitlement）**：某个租户或组织节点允许使用、并可继续向下授权哪些资源；
+- **绑定资源（binding）**：在该范围真正选择哪个已授权资源参与执行。
+
+模型和数据源从当前组织节点开始向上回溯，直到租户，距离最近的有效绑定优先。知识则由租户与当前完整组织路径共同挂载，因此同一个 Runtime 可以服务不同组织，同时不打平它们之间的边界。
 
 ## 架构
 
 ```text
-企业宿主系统
-  ├─ 身份认证与业务授权
-  ├─ 已有业务界面
-  └─ 可信的租户 / 组织 / 用户上下文
-                    │
-                    ▼
-              致知 Web API
-                    │
-               能力与策略解析
-      ┌─────────────┼─────────────┐
-      ▼             ▼             ▼
-     模型          数据源       Scene / Skill
-      └─────────────┼─────────────┘
-                    ▼
-             Gewu Agent Runtime
+企业宿主应用
+  ├─ 完成用户认证
+  ├─ 负责业务权限与产品界面
+  └─ 提供可信的租户 / 组织 / 调用方上下文
+                         │
+                         ▼
+                  致知 Web API
+                         │
+                  范围与能力解析
+       ┌─────────────────┼─────────────────┐
+       ▼                 ▼                 ▼
+     模型绑定          数据源绑定          知识 Workspace
+                                             │
+                                       Scene 与 Skill
+       └─────────────────┬─────────────────┘
+                         ▼
+                  Gewu Agent Runtime
+                         │
+              会话 · 上下文 · 记忆 · 压缩 · 工具
 ```
 
-租户是隔离边界，组织节点构成任意深度的树。可用资源决定每个范围可以使用或继续授权什么，绑定资源决定 Runtime 真正选择什么。请求从当前组织节点向父级和租户回溯，最近的有效模型绑定优先。
+致知负责面向企业的治理与应用组合，Gewu 则继续作为独立、业务中立的 Agent Runtime。
 
-Gewu 继续作为独立项目维护，不会复制到本仓库。正式的软件包版本发布前，后端通过固定的 Git revision 使用 Gewu。
+## 工程导航
 
-## 开发
+| 工程 | 作用 | 文档 |
+| --- | --- | --- |
+| `zhizhi-backend` | 租户与组织治理、Admin API、Agent Web API、持久化、资源解析和后台任务 | [README](zhizhi-backend/README.md) · [中文](zhizhi-backend/README.zh-CN.md) |
+| `zhizhi-admin-web` | 管理组织、模型、数据源、Git 知识、Scene、Skill、可用资源与绑定资源 | [README](zhizhi-admin-web/README.md) · [中文](zhizhi-admin-web/README.zh-CN.md) |
+| `zhizhi-web` | 展示企业现有界面如何接入 Agent API 的轻量试用端 | [README](zhizhi-web/README.md) · [中文](zhizhi-web/README.zh-CN.md) |
+
+三个工程共享一个 Git 历史，但仍然可以独立构建和独立部署。
+
+## 技术概览
+
+- 后端使用 Python 3.12+、FastAPI、Pydantic V2、SQLAlchemy、Redis、Celery 与 `uv`。
+- 管理端使用 Vue 3、TypeScript、Vite、Element Plus、Pinia 与 pnpm。
+- 试用接入端使用 Vue 3、TypeScript、Vite 与 Server-Sent Events。
+- 管理型 Workspace 基于文件系统，聊天媒体可选择对象存储，Scene 支持 Git 同步。
+- Runtime 使用只读工具集：`list`、`read`、`glob`、`grep`、`skill`、`ask_user`，以及按需绑定的 `query_data_source`。
+
+## 有意保留的边界
+
+致知不替代企业身份系统、员工目录、业务权限服务或成熟产品界面。仓库中的 Web 工程是试用和接入参考，不是完整聊天产品。
+
+首个开源版本还将 Runtime Workspace 保持为只读，不暴露 Shell 执行或不受限制的文件写入，目前也不提供 Subagent。这些约束牺牲了部分个人终端 Agent 的广度，换取更小、更可控的服务端安全面。
+
+## 开始了解
 
 环境要求：
 
-- Python 3.12+
-- `uv`
-- Node.js 22+
-- 启用 Corepack 的 pnpm
+- Python 3.12 与 `uv`
+- Node.js 22 与 Corepack
+- 后端进程使用的 Redis
 
-分别进入两个前端工程，独立安装依赖并执行验证：
+建议先阅读[后端指南](zhizhi-backend/README.zh-CN.md)，再选择需要的界面：
 
-```bash
-cd zhizhi-admin-web
-corepack pnpm install --frozen-lockfile
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run build
+- 使用 [Admin Web](zhizhi-admin-web/README.zh-CN.md) 配置租户、组织、模型、知识和资源；
+- 使用 [致知 Web](zhizhi-web/README.zh-CN.md) 观察 API 接入契约与流式会话生命周期。
 
-cd ../zhizhi-web
-corepack pnpm install --frozen-lockfile
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run build
-```
-
-在需要启动的前端工程目录内运行 `corepack pnpm run dev`。Admin Web 使用 5173 端口，Web 使用 5174 端口。
-
-安装并验证后端：
-
-```bash
-cd zhizhi-backend
-uv sync --all-packages --all-extras --all-groups --frozen
-uv run black apps packages --check
-uv run ruff check apps packages
-uv run mypy
-uv run pytest
-uv lock --check
-```
-
-本地配置与启动方式见各工程自己的 README。
+当前仓库是早期开源基线。在项目声明稳定版本线之前，API 与数据结构可能不提供旧版本兼容。
 
 ## 许可证
 
-本项目使用 Apache License 2.0，详见 [LICENSE](LICENSE)。
+[MIT](LICENSE)

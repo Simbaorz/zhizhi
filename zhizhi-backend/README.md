@@ -1,54 +1,69 @@
-# 致知 Backend
+# Zhizhi Backend
 
-[简体中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md) · [Back to the project overview](../README.md)
 
-致知 Backend is the enterprise application layer built on the [Gewu Agent Runtime](https://github.com/Simbaorz/gewu). It turns Gewu's business-neutral execution, context, memory, conversation, Tool, Scene, Skill, and virtual-filesystem capabilities into a deployable knowledge-question-answering service with tenant isolation, organization-aware resource governance, management APIs, and a minimal integration API.
+Zhizhi Backend is where an authenticated enterprise question becomes a governed Agent run.
 
-It is designed to sit behind an enterprise system. The host system keeps ownership of end-user authentication, product UI, and business authorization; 致知 accepts a trusted tenant, active organization unit, and principal context, resolves the effective Agent capabilities, and runs the turn.
+It sits between the enterprise host and the [Gewu Agent Runtime](https://github.com/Simbaorz/gewu). The host keeps control of users, business permissions, and product experience. The backend validates the supplied tenant and organization context, resolves the capabilities allowed for that scope, composes a read-only workspace and ToolSet, and then asks Gewu to execute and persist the conversation.
 
-## What is included
+## What happens during one turn
 
-- `apps/zhizhi-web-api`: streaming Agent API for enterprise integration.
-- `apps/zhizhi-admin-api`: administrator authentication, RBAC, organization, model, data-source, Git, Scene, and Skill management.
-- `apps/zhizhi-worker`: Scene Git synchronization and scheduled background jobs.
-- `packages/zhizhi-application`: transport-neutral application services, persistence adapters, resource resolution, audit, and workspace composition.
+```text
+trusted caller context
+        │
+        ▼
+tenant and organization-path validation
+        │
+        ├─ nearest model binding
+        ├─ nearest data-source binding
+        ├─ visible Scene and Skill catalog
+        └─ tenant + organization workspace mounts
+        │
+        ▼
+read-only Zhizhi ToolSet
+        │
+        ▼
+Gewu Agent Runtime
+        │
+        ├─ stream model and tool events
+        ├─ persist messages and conversation state
+        ├─ suspend and resume ask_user
+        ├─ compact long context
+        └─ accept interrupt
+```
 
-## Organization and resource model
+The backend does not infer identity from a public browser request. Its Agent API is designed to sit behind a trusted enterprise gateway or application that authenticates the caller before constructing the context.
 
-Tenant is the isolation boundary. Every tenant owns an arbitrary-depth organization tree:
+## Workspace layout
+
+This directory is a Python `uv workspace`:
+
+| Module | Responsibility |
+| --- | --- |
+| [`apps/zhizhi-web-api`](apps/zhizhi-web-api/README.md) | Small, streaming Agent API for integration with enterprise applications |
+| [`apps/zhizhi-admin-api`](apps/zhizhi-admin-api/README.md) | Administrator authentication, RBAC, tenants, organizations, resources, Scenes, Skills, and audited mutations |
+| [`apps/zhizhi-worker`](apps/zhizhi-worker/README.md) | Celery worker and scheduler for Scene Git synchronization and attachment cleanup |
+| `packages/zhizhi-application` | Transport-neutral application services, resource policies, persistence adapters, Runtime composition, and managed workspace support |
+
+All processes use the same application package and must agree on the database, Redis topology, workspace storage root, media storage, and storage-encryption key.
+
+## Identity and organization model
+
+Tenant is the hard isolation boundary. Organization units form an arbitrary-depth tree:
 
 ```text
 tenant
 └── organization unit
+    ├── organization unit
+    │   └── organization unit
     └── organization unit
-        └── ...
 ```
 
-Organization units use `parent_id`; names such as division, branch, region, department, team, and project are data, not schema levels. A request selects one active organization unit and 致知 validates its complete root-to-leaf path.
+An organization unit has a parent, an external key, a display name, a type, metadata, and status. Terms such as region, branch, department, team, and project remain data; they are not schema levels.
 
-Models and data sources distinguish two concepts:
+Principals and groups are separate from the tree. A principal may be associated with organization units and groups without forcing the enterprise's identity model into the organization schema.
 
-- Entitlement: the resource is available to a tenant or organization unit and may be delegated further.
-- Binding: the resource is selected for execution at that scope.
-
-At runtime, bindings resolve from the active leaf toward its ancestors and finally the tenant. The nearest valid binding wins. A binding never bypasses entitlement checks. Tenant Scene and Skill assets are mounted into the read-only Agent workspace together with the active organization path.
-
-## Web API surface
-
-The Web API intentionally stays small so an enterprise can embed it without adopting another user system or complete chat product:
-
-- `POST /api/agent/chat/stream`
-- `POST /api/agent/chat/ask-answer`
-- `POST /api/agent/chat/attachments`
-- `GET /api/agent/chat/attachments/{attachment_id}`
-- `GET /api/agent/capabilities`
-- `GET /api/agent/skills`
-- `GET /api/agent/scenes`
-- `GET /api/agent/conversations/{conversation_id}/messages`
-- `GET /api/agent/conversations/{conversation_id}/pending-ask`
-- `POST /api/agent/conversations/{conversation_id}/interrupt`
-
-The trusted caller context is:
+The Web API receives:
 
 ```json
 {
@@ -60,23 +75,175 @@ The trusted caller context is:
 }
 ```
 
-致知 does not expose end-user login, profiles, or a conversation-list product. The host application must authenticate the caller and construct this context.
+The active organization unit is optional for tenant-level operation. When present, the backend validates the complete root-to-leaf path before resolving any capability.
+
+## Entitlements, bindings, and inheritance
+
+Resource governance separates availability from selection:
+
+| Concept | Meaning |
+| --- | --- |
+| Entitlement | The resource is available at a tenant or organization scope and may be delegated according to policy |
+| Binding | The authorized resource is selected for execution at that scope |
+
+Model and data-source bindings resolve from the active organization leaf toward its ancestors and finally the tenant. The first valid binding wins. If the nearest active binding exists but its capability cannot be created, the request fails instead of silently skipping to a broader scope.
+
+Runtime knowledge is assembled differently: the tenant workspace and every organization workspace on the active path are mounted read-only. In the current release, managed Scene and Skill assets are tenant-scoped and are exposed only when visible to the resolved caller scope.
+
+## Runtime capabilities
+
+The first open-source release deliberately exposes a bounded ToolSet:
+
+- `list`, `read`, `glob`, and `grep` for read-only workspace discovery;
+- `skill` for loading a governed Skill;
+- `ask_user` for pausing a run and requesting structured clarification;
+- optional `query_data_source` when an authorized data-source binding resolves.
+
+There is no shell tool and no unrestricted workspace mutation.
+
+### Business data without database credentials in the model
+
+`query_data_source` does not connect the Agent directly to a database. Zhizhi binds it to an administrator-configured HTTP data gateway. The current reference adapter:
+
+- accepts only a single `SELECT` or `WITH` statement;
+- rejects mutation and DDL keywords;
+- applies a configured row limit and maximum Tool result size;
+- keeps gateway credentials on the server;
+- normalizes the gateway response and masks values under sensitive-looking column names.
+
+The gateway protocol is an application adapter, not a Gewu requirement. Enterprises can replace it with an adapter for their own governed query service while keeping the Runtime contract bounded.
+
+## Agent Web API
+
+The integration surface stays intentionally small:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/agent/chat/stream` | Start an Agent turn and receive Server-Sent Events |
+| `POST` | `/api/agent/chat/ask-answer` | Resume a pending `ask_user` interaction |
+| `POST` | `/api/agent/chat/attachments` | Upload an image before a turn |
+| `GET` | `/api/agent/chat/attachments/{attachment_id}` | Read an authorized attachment |
+| `GET` | `/api/agent/capabilities` | Resolve capabilities for the supplied scope |
+| `GET` | `/api/agent/skills` | List visible Skills |
+| `GET` | `/api/agent/scenes` | List visible Scenes |
+| `GET` | `/api/agent/conversations/{conversation_id}/messages` | Read persisted messages |
+| `GET` | `/api/agent/conversations/{conversation_id}/pending-ask` | Recover pending clarification state |
+| `POST` | `/api/agent/conversations/{conversation_id}/interrupt` | Interrupt the active run |
+| `GET` | `/healthz` | Process liveness |
+| `GET` | `/readyz` | Runtime readiness |
+
+Requests use `request_id` for idempotency. Reusing one request ID for different work returns a conflict instead of starting a duplicate turn.
+
+## Admin API
+
+The management process is separate from Agent execution. It provides:
+
+- administrator login, encrypted password transport, session handling, login throttling, RBAC, and permission-aware navigation;
+- tenants, recursive organization units, administrator accounts, tenant memberships, and roles;
+- model definitions, encrypted credentials, connectivity tests, entitlements, and bindings;
+- HTTP data-source definitions, encrypted gateway credentials, entitlements, and bindings;
+- Git repositories and tenant entitlements;
+- managed Scene and Skill files, packages, manifests, and Scene Git synchronization;
+- mutation audit records and bounded upload/download handling.
+
+It does not start the Agent Runtime.
+
+## Configuration model
+
+Each process loads bootstrap values from the environment and service settings from YAML or Apollo.
+
+Common bootstrap variables include:
+
+- `PROJECT_NAME`, `PROJECT_HOME`, `MODE`, and `TIMEZONE`;
+- `CONFIG_SOURCE`: `local` or `apollo`;
+- `CONFIG_FILE` for an explicit YAML path;
+- Apollo connection variables when `CONFIG_SOURCE=apollo`.
+
+The tracked examples are:
+
+- [`conf/web.example.yml`](conf/web.example.yml)
+- [`conf/admin.example.yml`](conf/admin.example.yml)
+- [`conf/worker.example.yml`](conf/worker.example.yml)
+
+Real configuration files and credentials are ignored by Git.
+
+The Web API, Admin API, and Worker must use compatible values for:
+
+- database connection and schema;
+- Redis application and Celery databases;
+- `workspace.storage_root`;
+- media filesystem or object-storage configuration;
+- `storage_encryption.key`.
+
+In production, the JWT signing key and storage-encryption key must be distinct secrets. Admin session cookies should be secure and all services should run behind TLS.
 
 ## Local development
 
-Requirements: Python 3.12+ and `uv`. Gewu is resolved from the revision locked by this workspace.
+Requirements:
+
+- Python 3.12+
+- `uv`
+- Redis
+- Git when using Scene Git synchronization
+- OpenSSL for generating the local Admin password-transport key
+
+Install the workspace:
 
 ```bash
 uv sync --all-packages --all-extras --all-groups --frozen
+```
+
+Create ignored local configuration:
+
+```bash
 cp conf/web.example.yml conf/web.yml
 cp conf/admin.example.yml conf/admin.yml
 cp conf/worker.example.yml conf/worker.yml
+mkdir -p .local
+openssl genpkey -algorithm RSA -out .local/admin-password-key.pem -pkeyopt rsa_keygen_bits:2048
+```
+
+Before starting, edit the three YAML files:
+
+1. point `password_transport.private_key_path` at the generated private key;
+2. choose writable local paths for workspace, media, and temporary data;
+3. set the same non-empty `storage_encryption.key` in all three files;
+4. set an Admin `jwt.sk`;
+5. verify that all processes use the same database and Redis deployment.
+
+Start the complete local stack:
+
+```bash
 ./scripts/start-local.sh
 ```
 
-The script starts the Web API on `127.0.0.1:8000`, the Admin API on `127.0.0.1:8001`, and a Celery worker with its scheduler. Local configuration files and credentials must remain outside Git.
+The script starts:
 
-In `dev` and `test` modes, missing tables are created from SQLAlchemy metadata. Production mode never executes schema DDL; provision the schema before starting the services. All processes must share the same database, Redis deployment, workspace storage root, and storage-encryption key.
+- Web API at `http://127.0.0.1:8000`;
+- Admin API at `http://127.0.0.1:8001`;
+- Celery Worker with Beat.
+
+Create the one-time super administrator in another terminal:
+
+```bash
+CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api init-super-admin
+```
+
+The command prompts for credentials unless explicit CLI values are supplied.
+
+### Run processes separately
+
+```bash
+CONFIG_FILE=conf/web.yml uv run zhizhi-web-api --host 127.0.0.1 --port 8000
+CONFIG_FILE=conf/admin.yml uv run zhizhi-admin-api --host 127.0.0.1 --port 8001
+CONFIG_FILE=conf/worker.yml uv run zhizhi-worker worker --beat --loglevel=INFO
+```
+
+## Schema and production behavior
+
+In `dev` and `test` modes, startup creates missing Zhizhi and Gewu tables from SQLAlchemy metadata. This is a convenience for local work, not a migration system.
+
+In `prod` mode, the services never issue schema DDL. Provision the complete schema before starting production processes. The project currently makes no legacy-schema compatibility promise.
 
 ## Verification
 
@@ -91,4 +258,4 @@ uv build --all-packages
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+[MIT](LICENSE)

@@ -1,0 +1,6 @@
+packages:
+  - "zhizhi-admin-web"
+  - "zhizhi-web"
+
+allowBuilds:
+  esbuild: true

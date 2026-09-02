@@ -22,7 +22,7 @@ SharedScopeType = Literal["tenant"]
 
 
 class SharedAssetModel(ZhizhiBase):
-    """Indexed metadata for one Zhizhi shared asset."""
+    """Indexed metadata for one 致知 shared asset."""
 
     __tablename__ = "zhizhi_shared_asset"
     __table_args__ = (

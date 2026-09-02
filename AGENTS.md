@@ -1,4 +1,4 @@
-# Zhizhi Backend Monorepo Guidelines
+# 致知 Backend Monorepo Guidelines
 
 This repository is the business-neutral host application for the Gewu Agent Runtime and is built as a Python `uv workspace`.
 
@@ -11,7 +11,7 @@ This repository is the business-neutral host application for the Gewu Agent Runt
 
 ## Boundaries
 
-- Zhizhi depends on Gewu; business rules must not be added to Gewu.
+- 致知 depends on Gewu; business rules must not be added to Gewu.
 - The Web API does not own enterprise end-user login, password, profile, or conversation-list products.
 - Tenant is the isolation boundary. Organization units form an arbitrary-depth tree and must never encode fixed region levels.
 - Resource entitlements define what a scope may bind or delegate. Runtime bindings resolve through the active organization path.

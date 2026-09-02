@@ -1,4 +1,4 @@
-"""Authorization policies shared by Zhizhi management use cases."""
+"""Authorization policies shared by 致知 management use cases."""
 
 from collections.abc import Sequence
 

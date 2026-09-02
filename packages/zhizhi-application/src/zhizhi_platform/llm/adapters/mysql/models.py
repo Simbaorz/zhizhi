@@ -1,4 +1,4 @@
-"""Zhizhi LLM configuration, binding, and entitlement rows."""
+"""致知 LLM configuration, binding, and entitlement rows."""
 
 from __future__ import annotations
 

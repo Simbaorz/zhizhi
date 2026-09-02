@@ -1,4 +1,4 @@
-"""Zhizhi managed Git repository and entitlement use cases."""
+"""致知 managed Git repository and entitlement use cases."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ class GitEntitlementResultPage(BaseModel):
 
 
 class ZhizhiGitAdminService:
-    """Execute Zhizhi management use cases for Git resources and entitlements."""
+    """Execute 致知 management use cases for Git resources and entitlements."""
 
     def __init__(
         self,

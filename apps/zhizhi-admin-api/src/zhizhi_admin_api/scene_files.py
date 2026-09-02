@@ -1,4 +1,4 @@
-"""Zhizhi management Scene file-tree routes."""
+"""致知 management Scene file-tree routes."""
 
 from __future__ import annotations
 

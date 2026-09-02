@@ -1,4 +1,4 @@
-"""SQLAlchemy model and repository for Zhizhi administrative audit logs."""
+"""SQLAlchemy model and repository for 致知 administrative audit logs."""
 
 from __future__ import annotations
 

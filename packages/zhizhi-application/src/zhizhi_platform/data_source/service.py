@@ -1,4 +1,4 @@
-"""Zhizhi Data Source catalog, entitlement, and binding use cases."""
+"""致知 Data Source catalog, entitlement, and binding use cases."""
 
 from __future__ import annotations
 
@@ -105,7 +105,7 @@ class UpdateDataSourceSourceCommand(BaseModel):
 
 
 class CreateDataSourceEntitlementCommand(BaseModel):
-    """Create source-pool entitlements for one Zhizhi scope."""
+    """Create source-pool entitlements for one 致知 scope."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -129,7 +129,7 @@ class CreateDataSourceBindingCommand(BaseModel):
 
 
 class ZhizhiDataSourceAdminService:
-    """Execute exact Zhizhi Data Source management behavior outside Runtime."""
+    """Execute exact 致知 Data Source management behavior outside Runtime."""
 
     def __init__(
         self,

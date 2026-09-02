@@ -1,4 +1,4 @@
-"""Stable validation and normalization used by Zhizhi identities."""
+"""Stable validation and normalization used by 致知 identities."""
 
 import re
 from typing import Any
@@ -13,7 +13,7 @@ def validate_stable_code(
     min_length: int = 1,
     max_length: int = 64,
 ) -> str:
-    """Validate one filesystem-safe Zhizhi business code."""
+    """Validate one filesystem-safe 致知 business code."""
 
     code = value.strip()
     if not (min_length <= len(code) <= max_length):
@@ -26,7 +26,7 @@ def validate_stable_code(
 
 
 def canonical_stable_code(value: Any) -> str:
-    """Return Zhizhi's case-insensitive canonical code representation."""
+    """Return 致知's case-insensitive canonical code representation."""
 
     return str(value).strip().upper()
 

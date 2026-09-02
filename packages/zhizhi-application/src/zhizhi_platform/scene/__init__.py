@@ -1,4 +1,4 @@
-"""Zhizhi Scene and Git management services."""
+"""致知 Scene and Git management services."""
 
 from zhizhi_platform.scene.admin_service import SceneAdminService
 from zhizhi_platform.scene.git import (

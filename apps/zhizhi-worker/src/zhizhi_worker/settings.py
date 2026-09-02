@@ -1,4 +1,4 @@
-"""Typed configuration accepted by the Zhizhi Worker process."""
+"""Typed configuration accepted by the 致知 Worker process."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Zhizhi MySQL persistence models."""
+"""致知 MySQL persistence models."""
 
 from zhizhi_platform.adapters.mysql.models.data_source import (
     DataSourceSourceBindingModel,

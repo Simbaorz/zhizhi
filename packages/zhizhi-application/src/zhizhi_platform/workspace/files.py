@@ -1,4 +1,4 @@
-"""Managed Zhizhi Workspace path, version, and text policies."""
+"""Managed 致知 Workspace path, version, and text policies."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ FileVersion = Annotated[
 
 
 class ManagedWorkspacePath(BaseModel):
-    """Normalized relative path inside one Zhizhi owner workspace."""
+    """Normalized relative path inside one 致知 owner workspace."""
 
     model_config = ConfigDict(frozen=True)
 

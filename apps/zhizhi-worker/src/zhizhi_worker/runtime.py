@@ -1,4 +1,4 @@
-"""Lazy composition root for Zhizhi background worker resources."""
+"""Lazy composition root for 致知 background worker resources."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Shared Zhizhi Chat media configuration."""
+"""Shared 致知 Chat media configuration."""
 
 from pydantic import Field
 
@@ -20,7 +20,7 @@ class ChatMediaOssSettings(SettingsModel):
 
 
 class ChatMediaSettings(SettingsModel):
-    """Zhizhi Chat media storage, image limits, and cleanup policy."""
+    """致知 Chat media storage, image limits, and cleanup policy."""
 
     root: str = ""
     oss_enable: bool = False

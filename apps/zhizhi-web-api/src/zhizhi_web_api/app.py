@@ -96,7 +96,7 @@ def create_app(
                 await resolved_runtime.shutdown()
 
     app_ = FastAPI(
-        title="Zhizhi Web API",
+        title="致知 Web API",
         version="0.1.0",
         lifespan=lifespan,
     )

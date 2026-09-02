@@ -1,4 +1,4 @@
-"""Zhizhi background job domain model and outbound contracts."""
+"""致知 background job domain model and outbound contracts."""
 
 from __future__ import annotations
 

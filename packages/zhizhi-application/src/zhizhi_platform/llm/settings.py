@@ -1,4 +1,4 @@
-"""Zhizhi Admin outbound model-probe settings."""
+"""致知 Admin outbound model-probe settings."""
 
 from pydantic import Field, model_validator
 
@@ -6,7 +6,7 @@ from gewu_core.config import SettingsModel
 
 
 class OutboundHttpSettings(SettingsModel):
-    """Connection pool and timeout values preserved from Zhizhi configuration."""
+    """Connection pool and timeout values preserved from 致知 configuration."""
 
     max_connections: int = Field(default=100, ge=1)
     max_keepalive_connections: int = Field(default=20, ge=0)

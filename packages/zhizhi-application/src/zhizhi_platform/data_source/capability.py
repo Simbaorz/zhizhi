@@ -1,4 +1,4 @@
-"""Zhizhi gateway capability bound to one authorized Data Source source."""
+"""致知 gateway capability bound to one authorized Data Source source."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ Clock = Callable[[], int]
 
 
 class DataSourceGateway(Protocol):
-    """Transport used by a bound Zhizhi Data Source capability."""
+    """Transport used by a bound 致知 Data Source capability."""
 
     async def call(
         self,
@@ -47,7 +47,7 @@ class DataSourceGateway(Protocol):
 
 
 class ZhizhiDataSourceSourceRepository(Protocol):
-    """Load one Zhizhi-managed source referenced by an authorized binding."""
+    """Load one 致知-managed source referenced by an authorized binding."""
 
     async def get_source(self, source_id: str) -> ZhizhiDataSourceSourceRecord | None:
         """Return one source by ID."""
@@ -119,7 +119,7 @@ class ZhizhiDataSourceCapabilityBuilder:
 
 
 class ZhizhiHttpDataSourceCapability:
-    """Execute the exact Zhizhi gateway protocol for one bound source."""
+    """Execute the exact 致知 gateway protocol for one bound source."""
 
     def __init__(
         self,
@@ -133,7 +133,7 @@ class ZhizhiHttpDataSourceCapability:
         self._clock = clock
 
     async def query(self, request: DataSourceQueryRequest) -> DataSourceQueryOutput:
-        """Build, send, and normalize one Zhizhi Data Source request."""
+        """Build, send, and normalize one 致知 Data Source request."""
 
         started = time.monotonic()
         error = _configuration_error(self._config)
@@ -208,7 +208,7 @@ def normalize_gateway_response(
     row_limit: int,
     started: float,
 ) -> DataSourceQueryOutput:
-    """Normalize the Zhizhi gateway's nested execution envelope."""
+    """Normalize the 致知 gateway's nested execution envelope."""
 
     response_map = response if isinstance(response, Mapping) else {}
     response_data = response_map.get("data", response)

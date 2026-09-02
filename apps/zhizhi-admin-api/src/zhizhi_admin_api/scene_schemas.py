@@ -1,4 +1,4 @@
-"""HTTP schemas shared by Zhizhi management Scene routes."""
+"""HTTP schemas shared by 致知 management Scene routes."""
 
 from __future__ import annotations
 

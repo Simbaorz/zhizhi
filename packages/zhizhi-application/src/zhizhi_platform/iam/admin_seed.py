@@ -1,4 +1,4 @@
-"""Zhizhi administrator permission and one-time root-account seed operations."""
+"""致知 administrator permission and one-time root-account seed operations."""
 
 from __future__ import annotations
 

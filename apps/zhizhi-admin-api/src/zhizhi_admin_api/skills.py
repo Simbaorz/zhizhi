@@ -1,4 +1,4 @@
-"""Zhizhi Skill asset and managed file-tree routes."""
+"""致知 Skill asset and managed file-tree routes."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Exact Zhizhi prompt preset over subscriber-neutral Runtime inputs."""
+"""Exact 致知 prompt preset over subscriber-neutral Runtime inputs."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from gewu_agent_runtime.prompts import (
     get_static_prompt,
 )
 
-ZHIZHI_ASSISTANT_NAME = "Zhizhi"
+ZHIZHI_ASSISTANT_NAME = "致知"
 ZHIZHI_DYNAMIC_BOUNDARY = "__ZHIZHI_PROMPT_DYNAMIC_BOUNDARY__"
 ZHIZHI_MEMORY_INTRODUCTION = """\
 # Memory
@@ -28,7 +28,7 @@ def build_zhizhi_prompt_profile(
     bot_md: str = "",
     user_md: str = "",
 ) -> PromptProfile | None:
-    """Project Zhizhi's Bot.md/User.md records into neutral prompt sections."""
+    """Project 致知's Bot.md/User.md records into neutral prompt sections."""
 
     if not bot_md and not user_md:
         return None
@@ -43,7 +43,7 @@ def build_zhizhi_prompt_profile(
 def get_zhizhi_static_prompt(
     assistant_name: str = ZHIZHI_ASSISTANT_NAME,
 ) -> str:
-    """Return the byte-compatible static prompt for the Zhizhi subscriber."""
+    """Return the byte-compatible static prompt for the 致知 subscriber."""
 
     return get_static_prompt(_resolve_zhizhi_assistant_name(assistant_name))
 
@@ -55,7 +55,7 @@ def build_zhizhi_system_prompt(
     extra_dynamic_sections: Mapping[str, str] | Sequence[str] | None = None,
     assistant_name: str = ZHIZHI_ASSISTANT_NAME,
 ) -> SystemPrompt:
-    """Build the exact Zhizhi prompt while keeping the Runtime default neutral."""
+    """Build the exact 致知 prompt while keeping the Runtime default neutral."""
 
     return build_system_prompt(
         profile=profile,

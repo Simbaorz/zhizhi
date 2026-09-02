@@ -1,4 +1,4 @@
-"""Zhizhi PBKDF2 password hashing compatible with existing persisted values."""
+"""致知 PBKDF2 password hashing compatible with existing persisted values."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, stored_hash: str) -> bool:
-    """Return whether plaintext matches one persisted Zhizhi hash."""
+    """Return whether plaintext matches one persisted 致知 hash."""
 
     try:
         scheme, iterations_text, salt, digest = stored_hash.split("$", 3)

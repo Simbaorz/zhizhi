@@ -1,4 +1,4 @@
-"""Outbound contracts for Zhizhi Data Source administration."""
+"""Outbound contracts for 致知 Data Source administration."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ class DataSourcePage(BaseModel):
 
 
 class DataSourceAdminRepository(Protocol):
-    """Store and query all Zhizhi Data Source management resources."""
+    """Store and query all 致知 Data Source management resources."""
 
     async def list_sources_page(
         self,
@@ -142,7 +142,7 @@ class DataSourceAdminRepository(Protocol):
 
 
 class ZhizhiDataSourceOrganizationDirectory(Protocol):
-    """Zhizhi organization facts required by Data Source hierarchy policy."""
+    """致知 organization facts required by Data Source hierarchy policy."""
 
     async def get_tenant(self, tenant_id: str) -> ManagedTenant | None: ...
 

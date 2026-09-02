@@ -1,4 +1,4 @@
-"""Zhizhi Workspace Skill and Scene resource models."""
+"""致知 Workspace Skill and Scene resource models."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from zhizhi_platform.workspace.files import FileVersion
 
 
 class WorkspaceSkillAsset(BaseModel):
-    """DB-backed Zhizhi Skill metadata before Runtime projection."""
+    """DB-backed 致知 Skill metadata before Runtime projection."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -39,7 +39,7 @@ class WorkspaceSkillAsset(BaseModel):
 
 
 class WorkspaceSceneAsset(BaseModel):
-    """DB-backed Zhizhi Scene metadata before Runtime projection."""
+    """DB-backed 致知 Scene metadata before Runtime projection."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -120,7 +120,7 @@ class WorkspaceSceneAssetRepository(Protocol):
 
 
 class WorkspaceAssetRepository(WorkspaceSceneAssetRepository, Protocol):
-    """Persistence boundary for Zhizhi Workspace Skill and Scene assets."""
+    """Persistence boundary for 致知 Workspace Skill and Scene assets."""
 
     async def save_skill(self, asset: WorkspaceSkillAsset) -> WorkspaceSkillAsset: ...
 
@@ -211,7 +211,7 @@ class WorkspaceAssetRepository(WorkspaceSceneAssetRepository, Protocol):
 
 
 class ManagedWorkspaceRepository(Protocol):
-    """Physical persistence boundary for administrator-managed Zhizhi Workspace content."""
+    """Physical persistence boundary for administrator-managed 致知 Workspace content."""
 
     max_file_bytes: int
     max_skill_package_bytes: int

@@ -1,4 +1,4 @@
-"""Complete typed configuration accepted by the Zhizhi Admin API process."""
+"""Complete typed configuration accepted by the 致知 Admin API process."""
 
 from pathlib import Path
 
@@ -34,7 +34,7 @@ class AdminApiBootstrapSettings(ApolloBootstrapSettings):
 
 
 class AdminHttpIngressSettings(HttpIngressSettings):
-    """Request size limits owned by Zhizhi's management API routes."""
+    """Request size limits owned by 致知's management API routes."""
 
     admin_json_max_bytes: int = Field(default=1024 * 1024, ge=1024)
 

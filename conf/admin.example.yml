@@ -1,4 +1,4 @@
-# Zhizhi Admin API configuration example.
+# 致知 Admin API configuration example.
 #
 # Bootstrap values are not YAML settings. Configure PROJECT_NAME, PROJECT_HOME,
 # MODE, TIMEZONE, CONFIG_FILE, and ADMIN_SESSION_COOKIE_SECURE through .env,

@@ -1,4 +1,4 @@
-"""Zhizhi Web API."""
+"""致知 Web API."""
 
 from zhizhi_web_api.app import create_app
 

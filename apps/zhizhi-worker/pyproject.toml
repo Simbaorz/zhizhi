@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "zhizhi-worker"
 version = "0.1.0"
-description = "Dedicated Zhizhi background worker process"
+description = "Dedicated 致知 background worker process"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"

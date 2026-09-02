@@ -1,4 +1,4 @@
-"""Zhizhi administrator authentication use cases."""
+"""致知 administrator authentication use cases."""
 
 from __future__ import annotations
 

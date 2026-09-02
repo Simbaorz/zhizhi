@@ -1,4 +1,4 @@
-"""Zhizhi Admin managed Scene file-tree use cases."""
+"""致知 Admin managed Scene file-tree use cases."""
 
 from __future__ import annotations
 

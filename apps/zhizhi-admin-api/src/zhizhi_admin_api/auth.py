@@ -1,4 +1,4 @@
-"""Admin authentication routes with the original Zhizhi HTTP contract."""
+"""Admin authentication routes with the original 致知 HTTP contract."""
 
 from __future__ import annotations
 

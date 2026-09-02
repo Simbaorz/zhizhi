@@ -1,4 +1,4 @@
-"""Zhizhi Admin one-time super-user CLI behavior."""
+"""致知 Admin one-time super-user CLI behavior."""
 
 from __future__ import annotations
 

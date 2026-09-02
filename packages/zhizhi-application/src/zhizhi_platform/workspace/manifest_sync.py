@@ -1,4 +1,4 @@
-"""Synchronize validated SKILL.md metadata with Zhizhi Skill assets."""
+"""Synchronize validated SKILL.md metadata with 致知 Skill assets."""
 
 from __future__ import annotations
 

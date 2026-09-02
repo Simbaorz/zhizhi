@@ -1,4 +1,4 @@
-"""Zhizhi Celery task entrypoints."""
+"""致知 Celery task entrypoints."""
 
 from zhizhi_worker.tasks.chat_media import cleanup_chat_media_job
 from zhizhi_worker.tasks.scene_git import (

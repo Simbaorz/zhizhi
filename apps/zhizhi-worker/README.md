@@ -1,6 +1,6 @@
-# Zhizhi Worker
+# 致知 Worker
 
-`zhizhi-worker` is the Celery worker and scheduler process for Zhizhi.
+`zhizhi-worker` is the Celery worker and scheduler process for 致知.
 It executes Scene Git synchronization and expired chat attachment cleanup jobs. The process owns
 its broker configuration and process-local asynchronous resources; it does not expose HTTP APIs.
 

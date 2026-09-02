@@ -1,4 +1,4 @@
-"""Zhizhi Skill management services."""
+"""致知 Skill management services."""
 
 from zhizhi_platform.skill.admin_service import SkillAdminService
 

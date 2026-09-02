@@ -1,4 +1,4 @@
-"""S3/MinIO-compatible Zhizhi Chat media storage."""
+"""S3/MinIO-compatible 致知 Chat media storage."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from gewu_core.blocking import run_external_task
 
 
 class OssZhizhiChatMediaStore:
-    """Store opaque Zhizhi Chat media keys in one object-storage bucket."""
+    """Store opaque 致知 Chat media keys in one object-storage bucket."""
 
     storage_backend = "oss"
 

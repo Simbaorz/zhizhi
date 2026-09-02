@@ -1,4 +1,4 @@
-"""Zhizhi-specific identity, authentication, and authorization package."""
+"""致知-specific identity, authentication, and authorization package."""
 
 from zhizhi_platform.iam.admin_runtime import ZhizhiAdminIamRuntime
 from zhizhi_platform.iam.admin_seed import (

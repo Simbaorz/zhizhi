@@ -1,4 +1,4 @@
-"""Filesystem adapters for the Zhizhi subscriber application."""
+"""Filesystem adapters for the 致知 subscriber application."""
 
 from zhizhi_platform.adapters.filesystem.media import (
     LocalZhizhiChatMediaStore,

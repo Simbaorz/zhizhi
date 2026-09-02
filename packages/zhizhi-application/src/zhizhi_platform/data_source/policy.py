@@ -1,4 +1,4 @@
-"""Zhizhi Data Source validation, hierarchy, authorization, and projections."""
+"""致知 Data Source validation, hierarchy, authorization, and projections."""
 
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ def credential_fields(
 
 
 def stable_code(value: str, label: str) -> str:
-    """Normalize one stable Zhizhi organization or resource code."""
+    """Normalize one stable 致知 organization or resource code."""
 
     raw_value = value.strip()
     if len(raw_value) == 32 and all(ch in "0123456789abcdef" for ch in raw_value):
@@ -180,7 +180,7 @@ async def require_source(
     source_id: str,
     repository: DataSourceAdminRepository,
 ) -> ManagedDataSourceSource:
-    """Load one source or report the exact Zhizhi application error."""
+    """Load one source or report the exact 致知 application error."""
 
     source = await repository.get_source(source_id)
     if source is None:
@@ -192,7 +192,7 @@ async def require_binding(
     binding_id: str,
     repository: DataSourceAdminRepository,
 ) -> ManagedDataSourceSourceBinding:
-    """Load one binding or report the exact Zhizhi application error."""
+    """Load one binding or report the exact 致知 application error."""
 
     binding = await repository.get_binding(binding_id)
     if binding is None:
@@ -204,7 +204,7 @@ async def require_entitlement(
     entitlement_id: str,
     repository: DataSourceAdminRepository,
 ) -> ManagedDataSourceSourceEntitlement:
-    """Load one entitlement or report the exact Zhizhi application error."""
+    """Load one entitlement or report the exact 致知 application error."""
 
     entitlement = await repository.get_entitlement(entitlement_id)
     if entitlement is None:

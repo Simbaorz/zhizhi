@@ -1,4 +1,4 @@
-"""Persistence and security boundaries required by Zhizhi IAM use cases."""
+"""Persistence and security boundaries required by 致知 IAM use cases."""
 
 from __future__ import annotations
 

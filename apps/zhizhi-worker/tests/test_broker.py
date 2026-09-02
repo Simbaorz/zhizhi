@@ -1,4 +1,4 @@
-"""Zhizhi Celery broker policy parity."""
+"""致知 Celery broker policy parity."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Typed settings for restricted Zhizhi Git operations."""
+"""Typed settings for restricted 致知 Git operations."""
 
 from pydantic import Field
 

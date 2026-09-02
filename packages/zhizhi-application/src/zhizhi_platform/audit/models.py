@@ -1,4 +1,4 @@
-"""Zhizhi audit identities and sanitized administrative records."""
+"""致知 audit identities and sanitized administrative records."""
 
 from __future__ import annotations
 

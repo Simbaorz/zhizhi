@@ -1,4 +1,4 @@
-"""Zhizhi background-job table ownership."""
+"""致知 background-job table ownership."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from zhizhi_platform.database import ZhizhiBase
 
 
 class BackgroundJobModel(ZhizhiBase):
-    """Persistent status for one Zhizhi asynchronous job."""
+    """Persistent status for one 致知 asynchronous job."""
 
     __tablename__ = "zhizhi_background_job"
     __table_args__ = (

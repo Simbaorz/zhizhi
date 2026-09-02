@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi managed Git resources."""
+"""SQLAlchemy persistence for 致知 managed Git resources."""
 
 from __future__ import annotations
 

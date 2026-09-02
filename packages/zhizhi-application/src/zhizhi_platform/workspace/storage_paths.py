@@ -1,4 +1,4 @@
-"""Secure Zhizhi scope-to-physical Workspace path mapping."""
+"""Secure 致知 scope-to-physical Workspace path mapping."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from zhizhi_platform.workspace.files import ManagedWorkspacePath
 
 
 class ZhizhiWorkspaceStoragePaths:
-    """Map Zhizhi owner scopes to paths beneath one configured storage root."""
+    """Map 致知 owner scopes to paths beneath one configured storage root."""
 
     def __init__(self, storage_root: str | Path) -> None:
         if not str(storage_root):

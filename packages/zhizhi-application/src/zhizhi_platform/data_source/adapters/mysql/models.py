@@ -1,4 +1,4 @@
-"""Zhizhi Data Source source, binding, and entitlement rows."""
+"""致知 Data Source source, binding, and entitlement rows."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ class DataSourceSourceBindingModel(ZhizhiBase):
 
 
 class DataSourceSourceEntitlementModel(ZhizhiBase):
-    """Zhizhi scope source-pool entitlement row."""
+    """致知 scope source-pool entitlement row."""
 
     __tablename__ = "zhizhi_data_source_source_entitlement"
     __table_args__ = (

@@ -1,4 +1,4 @@
-"""Zhizhi-specific managed Data Source package."""
+"""致知-specific managed Data Source package."""
 
 from zhizhi_platform.data_source.credentials import (
     ConfiguredDataSourceCredentialCipher,

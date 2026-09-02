@@ -1,4 +1,4 @@
-"""Zhizhi administrative audit contracts and MySQL adapter."""
+"""致知 administrative audit contracts and MySQL adapter."""
 
 from zhizhi_platform.audit.models import (
     AdminAuditActor,

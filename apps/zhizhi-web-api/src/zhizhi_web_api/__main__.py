@@ -1,4 +1,4 @@
-"""Run the Zhizhi Web API process."""
+"""Run the 致知 Web API process."""
 
 from gewu_core.http.runner import run_http_service
 
@@ -6,7 +6,7 @@ from gewu_core.http.runner import run_http_service
 def main() -> None:
     run_http_service(
         "zhizhi_web_api.app:app",
-        "Run the Zhizhi Web API service.",
+        "Run the 致知 Web API service.",
     )
 
 

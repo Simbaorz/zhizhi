@@ -1,4 +1,4 @@
-"""Celery application wiring for Zhizhi."""
+"""Celery application wiring for 致知."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def create_celery_app(
     bootstrap: BootstrapSettings | None = None,
     settings: ZhizhiWorkerSettings | None = None,
 ) -> Any:
-    """Create a fully configured Zhizhi Celery application."""
+    """Create a fully configured 致知 Celery application."""
 
     Celery = import_module("celery").Celery  # noqa
     Queue = import_module("kombu").Queue  # noqa

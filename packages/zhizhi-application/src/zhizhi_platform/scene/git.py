@@ -1,4 +1,4 @@
-"""Zhizhi management use cases for Git-backed Scene assets."""
+"""致知 management use cases for Git-backed Scene assets."""
 
 from __future__ import annotations
 

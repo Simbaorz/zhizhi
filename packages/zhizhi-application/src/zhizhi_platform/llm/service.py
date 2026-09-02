@@ -1,4 +1,4 @@
-"""Zhizhi model catalog, entitlement, binding, and connectivity use cases."""
+"""致知 model catalog, entitlement, binding, and connectivity use cases."""
 
 from __future__ import annotations
 
@@ -162,7 +162,7 @@ class UpdateLLMBindingCommand(BaseModel):
 
 
 class ZhizhiLLMAdminService:
-    """Execute exact Zhizhi model-management behavior outside Agent Runtime."""
+    """Execute exact 致知 model-management behavior outside Agent Runtime."""
 
     def __init__(
         self,

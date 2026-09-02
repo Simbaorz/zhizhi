@@ -1,4 +1,4 @@
-"""Runtime catalogs backed by Zhizhi shared assets."""
+"""Runtime catalogs backed by 致知 shared assets."""
 
 from __future__ import annotations
 

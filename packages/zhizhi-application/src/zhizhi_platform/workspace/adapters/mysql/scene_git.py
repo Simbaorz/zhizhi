@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi Scene Git configuration."""
+"""SQLAlchemy persistence for 致知 Scene Git configuration."""
 
 from __future__ import annotations
 

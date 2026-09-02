@@ -1,4 +1,4 @@
-"""Zhizhi tenant Scene metadata and package lifecycle use cases."""
+"""致知 tenant Scene metadata and package lifecycle use cases."""
 
 from __future__ import annotations
 

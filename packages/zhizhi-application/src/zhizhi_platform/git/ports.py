@@ -1,4 +1,4 @@
-"""Outbound boundaries for Zhizhi managed Git use cases."""
+"""Outbound boundaries for 致知 managed Git use cases."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class GitCredentialCipher(Protocol):
 
 
 class GitOrganizationDirectory(Protocol):
-    """Zhizhi organization reads required by Git entitlement policy."""
+    """致知 organization reads required by Git entitlement policy."""
 
     async def get_tenant(self, tenant_id: str) -> ManagedTenant | None: ...
 

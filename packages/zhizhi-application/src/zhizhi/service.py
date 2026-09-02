@@ -1,4 +1,4 @@
-"""Zhizhi Web API use cases built on the Gewu Agent Runtime."""
+"""致知 Web API use cases built on the Gewu Agent Runtime."""
 
 from __future__ import annotations
 

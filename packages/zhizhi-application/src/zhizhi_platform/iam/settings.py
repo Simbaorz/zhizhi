@@ -1,4 +1,4 @@
-"""Typed IAM settings loaded once by each Zhizhi process composition root."""
+"""Typed IAM settings loaded once by each 致知 process composition root."""
 
 from pydantic import Field
 

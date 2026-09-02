@@ -1,4 +1,4 @@
-# Zhizhi Admin API Guidelines
+# 致知 Admin API Guidelines
 
 - This app is an independently configured and deployed management API.
 - Keep administrator authentication, roles, tenants, arbitrary organization units, models, Skills, Scenes, Git knowledge sources, data sources, resource entitlements, and bindings.

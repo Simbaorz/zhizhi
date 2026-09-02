@@ -1,4 +1,4 @@
-"""Outbound boundaries for Zhizhi-managed model administration."""
+"""Outbound boundaries for 致知-managed model administration."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class LLMPage(BaseModel):
 
 
 class LLMAdminRepository(Protocol):
-    """Store and query Zhizhi model configs, entitlements, and bindings."""
+    """Store and query 致知 model configs, entitlements, and bindings."""
 
     async def list_configs_page(
         self,
@@ -146,7 +146,7 @@ class LLMAdminRepository(Protocol):
 
 
 class ZhizhiLLMOrganizationDirectory(Protocol):
-    """Zhizhi organization facts required by model hierarchy policy."""
+    """致知 organization facts required by model hierarchy policy."""
 
     async def get_tenant(self, tenant_id: str) -> ManagedTenant | None: ...
 

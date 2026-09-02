@@ -1,4 +1,4 @@
-"""Typed process configuration for the Zhizhi Web API."""
+"""Typed process configuration for the 致知 Web API."""
 
 from pathlib import Path
 

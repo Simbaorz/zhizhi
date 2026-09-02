@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "zhizhi-application"
 version = "0.1.0"
-description = "Zhizhi subscriber rules for Gewu Agent Runtime"
+description = "致知 subscriber rules for Gewu Agent Runtime"
 requires-python = ">=3.12"
 dependencies = [
     "gewu-agent-runtime",

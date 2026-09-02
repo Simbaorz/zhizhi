@@ -1,4 +1,4 @@
-"""Startup-injected encryption for Zhizhi model credentials."""
+"""Startup-injected encryption for 致知 model credentials."""
 
 from typing import Any
 

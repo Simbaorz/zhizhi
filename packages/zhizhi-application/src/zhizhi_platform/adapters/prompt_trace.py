@@ -1,4 +1,4 @@
-"""Zhizhi-gated prompt trace debug file writer."""
+"""致知-gated prompt trace debug file writer."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ TRACE_MODE_ALLOWLIST = frozenset({"dev", "test"})
 
 
 class ZhizhiPromptTraceController:
-    """Apply Zhizhi actor and deployment policy before creating a trace sink."""
+    """Apply 致知 actor and deployment policy before creating a trace sink."""
 
     def __init__(
         self,
@@ -35,7 +35,7 @@ class ZhizhiPromptTraceController:
         self._user_id = user_id
 
     async def start_turn(self, scope: AccessScope) -> ModelTraceSink | None:
-        """Create a trace sink only for the configured Zhizhi actor."""
+        """Create a trace sink only for the configured 致知 actor."""
 
         if not self._enabled_for(scope):
             return None
@@ -73,7 +73,7 @@ class ZhizhiPromptTraceController:
 
 
 class PromptTraceTurn:
-    """Write numbered Zhizhi-compatible trace files for one Runtime turn."""
+    """Write numbered 致知-compatible trace files for one Runtime turn."""
 
     def __init__(self, trace_dir: Path) -> None:
         self.trace_dir = trace_dir
@@ -102,7 +102,7 @@ class PromptTraceTurn:
 
 
 def format_trace_payload(payload: ModelTracePayload) -> str:
-    """Format one redacted provider request payload exactly as Zhizhi does."""
+    """Format one redacted provider request payload exactly as 致知 does."""
 
     request = _redact_trace_value(payload.request)
     lines = [f"# Prompt Trace {payload.provider}", ""]

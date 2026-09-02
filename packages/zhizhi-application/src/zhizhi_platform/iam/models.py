@@ -1,4 +1,4 @@
-"""Zhizhi browser-user, admin-session, and authorization domain models."""
+"""致知 browser-user, admin-session, and authorization domain models."""
 
 from __future__ import annotations
 
@@ -134,7 +134,7 @@ class AdminRole(BaseModel):
 
 
 class AdminRolePage(BaseModel):
-    """One SQL-filtered page of Zhizhi administrator roles."""
+    """One SQL-filtered page of 致知 administrator roles."""
 
     model_config = ConfigDict(frozen=True)
 

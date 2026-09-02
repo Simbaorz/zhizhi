@@ -1,4 +1,4 @@
-"""Zhizhi model configuration decryption and provider capability construction."""
+"""致知 model configuration decryption and provider capability construction."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ MIN_SUMMARY_OUTPUT_TOKENS = 1_024
 
 
 class ZhizhiModelConfigRecord(BaseModel):
-    """Zhizhi-managed provider configuration required for a runtime model."""
+    """致知-managed provider configuration required for a runtime model."""
 
     model_config = ConfigDict(frozen=True)
 

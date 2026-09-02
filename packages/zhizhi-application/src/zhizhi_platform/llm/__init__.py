@@ -1,4 +1,4 @@
-"""Zhizhi-specific managed model package."""
+"""致知-specific managed model package."""
 
 from zhizhi_platform.llm.connectivity import ProviderConnectivityTester
 from zhizhi_platform.llm.credentials import ConfiguredLLMCredentialCipher

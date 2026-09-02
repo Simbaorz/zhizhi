@@ -1,4 +1,4 @@
-"""Zhizhi Skill and Scene directory-query timing logs."""
+"""致知 Skill and Scene directory-query timing logs."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def log_special_asset_entries_timing(
     started_at: float,
     entries: int,
 ) -> None:
-    """Record Zhizhi's segmented special-asset directory query timing."""
+    """Record 致知's segmented special-asset directory query timing."""
 
     total_milliseconds = (time.perf_counter() - started_at) * 1000
     log_timing = (

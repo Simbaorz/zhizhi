@@ -1,4 +1,4 @@
-"""Zhizhi composition-root query for references to IAM organization nodes."""
+"""致知 composition-root query for references to IAM organization nodes."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ DELETED_STATUS = "deleted"
 
 
 class MysqlOrganizationReferenceQuery:
-    """Count references owned by Zhizhi packages without leaking their ORM into IAM."""
+    """Count references owned by 致知 packages without leaking their ORM into IAM."""
 
     def __init__(self, session_factory: SessionFactory) -> None:
         self._sessions = session_factory
@@ -46,7 +46,7 @@ class MysqlOrganizationReferenceQuery:
         tenant_id: str = "",
         organization_unit_id: str = "",
     ) -> dict[str, int]:
-        """Return non-zero reference counts for one Zhizhi organization node."""
+        """Return non-zero reference counts for one 致知 organization node."""
 
         count_queries: list[tuple[str, Any]] = []
 

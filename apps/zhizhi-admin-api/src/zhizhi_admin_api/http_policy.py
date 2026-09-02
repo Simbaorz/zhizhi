@@ -1,4 +1,4 @@
-"""HTTP capacity and request-size policy for Zhizhi management routes."""
+"""HTTP capacity and request-size policy for 致知 management routes."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ _FOREIGN_CHAT_MULTIPART_OVERHEAD_BYTES = 64 * 1024
 
 
 def admin_request_body_limit(scope: Scope) -> int | None:
-    """Return the byte limit for one Zhizhi Admin request body."""
+    """Return the byte limit for one 致知 Admin request body."""
 
     path = str(scope.get("path") or "")
     if is_admin_upload_request(scope) or _is_foreign_web_upload_request(scope):
@@ -29,7 +29,7 @@ def admin_request_body_limit(scope: Scope) -> int | None:
 
 
 def is_admin_upload_request(scope: Scope) -> bool:
-    """Select Zhizhi Admin upload routes for ingress capacity control."""
+    """Select 致知 Admin upload routes for ingress capacity control."""
 
     if scope["type"] != "http":
         return False
@@ -42,7 +42,7 @@ def is_admin_upload_request(scope: Scope) -> bool:
 
 
 def is_admin_download_request(scope: Scope) -> bool:
-    """Select Zhizhi Admin download routes for egress capacity control."""
+    """Select 致知 Admin download routes for egress capacity control."""
 
     if scope["type"] != "http":
         return False

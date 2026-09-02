@@ -1,4 +1,4 @@
-"""Shared, bounded login failure throttling for Zhizhi identities."""
+"""Shared, bounded login failure throttling for 致知 identities."""
 
 from __future__ import annotations
 
@@ -183,7 +183,7 @@ class RedisLoginThrottleBackend:
 
 
 class LoginThrottle:
-    """Throttle failures by client IP and canonical Zhizhi username."""
+    """Throttle failures by client IP and canonical 致知 username."""
 
     def __init__(
         self,

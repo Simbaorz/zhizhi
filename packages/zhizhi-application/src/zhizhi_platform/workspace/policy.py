@@ -1,4 +1,4 @@
-"""Zhizhi Skill and Scene scope, identity, and presentation policy."""
+"""致知 Skill and Scene scope, identity, and presentation policy."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ DEFAULT_COMPLETE_CATALOG_MAX_ENTRIES = 1000
 
 
 class ManagedAssetScope(BaseModel):
-    """Normalized exact metadata scope for one Zhizhi managed asset."""
+    """Normalized exact metadata scope for one 致知 managed asset."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -62,7 +62,7 @@ class ManagedSkillContext(BaseModel):
 
 
 class ManagedSceneContext(BaseModel):
-    """Authorized Zhizhi tenant Scene context."""
+    """Authorized 致知 tenant Scene context."""
 
     model_config = ConfigDict(frozen=True)
 

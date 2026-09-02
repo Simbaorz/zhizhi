@@ -1,4 +1,4 @@
-"""Celery tasks for Zhizhi Scene Git synchronization."""
+"""Celery tasks for 致知 Scene Git synchronization."""
 
 from __future__ import annotations
 

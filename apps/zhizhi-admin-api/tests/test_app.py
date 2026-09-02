@@ -1,4 +1,4 @@
-"""Dedicated Zhizhi Admin API process behavior."""
+"""Dedicated 致知 Admin API process behavior."""
 
 from __future__ import annotations
 
@@ -328,7 +328,7 @@ def test_complete_admin_openapi_publishes_the_management_surface() -> None:
     spec = create_admin_app().openapi()
     paths = set(spec["paths"])
 
-    assert spec["info"]["title"] == "Zhizhi Admin API"
+    assert spec["info"]["title"] == "致知 Admin API"
     assert "/api/admin/org/tenants/{tenant_id}/organization-units" in paths
     assert "/api/admin/llm/bindings" in paths
     assert "/api/admin/data-sources/bindings" in paths

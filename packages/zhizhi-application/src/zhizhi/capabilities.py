@@ -1,4 +1,4 @@
-"""Read-only Runtime capabilities for Zhizhi."""
+"""Read-only Runtime capabilities for 致知."""
 
 from __future__ import annotations
 

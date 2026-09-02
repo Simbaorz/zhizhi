@@ -1,4 +1,4 @@
-"""Zhizhi administrator role and permission management use cases."""
+"""致知 administrator role and permission management use cases."""
 
 from __future__ import annotations
 

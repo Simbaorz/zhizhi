@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi background jobs."""
+"""SQLAlchemy persistence for 致知 background jobs."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ ACTIVE_JOB_STATUSES = ("queued", "running")
 
 
 class MysqlBackgroundJobRepository:
-    """Persist and atomically transition Zhizhi background jobs."""
+    """Persist and atomically transition 致知 background jobs."""
 
     def __init__(self, session_factory: SessionFactory) -> None:
         self._sessions = session_factory

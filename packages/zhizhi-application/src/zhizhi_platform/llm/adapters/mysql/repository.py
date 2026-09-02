@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi-managed model resources."""
+"""SQLAlchemy persistence for 致知-managed model resources."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ SessionFactory = Callable[[], AsyncSession]
 
 
 class MysqlLLMAdminRepository:
-    """Store and page all Zhizhi model-management resources."""
+    """Store and page all 致知 model-management resources."""
 
     def __init__(
         self,

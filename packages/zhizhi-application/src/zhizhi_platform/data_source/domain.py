@@ -1,4 +1,4 @@
-"""Persistence-neutral Zhizhi Data Source resource models."""
+"""Persistence-neutral 致知 Data Source resource models."""
 
 from __future__ import annotations
 

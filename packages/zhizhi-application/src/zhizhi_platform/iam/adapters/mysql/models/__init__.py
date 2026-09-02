@@ -1,4 +1,4 @@
-"""Zhizhi IAM SQLAlchemy models."""
+"""致知 IAM SQLAlchemy models."""
 
 from zhizhi_platform.iam.adapters.mysql.models.admin_auth import (
     AdminPermissionModel,

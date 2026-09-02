@@ -1,4 +1,4 @@
-"""Zhizhi IAM scope compatibility exports for subscriber capabilities."""
+"""致知 IAM scope compatibility exports for subscriber capabilities."""
 
 from zhizhi_platform.iam.identity import AccessScope, ScopeType
 

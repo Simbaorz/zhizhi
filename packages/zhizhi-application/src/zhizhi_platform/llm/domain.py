@@ -1,4 +1,4 @@
-"""Zhizhi-managed LLM provider constants and persistence-neutral models."""
+"""致知-managed LLM provider constants and persistence-neutral models."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class LLMProvider(StrEnum):
-    """Model providers supported by the current Zhizhi subscriber."""
+    """Model providers supported by the current 致知 subscriber."""
 
     OPENAI = "openai"
     ANTHROPIC = "anthropic"

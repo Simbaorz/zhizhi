@@ -1,4 +1,4 @@
-"""Zhizhi Data Source source, entitlement, and binding management routes."""
+"""致知 Data Source source, entitlement, and binding management routes."""
 
 from __future__ import annotations
 

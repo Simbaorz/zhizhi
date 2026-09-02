@@ -1,4 +1,4 @@
-"""Zhizhi-specific managed Git repository package."""
+"""致知-specific managed Git repository package."""
 
 from zhizhi_platform.git.client import (
     RestrictedGitRepositoryClient,

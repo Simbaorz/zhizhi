@@ -1,4 +1,4 @@
-"""MySQL adapters for the Zhizhi subscriber application."""
+"""MySQL adapters for the 致知 subscriber application."""
 
 from zhizhi_platform.adapters.mysql.base import ZhizhiBase
 from zhizhi_platform.adapters.mysql.data_source import (

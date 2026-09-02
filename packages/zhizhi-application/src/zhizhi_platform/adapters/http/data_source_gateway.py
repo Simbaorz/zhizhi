@@ -1,4 +1,4 @@
-"""Bounded HTTP transport for the Zhizhi Data Source gateway."""
+"""Bounded HTTP transport for the 致知 Data Source gateway."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Filesystem adapter for administrator-managed Zhizhi workspaces."""
+"""Filesystem adapter for administrator-managed 致知 workspaces."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from zhizhi_platform.workspace.storage_paths import (
 
 
 class FilesystemManagedWorkspaceRepository:
-    """Shared-workspace persistence addressed by Zhizhi administrative scope."""
+    """Shared-workspace persistence addressed by 致知 administrative scope."""
 
     def __init__(
         self,

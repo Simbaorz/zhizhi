@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "zhizhi-admin-api"
 version = "0.1.0"
-description = "Dedicated Zhizhi management API service"
+description = "Dedicated 致知 management API service"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"

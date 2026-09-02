@@ -1,4 +1,4 @@
-"""Composition root for the Zhizhi Web API process."""
+"""Composition root for the 致知 Web API process."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ SUBSCRIBER_ID = "zhizhi"
 
 
 class ZhizhiApiRuntime:
-    """Own all process resources without initializing Zhizhi browser IAM."""
+    """Own all process resources without initializing 致知 browser IAM."""
 
     def __init__(
         self,

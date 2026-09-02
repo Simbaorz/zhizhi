@@ -1,1 +1,1 @@
-"""Zhizhi IAM infrastructure adapters."""
+"""致知 IAM infrastructure adapters."""

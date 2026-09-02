@@ -1,4 +1,4 @@
-"""Compatibility exports for LLM rows owned by the Zhizhi LLM package."""
+"""Compatibility exports for LLM rows owned by the 致知 LLM package."""
 
 from zhizhi_platform.llm.adapters.mysql.models import (
     LLMBindingModel,

@@ -13,7 +13,7 @@ from zhizhi_platform.iam.settings import JwtSettings, require_jwt_signing_key
 
 
 class DefaultIdentitySecurity:
-    """Use one startup-injected signer and Zhizhi's PBKDF2 representation."""
+    """Use one startup-injected signer and 致知's PBKDF2 representation."""
 
     def __init__(self, settings: JwtSettings) -> None:
         self._settings = settings

@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi administrator roles and permissions."""
+"""SQLAlchemy persistence for 致知 administrator roles and permissions."""
 
 from __future__ import annotations
 

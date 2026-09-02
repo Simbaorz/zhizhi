@@ -1,10 +1,10 @@
-# Zhizhi Backend
+# 致知 Backend
 
 [简体中文](README.zh-CN.md)
 
-Zhizhi Backend is the enterprise application layer built on the [Gewu Agent Runtime](https://github.com/Simbaorz/gewu). It turns Gewu's business-neutral execution, context, memory, conversation, Tool, Scene, Skill, and virtual-filesystem capabilities into a deployable knowledge-question-answering service with tenant isolation, organization-aware resource governance, management APIs, and a minimal integration API.
+致知 Backend is the enterprise application layer built on the [Gewu Agent Runtime](https://github.com/Simbaorz/gewu). It turns Gewu's business-neutral execution, context, memory, conversation, Tool, Scene, Skill, and virtual-filesystem capabilities into a deployable knowledge-question-answering service with tenant isolation, organization-aware resource governance, management APIs, and a minimal integration API.
 
-It is designed to sit behind an enterprise system. The host system keeps ownership of end-user authentication, product UI, and business authorization; Zhizhi accepts a trusted tenant, active organization unit, and principal context, resolves the effective Agent capabilities, and runs the turn.
+It is designed to sit behind an enterprise system. The host system keeps ownership of end-user authentication, product UI, and business authorization; 致知 accepts a trusted tenant, active organization unit, and principal context, resolves the effective Agent capabilities, and runs the turn.
 
 ## What is included
 
@@ -24,7 +24,7 @@ tenant
         └── ...
 ```
 
-Organization units use `parent_id`; names such as division, branch, region, department, team, and project are data, not schema levels. A request selects one active organization unit and Zhizhi validates its complete root-to-leaf path.
+Organization units use `parent_id`; names such as division, branch, region, department, team, and project are data, not schema levels. A request selects one active organization unit and 致知 validates its complete root-to-leaf path.
 
 Models and data sources distinguish two concepts:
 
@@ -60,7 +60,7 @@ The trusted caller context is:
 }
 ```
 
-Zhizhi does not expose end-user login, profiles, or a conversation-list product. The host application must authenticate the caller and construct this context.
+致知 does not expose end-user login, profiles, or a conversation-list product. The host application must authenticate the caller and construct this context.
 
 ## Local development
 

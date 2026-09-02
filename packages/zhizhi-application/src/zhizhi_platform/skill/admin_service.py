@@ -1,4 +1,4 @@
-"""Zhizhi tenant Skill administration service."""
+"""致知 tenant Skill administration service."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ from zhizhi_platform.workspace.policy import MAX_UPLOAD_REPLACE_BYTES
 
 
 class SkillAdminService:
-    """Handle Zhizhi tenant Skill assets and their managed file trees."""
+    """Handle 致知 tenant Skill assets and their managed file trees."""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""Zhizhi shared Skill and Scene management services."""
+"""致知 shared Skill and Scene management services."""
 
 from __future__ import annotations
 
@@ -857,5 +857,5 @@ def _safe_relative(path: str, *, allow_empty: bool) -> str:
 def _scene_git_unavailable() -> ApplicationError:
     return ApplicationError(
         ApplicationErrorKind.UNAVAILABLE,
-        "Scene Git is not configured for Zhizhi shared assets.",
+        "Scene Git is not configured for 致知 shared assets.",
     )

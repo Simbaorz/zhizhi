@@ -1,4 +1,4 @@
-"""Zhizhi managed Git resource models."""
+"""致知 managed Git resource models."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class ManagedGitRepository(BaseModel):
 
 
 class ManagedGitEntitlement(BaseModel):
-    """Git repository availability granted to one Zhizhi organization scope."""
+    """Git repository availability granted to one 致知 organization scope."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -97,7 +97,7 @@ class GitCheckoutSnapshot(BaseModel):
 
 
 class WorkspaceSceneGitConfig(BaseModel):
-    """Git repository settings for one Zhizhi Scene asset."""
+    """Git repository settings for one 致知 Scene asset."""
 
     model_config = ConfigDict(frozen=True)
 

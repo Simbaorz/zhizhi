@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "zhizhi-web-api"
 version = "0.1.0"
-description = "Zhizhi streaming Agent Web API"
+description = "致知 streaming Agent Web API"
 requires-python = ">=3.12"
 dependencies = [
     "aiomysql>=0.3.2",

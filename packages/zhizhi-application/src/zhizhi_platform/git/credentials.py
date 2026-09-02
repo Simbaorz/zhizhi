@@ -1,4 +1,4 @@
-"""Startup-injected credential encryption for Zhizhi Git resources."""
+"""Startup-injected credential encryption for 致知 Git resources."""
 
 from typing import Any
 

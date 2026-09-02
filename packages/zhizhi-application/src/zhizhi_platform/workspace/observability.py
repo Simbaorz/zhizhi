@@ -1,4 +1,4 @@
-"""Zhizhi OpenTelemetry instruments for Workspace filesystem scans."""
+"""致知 OpenTelemetry instruments for Workspace filesystem scans."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def record_zhizhi_filesystem_scan(
     scanned_bytes: int,
     outcome: str,
 ) -> None:
-    """Record Zhizhi's exact low-cardinality filesystem metric contract."""
+    """Record 致知's exact low-cardinality filesystem metric contract."""
 
     attributes = {
         "operation": _ZHIZHI_OPERATION_NAMES.get(operation, operation),
@@ -43,6 +43,6 @@ def record_zhizhi_filesystem_scan(
 
 
 def install_zhizhi_filesystem_metrics() -> FilesystemScanRecorder:
-    """Install Zhizhi's recorder and return the previous process recorder."""
+    """Install 致知's recorder and return the previous process recorder."""
 
     return configure_filesystem_scan_recorder(record_zhizhi_filesystem_scan)

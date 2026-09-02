@@ -1,4 +1,4 @@
-"""Validation, visibility, and response rules for Zhizhi organization use cases."""
+"""Validation, visibility, and response rules for 致知 organization use cases."""
 
 from __future__ import annotations
 

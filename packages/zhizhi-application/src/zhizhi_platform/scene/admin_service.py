@@ -1,4 +1,4 @@
-"""Zhizhi Scene administration service."""
+"""致知 Scene administration service."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ from zhizhi_platform.workspace.policy import MAX_UPLOAD_REPLACE_BYTES
 
 
 class SceneAdminService:
-    """Handle Zhizhi Scene assets and managed file trees."""
+    """Handle 致知 Scene assets and managed file trees."""
 
     def __init__(
         self,

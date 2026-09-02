@@ -1,1 +1,1 @@
-"""Zhizhi Git infrastructure adapters."""
+"""致知 Git infrastructure adapters."""

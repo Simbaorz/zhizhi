@@ -1,4 +1,4 @@
-"""Management-facing Zhizhi FastAPI process entrypoint."""
+"""Management-facing 致知 FastAPI process entrypoint."""
 
 from __future__ import annotations
 
@@ -48,8 +48,8 @@ def create_admin_app(
     app_ = create_base_http_app(
         create_lifespan(resolved_runtime),
         timezone_name=resolved_bootstrap.timezone,
-        title="Zhizhi Admin API",
-        description="Zhizhi management service",
+        title="致知 Admin API",
+        description="致知 management service",
         version="0.1.0",
     )
     app_.state.admin_session_cookie_secure = bool(

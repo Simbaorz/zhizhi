@@ -1,4 +1,4 @@
-"""Startup-injected encryption for Zhizhi Data Source credentials."""
+"""Startup-injected encryption for 致知 Data Source credentials."""
 
 from typing import Any
 

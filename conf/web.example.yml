@@ -1,4 +1,4 @@
-# Zhizhi Web API configuration example.
+# 致知 Web API configuration example.
 #
 # Bootstrap values are not YAML settings. Configure PROJECT_NAME, PROJECT_HOME,
 # MODE, TIMEZONE, and CONFIG_FILE through .env, .env.local, or process environment.

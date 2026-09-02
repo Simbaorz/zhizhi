@@ -1,4 +1,4 @@
-"""Stable Zhizhi Workspace domain failures independent of HTTP."""
+"""Stable 致知 Workspace domain failures independent of HTTP."""
 
 
 class WorkspaceDomainError(Exception):

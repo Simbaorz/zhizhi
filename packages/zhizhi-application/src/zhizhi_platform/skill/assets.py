@@ -1,4 +1,4 @@
-"""Zhizhi tenant Skill asset use cases."""
+"""致知 tenant Skill asset use cases."""
 
 from __future__ import annotations
 

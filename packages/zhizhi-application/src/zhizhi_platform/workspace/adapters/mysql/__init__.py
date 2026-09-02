@@ -1,4 +1,4 @@
-"""MySQL adapters for Zhizhi Workspace resources."""
+"""MySQL adapters for 致知 Workspace resources."""
 
 from zhizhi_platform.workspace.adapters.mysql.background_jobs import (
     MysqlBackgroundJobRepository,

@@ -1,1 +1,1 @@
-"""Zhizhi-managed LLM outbound adapters."""
+"""致知-managed LLM outbound adapters."""

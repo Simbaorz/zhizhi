@@ -1,4 +1,4 @@
-"""Zhizhi SubscriberRuntimeProvider implementation."""
+"""致知 SubscriberRuntimeProvider implementation."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from zhizhi.scope import AgentScope, AgentScopeResolver
 
 
 class ResolvedTurnCapabilities(BaseModel):
-    """Already-authorized Zhizhi capabilities for one turn."""
+    """Already-authorized 致知 capabilities for one turn."""
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 

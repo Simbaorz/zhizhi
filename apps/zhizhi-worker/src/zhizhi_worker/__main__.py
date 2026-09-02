@@ -1,4 +1,4 @@
-"""Run the dedicated Zhizhi Celery process."""
+"""Run the dedicated 致知 Celery process."""
 
 from __future__ import annotations
 

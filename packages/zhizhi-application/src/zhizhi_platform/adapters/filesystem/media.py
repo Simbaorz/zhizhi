@@ -1,4 +1,4 @@
-"""Local filesystem storage for Zhizhi Chat media objects."""
+"""Local filesystem storage for 致知 Chat media objects."""
 
 from __future__ import annotations
 

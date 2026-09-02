@@ -1,4 +1,4 @@
-"""Persistence boundary for Zhizhi administrative audit records."""
+"""Persistence boundary for 致知 administrative audit records."""
 
 from typing import Protocol
 

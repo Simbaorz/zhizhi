@@ -1,4 +1,4 @@
-"""Minimal MySQL reads used by one Zhizhi model-bound turn."""
+"""Minimal MySQL reads used by one 致知 model-bound turn."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ SessionFactory = Callable[[], AsyncSession]
 
 
 class MysqlModelRuntimeRepository:
-    """Read only the Zhizhi model catalog needed by one Agent turn."""
+    """Read only the 致知 model catalog needed by one Agent turn."""
 
     def __init__(
         self,

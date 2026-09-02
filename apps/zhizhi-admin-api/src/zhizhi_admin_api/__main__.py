@@ -1,4 +1,4 @@
-"""Run the dedicated Zhizhi Admin API process."""
+"""Run the dedicated 致知 Admin API process."""
 
 from __future__ import annotations
 
@@ -26,14 +26,14 @@ from zhizhi_platform.schema import ensure_schema_for_mode
 
 
 def main() -> None:
-    """Run the management-facing Zhizhi ASGI application."""
+    """Run the management-facing 致知 ASGI application."""
 
     if sys.argv[1:2] == ["init-super-admin"]:
         _run_init_super_admin_command(sys.argv[2:])
         return
     run_http_service(
         "zhizhi_admin_api.app:app",
-        "Run the Zhizhi management API service.",
+        "Run the 致知 management API service.",
     )
 
 

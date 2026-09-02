@@ -1,4 +1,4 @@
-"""Zhizhi administrator tenant-member authorization use cases."""
+"""致知 administrator tenant-member authorization use cases."""
 
 from __future__ import annotations
 
@@ -303,7 +303,7 @@ async def bind_admin_tenant_member(
 
 
 def tenant_member_payload(member: AdminTenantMember) -> dict[str, object]:
-    """Serialize one admin tenant member with the original Zhizhi shape."""
+    """Serialize one admin tenant member with the original 致知 shape."""
 
     return {
         "id": member.id,

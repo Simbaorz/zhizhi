@@ -1,14 +1,14 @@
-"""Zhizhi IAM domain failures independent from inbound transports."""
+"""致知 IAM domain failures independent from inbound transports."""
 
 from gewu_core import ApplicationError, ApplicationErrorKind
 
 
 class DomainError(ValueError):
-    """Base error raised by Zhizhi IAM domain rules."""
+    """Base error raised by 致知 IAM domain rules."""
 
 
 class PermissionDeniedError(DomainError):
-    """The active Zhizhi principal cannot access the requested scope."""
+    """The active 致知 principal cannot access the requested scope."""
 
 
 class AuthorizationCatalogCapacityExceededError(ApplicationError):

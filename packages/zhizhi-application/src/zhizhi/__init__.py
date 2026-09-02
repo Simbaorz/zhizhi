@@ -1,4 +1,4 @@
-"""Zhizhi subscriber application."""
+"""致知 subscriber application."""
 
 from zhizhi.assets import (
     MysqlSharedAssetRepository,

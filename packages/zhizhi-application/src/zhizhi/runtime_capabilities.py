@@ -1,4 +1,4 @@
-"""Resolve Zhizhi configuration under a shared-only workspace policy."""
+"""Resolve 致知 configuration under a shared-only workspace policy."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class AgentCatalogResolver(Protocol):
 
 
 class ZhizhiCapabilityResolver:
-    """Adapt managed configuration to an Zhizhi turn."""
+    """Adapt managed configuration to a 致知 turn."""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""Shared configuration and runtime capabilities for Zhizhi services."""
+"""Shared configuration and runtime capabilities for 致知 services."""
 
 from zhizhi_platform.data_source.capability import (
     ZhizhiDataSourceCapabilityBuilder,

@@ -1,4 +1,4 @@
-"""Zhizhi Admin HTTP request classification policy."""
+"""致知 Admin HTTP request classification policy."""
 
 from __future__ import annotations
 

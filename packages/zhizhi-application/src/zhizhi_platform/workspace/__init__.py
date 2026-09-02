@@ -1,4 +1,4 @@
-"""Zhizhi-specific Workspace resources independent of Agent Runtime."""
+"""致知-specific Workspace resources independent of Agent Runtime."""
 
 from zhizhi_platform.workspace.adapters.filesystem import (
     FilesystemManagedWorkspaceRepository,

@@ -1,4 +1,4 @@
-"""Stable Zhizhi domain and application errors independent from HTTP transports."""
+"""Stable 致知 domain and application errors independent from HTTP transports."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence for Zhizhi-managed Data Source resources."""
+"""SQLAlchemy persistence for 致知-managed Data Source resources."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ DATA_SOURCE_FIELDS = (
 
 
 class MysqlDataSourceAdminRepository:
-    """Store and page all Zhizhi Data Source management resources."""
+    """Store and page all 致知 Data Source management resources."""
 
     def __init__(
         self,

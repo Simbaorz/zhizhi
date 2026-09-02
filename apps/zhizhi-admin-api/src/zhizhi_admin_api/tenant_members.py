@@ -31,7 +31,7 @@ class AdminScopePayload(BaseModel):
     scope_organization_unit_id: str = ""
 
     def to_scope_ref(self) -> AdminScopeRef:
-        """Convert the transport payload to a Zhizhi scope reference."""
+        """Convert the transport payload to a 致知 scope reference."""
 
         return AdminScopeRef(
             scope_type=AdminScopeType(self.scope_type),

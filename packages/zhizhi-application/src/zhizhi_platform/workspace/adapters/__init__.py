@@ -1,1 +1,1 @@
-"""External adapters for Zhizhi Workspace resources."""
+"""External adapters for 致知 Workspace resources."""

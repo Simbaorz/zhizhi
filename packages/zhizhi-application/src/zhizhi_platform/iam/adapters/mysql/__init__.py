@@ -1,4 +1,4 @@
-"""SQLAlchemy persistence adapters for Zhizhi IAM."""
+"""SQLAlchemy persistence adapters for 致知 IAM."""
 
 from zhizhi_platform.iam.adapters.mysql.admin_member import (
     MysqlAdminTenantMemberRepository,

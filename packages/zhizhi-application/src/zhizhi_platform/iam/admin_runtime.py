@@ -1,4 +1,4 @@
-"""Lifecycle-owned IAM components used by the Zhizhi Admin API."""
+"""Lifecycle-owned IAM components used by the 致知 Admin API."""
 
 from __future__ import annotations
 

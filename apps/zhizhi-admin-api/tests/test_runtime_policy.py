@@ -1,4 +1,4 @@
-"""Zhizhi Admin process dependency constraints."""
+"""致知 Admin process dependency constraints."""
 
 from __future__ import annotations
 

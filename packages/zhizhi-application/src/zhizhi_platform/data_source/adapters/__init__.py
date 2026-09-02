@@ -1,1 +1,1 @@
-"""Infrastructure adapters for Zhizhi Data Source."""
+"""Infrastructure adapters for 致知 Data Source."""

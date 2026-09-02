@@ -1,4 +1,4 @@
-"""Outbound adapters used by active Zhizhi processes."""
+"""Outbound adapters used by active 致知 processes."""
 
 from zhizhi_platform.adapters.media_factory import (
     build_zhizhi_chat_media_store,

@@ -1,4 +1,4 @@
-"""Zhizhi tenant-scoped administrator identity management."""
+"""致知 tenant-scoped administrator identity management."""
 
 from __future__ import annotations
 

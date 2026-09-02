@@ -1,4 +1,4 @@
-"""Redis configuration required by Zhizhi processes."""
+"""Redis configuration required by 致知 processes."""
 
 from typing import Literal
 
@@ -8,7 +8,7 @@ from gewu_core.redis import RedisConnectionSettings, RedisMode, RedisSettings
 
 
 class ZhizhiRedisSettings(RedisSettings):
-    """Redis settings that cannot be disabled by a Zhizhi application."""
+    """Redis settings that cannot be disabled by a 致知 application."""
 
     enabled: Literal[True] = True
     connection: RedisConnectionSettings = Field(

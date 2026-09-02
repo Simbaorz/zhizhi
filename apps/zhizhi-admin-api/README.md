@@ -1,6 +1,6 @@
-# Zhizhi Admin API
+# 致知 Admin API
 
-Dedicated management process for Zhizhi. It owns administrator authentication and RBAC, tenants,
+Dedicated management process for 致知. It owns administrator authentication and RBAC, tenants,
 arbitrary-depth organization trees, models, data sources, Git repositories, Scenes, Skills,
 resource entitlements, bindings, and audit-backed mutations. The process does not start the Agent
 Runtime.

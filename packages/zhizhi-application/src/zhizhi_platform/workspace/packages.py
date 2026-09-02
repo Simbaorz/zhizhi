@@ -1,4 +1,4 @@
-"""Zhizhi application policy for managed Skill ZIP packages."""
+"""致知 application policy for managed Skill ZIP packages."""
 
 from __future__ import annotations
 

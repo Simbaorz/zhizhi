@@ -1,4 +1,4 @@
-"""Zhizhi model validation, hierarchy, authorization, and response projections."""
+"""致知 model validation, hierarchy, authorization, and response projections."""
 
 from __future__ import annotations
 

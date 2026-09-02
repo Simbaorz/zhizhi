@@ -1,4 +1,4 @@
-"""Provider-specific connectivity tests for Zhizhi model administration."""
+"""Provider-specific connectivity tests for 致知 model administration."""
 
 from __future__ import annotations
 

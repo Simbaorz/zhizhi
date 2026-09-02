@@ -1,4 +1,4 @@
-"""Secure Zhizhi scope-to-physical Workspace mapping."""
+"""Secure 致知 scope-to-physical Workspace mapping."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class WorkspacePath(BaseModel):
 
 
 class ZhizhiWorkspaceStoragePaths:
-    """Map Zhizhi owner scopes beneath one configured storage root."""
+    """Map 致知 owner scopes beneath one configured storage root."""
 
     def __init__(self, storage_root: str | Path) -> None:
         if not str(storage_root):
@@ -46,7 +46,7 @@ class ZhizhiWorkspaceStoragePaths:
         self.storage_root = root
 
     def scope_root(self, scope: AccessScope) -> Path:
-        """Return the confined physical root for one Zhizhi owner scope."""
+        """Return the confined physical root for one 致知 owner scope."""
 
         root = self.storage_root.resolve()
         candidate = root.joinpath(*self._scope_parts(scope)).resolve()
@@ -84,7 +84,7 @@ class ZhizhiWorkspaceStoragePaths:
 
 
 class ZhizhiFilesystemWorkspaceBackendFactory:
-    """Create lazy local backends using Zhizhi's exact physical hierarchy."""
+    """Create lazy local backends using 致知's exact physical hierarchy."""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""Zhizhi Scene management HTTP contract and real persistence behavior."""
+"""致知 Scene management HTTP contract and real persistence behavior."""
 
 from __future__ import annotations
 

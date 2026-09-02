@@ -1,4 +1,4 @@
-"""Zhizhi Skill management HTTP contract and real persistence behavior."""
+"""致知 Skill management HTTP contract and real persistence behavior."""
 
 from __future__ import annotations
 

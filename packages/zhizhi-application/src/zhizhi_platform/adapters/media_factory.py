@@ -1,4 +1,4 @@
-"""Zhizhi Chat media storage composition."""
+"""致知 Chat media storage composition."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def build_zhizhi_chat_media_store(
     oss_store_factory: Callable[..., ZhizhiChatMediaStore] = OssZhizhiChatMediaStore,
     local_store_factory: Callable[[str | Path], ZhizhiChatMediaStore] = LocalZhizhiChatMediaStore,
 ) -> ZhizhiChatMediaStore:
-    """Build the configured local or S3-compatible Zhizhi media store."""
+    """Build the configured local or S3-compatible 致知 media store."""
 
     if settings.oss_enable:
         oss = settings.oss

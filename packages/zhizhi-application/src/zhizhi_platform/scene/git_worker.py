@@ -1,4 +1,4 @@
-"""Worker use cases for executing and scheduling Zhizhi Scene Git synchronization."""
+"""Worker use cases for executing and scheduling 致知 Scene Git synchronization."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class SceneGitWorkerService:
-    """Execute and schedule Zhizhi Scene Git synchronization jobs."""
+    """Execute and schedule 致知 Scene Git synchronization jobs."""
 
     def __init__(
         self,

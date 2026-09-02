@@ -1,4 +1,4 @@
-"""Zhizhi management Scene asset routes."""
+"""致知 management Scene asset routes."""
 
 from __future__ import annotations
 

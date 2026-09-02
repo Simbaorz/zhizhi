@@ -1,7 +1,15 @@
 **/.DS_Store
 **/.idea/
 **/.vscode/
-/gewu/
 **/node_modules/
 **/dist/
+**/__pycache__/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.venv/
+**/coverage/
+**/htmlcov/
+**/.coverage
+*.py[cod]
 *.log

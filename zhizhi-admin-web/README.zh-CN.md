@@ -17,13 +17,13 @@
 
 ## 开发
 
-在 Monorepo 根目录运行：
+在当前工程目录运行：
 
 ```bash
 corepack pnpm install --frozen-lockfile
-corepack pnpm --filter zhizhi-admin-web test
-corepack pnpm --filter zhizhi-admin-web run typecheck
-corepack pnpm --filter zhizhi-admin-web run dev
+corepack pnpm test
+corepack pnpm run typecheck
+corepack pnpm run dev
 ```
 
 开发服务器运行在 `http://127.0.0.1:5173`，并将 `/api` 代理到 `http://127.0.0.1:8001`。可通过 `ZHIZHI_ADMIN_API_PROXY_TARGET` 修改 Admin API 地址。
@@ -31,7 +31,7 @@ corepack pnpm --filter zhizhi-admin-web run dev
 ## 生产构建
 
 ```bash
-corepack pnpm --filter zhizhi-admin-web run build
+corepack pnpm run build
 ```
 
 静态产物输出到 `dist/`。

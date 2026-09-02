@@ -8,19 +8,19 @@ It is intentionally not a complete enterprise chat product: there is no login, u
 
 ## Development
 
-Run from the monorepo root:
+Run from this directory:
 
 ```bash
 corepack pnpm install --frozen-lockfile
-corepack pnpm --filter zhizhi-web test
-corepack pnpm --filter zhizhi-web run typecheck
-corepack pnpm --filter zhizhi-web run dev
+corepack pnpm test
+corepack pnpm run typecheck
+corepack pnpm run dev
 ```
 
 The development server runs on `http://127.0.0.1:5174` and proxies `/api` to `http://127.0.0.1:8000`.
 
 ```bash
-ZHIZHI_API_PROXY_TARGET=http://127.0.0.1:8080 corepack pnpm --filter zhizhi-web run dev
+ZHIZHI_API_PROXY_TARGET=http://127.0.0.1:8080 corepack pnpm run dev
 ```
 
 For a cross-origin production deployment, set `VITE_ZHIZHI_API_BASE_URL` during the build. Same-origin deployments need no value.
@@ -30,7 +30,7 @@ The trial session context is kept in `sessionStorage`. It contains `conversation
 ## Production build
 
 ```bash
-corepack pnpm --filter zhizhi-web run build
+corepack pnpm run build
 ```
 
 ## License

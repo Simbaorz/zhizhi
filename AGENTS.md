@@ -7,7 +7,6 @@ This repository contains the complete 致知 enterprise knowledge Agent applicat
 - `zhizhi-backend/`: Python `uv workspace` for the application layer, Web API, Admin API, and Worker.
 - `zhizhi-admin-web/`: Vue management console.
 - `zhizhi-web/`: Vue Web API trial workbench.
-- `gewu/`, when present locally, is an ignored independent checkout and must not be committed here.
 
 This is one Git repository. Do not create nested repositories or commit dependency caches, generated output, credentials, real configuration, or runtime data.
 
@@ -28,10 +27,10 @@ This is one Git repository. Do not create nested repositories or commit dependen
 
 ## Verification
 
-Run frontend checks from the repository root:
+Run frontend checks independently from both `zhizhi-admin-web/` and `zhizhi-web/`:
 
 ```bash
-corepack pnpm run test
+corepack pnpm test
 corepack pnpm run typecheck
 corepack pnpm run build
 ```

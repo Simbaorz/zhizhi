@@ -7,4 +7,4 @@
 - Use the shared blue-violet design tokens and generated 致知 brand assets; do not reintroduce legacy green branding.
 - Keep components focused and reuse established form, panel, table, tree, and feedback primitives.
 - Use `apply_patch` for manual edits.
-- Run the package test, typecheck, and build scripts through the root pnpm workspace after relevant changes.
+- Run `corepack pnpm test`, `corepack pnpm run typecheck`, and `corepack pnpm run build` from this package directory after relevant changes.

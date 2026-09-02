@@ -45,20 +45,23 @@ Requirements:
 - Node.js 22+
 - Corepack with pnpm
 
-Install and verify both frontend applications from the repository root:
+Install and verify each frontend application in its own directory:
 
 ```bash
+cd zhizhi-admin-web
 corepack pnpm install --frozen-lockfile
-corepack pnpm run test
+corepack pnpm test
+corepack pnpm run typecheck
+corepack pnpm run build
+
+cd ../zhizhi-web
+corepack pnpm install --frozen-lockfile
+corepack pnpm test
 corepack pnpm run typecheck
 corepack pnpm run build
 ```
 
-Start both frontend development servers on ports 5173 and 5174:
-
-```bash
-corepack pnpm run dev
-```
+Run `corepack pnpm run dev` inside the frontend you want to start. Admin Web uses port 5173; Web uses port 5174.
 
 Install and verify the backend:
 

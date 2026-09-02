@@ -45,20 +45,23 @@ Gewu 继续作为独立项目维护，不会复制到本仓库。正式的软件
 - Node.js 22+
 - 启用 Corepack 的 pnpm
 
-在仓库根目录安装并验证两个前端工程：
+分别进入两个前端工程，独立安装依赖并执行验证：
 
 ```bash
+cd zhizhi-admin-web
 corepack pnpm install --frozen-lockfile
-corepack pnpm run test
+corepack pnpm test
+corepack pnpm run typecheck
+corepack pnpm run build
+
+cd ../zhizhi-web
+corepack pnpm install --frozen-lockfile
+corepack pnpm test
 corepack pnpm run typecheck
 corepack pnpm run build
 ```
 
-同时启动两个前端开发服务器，端口分别为 5173 和 5174：
-
-```bash
-corepack pnpm run dev
-```
+在需要启动的前端工程目录内运行 `corepack pnpm run dev`。Admin Web 使用 5173 端口，Web 使用 5174 端口。
 
 安装并验证后端：
 

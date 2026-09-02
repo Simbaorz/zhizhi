@@ -1,6 +1,6 @@
 # 致知 Backend Monorepo Guidelines
 
-This repository is the business-neutral host application for the Gewu Agent Runtime and is built as a Python `uv workspace`.
+This directory is the business-neutral host application for the Gewu Agent Runtime and is built as a Python `uv workspace`.
 
 ## Workspace
 

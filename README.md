@@ -54,6 +54,12 @@ corepack pnpm run typecheck
 corepack pnpm run build
 ```
 
+Start both frontend development servers on ports 5173 and 5174:
+
+```bash
+corepack pnpm run dev
+```
+
 Install and verify the backend:
 
 ```bash

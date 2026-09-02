@@ -64,7 +64,7 @@ The trusted caller context is:
 
 ## Local development
 
-Requirements: Python 3.12+, `uv`, and a sibling Gewu checkout.
+Requirements: Python 3.12+ and `uv`. Gewu is resolved from the revision locked by this workspace.
 
 ```bash
 uv sync --all-packages --all-extras --all-groups --frozen

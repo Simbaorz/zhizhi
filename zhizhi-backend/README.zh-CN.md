@@ -64,7 +64,7 @@ Web API 保持轻量，便于企业直接嵌入现有系统，而不必采用另
 
 ## 本地开发
 
-需要 Python 3.12+、`uv`，并在相邻目录准备 Gewu 工程。
+需要 Python 3.12+ 和 `uv`。Gewu 将按照本工作区锁定的 revision 自动解析。
 
 ```bash
 uv sync --all-packages --all-extras --all-groups --frozen

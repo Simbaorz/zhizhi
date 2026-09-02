@@ -17,11 +17,13 @@ The UI uses a blue-violet visual system and the 致知 brand assets under `src/a
 
 ## Development
 
+Run from the monorepo root:
+
 ```bash
-corepack pnpm install
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter zhizhi-admin-web test
+corepack pnpm --filter zhizhi-admin-web run typecheck
+corepack pnpm --filter zhizhi-admin-web run dev
 ```
 
 The development server runs on `http://127.0.0.1:5173` and proxies `/api` to `http://127.0.0.1:8001`. Set `ZHIZHI_ADMIN_API_PROXY_TARGET` to use another Admin API origin.
@@ -29,7 +31,7 @@ The development server runs on `http://127.0.0.1:5173` and proxies `/api` to `ht
 ## Production build
 
 ```bash
-corepack pnpm run build
+corepack pnpm --filter zhizhi-admin-web run build
 ```
 
 The static output is written to `dist/`.

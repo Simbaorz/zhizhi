@@ -663,7 +663,7 @@ wheels = [
 [[package]]
 name = "gewu-agent-runtime"
 version = "0.1.0"
-source = { editable = "../gewu/packages/agent-runtime" }
+source = { git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fagent-runtime&rev=f1e60877f81dd5523926dd840679a02cc33021cb#f1e60877f81dd5523926dd840679a02cc33021cb" }
 dependencies = [
     { name = "gewu-core" },
     { name = "google-re2" },
@@ -686,34 +686,10 @@ redis = [
     { name = "redis" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "aiomysql", marker = "extra == 'all'", specifier = "==0.3.2" },
-    { name = "aiomysql", marker = "extra == 'mysql'", specifier = "==0.3.2" },
-    { name = "anthropic", marker = "extra == 'all'", specifier = "==0.100.0" },
-    { name = "anthropic", marker = "extra == 'providers'", specifier = "==0.100.0" },
-    { name = "gewu-core", editable = "../gewu/packages/gewu-core" },
-    { name = "google-re2", specifier = "==1.1.20251105" },
-    { name = "greenlet", marker = "extra == 'all'", specifier = "==3.5.0" },
-    { name = "greenlet", marker = "extra == 'mysql'", specifier = "==3.5.0" },
-    { name = "httpx", marker = "extra == 'all'", specifier = "==0.28.1" },
-    { name = "httpx", marker = "extra == 'host'", specifier = "==0.28.1" },
-    { name = "httpx", marker = "extra == 'providers'", specifier = "==0.28.1" },
-    { name = "openai", marker = "extra == 'all'", specifier = "==2.36.0" },
-    { name = "openai", marker = "extra == 'providers'", specifier = "==2.36.0" },
-    { name = "pydantic", specifier = "==2.13.4" },
-    { name = "redis", marker = "extra == 'all'", specifier = "==6.4.0" },
-    { name = "redis", marker = "extra == 'redis'", specifier = "==6.4.0" },
-    { name = "sqlalchemy", marker = "extra == 'all'", specifier = "==2.0.49" },
-    { name = "sqlalchemy", marker = "extra == 'mysql'", specifier = "==2.0.49" },
-    { name = "tiktoken", specifier = "==0.12.0" },
-]
-provides-extras = ["mysql", "redis", "host", "providers", "all"]
-
 [[package]]
 name = "gewu-core"
 version = "0.1.0"
-source = { editable = "../gewu/packages/gewu-core" }
+source = { git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=f1e60877f81dd5523926dd840679a02cc33021cb#f1e60877f81dd5523926dd840679a02cc33021cb" }
 dependencies = [
     { name = "cryptography" },
     { name = "filelock" },
@@ -740,34 +716,6 @@ http = [
 redis = [
     { name = "redis" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiomysql", marker = "extra == 'all'", specifier = "==0.3.2" },
-    { name = "aiomysql", marker = "extra == 'database'", specifier = "==0.3.2" },
-    { name = "aiosqlite", marker = "extra == 'all'", specifier = "==0.22.1" },
-    { name = "aiosqlite", marker = "extra == 'database'", specifier = "==0.22.1" },
-    { name = "cryptography", specifier = "==48.0.0" },
-    { name = "fastapi", marker = "extra == 'all'", specifier = "==0.136.1" },
-    { name = "fastapi", marker = "extra == 'http'", specifier = "==0.136.1" },
-    { name = "filelock", specifier = "==3.29.0" },
-    { name = "greenlet", marker = "extra == 'all'", specifier = "==3.5.0" },
-    { name = "greenlet", marker = "extra == 'database'", specifier = "==3.5.0" },
-    { name = "httpx", marker = "extra == 'all'", specifier = "==0.28.1" },
-    { name = "httpx", marker = "extra == 'apollo'", specifier = "==0.28.1" },
-    { name = "pydantic", specifier = "==2.13.4" },
-    { name = "python-dotenv", specifier = "==1.2.2" },
-    { name = "pyyaml", specifier = "==6.0.3" },
-    { name = "redis", marker = "extra == 'all'", specifier = "==6.4.0" },
-    { name = "redis", marker = "extra == 'redis'", specifier = "==6.4.0" },
-    { name = "sqlalchemy", marker = "extra == 'all'", specifier = "==2.0.49" },
-    { name = "sqlalchemy", marker = "extra == 'database'", specifier = "==2.0.49" },
-    { name = "starlette", marker = "extra == 'all'", specifier = "==1.0.0" },
-    { name = "starlette", marker = "extra == 'http'", specifier = "==1.0.0" },
-    { name = "uvicorn", marker = "extra == 'all'", specifier = "==0.46.0" },
-    { name = "uvicorn", marker = "extra == 'http'", specifier = "==0.46.0" },
-]
-provides-extras = ["apollo", "database", "redis", "http", "all"]
 
 [[package]]
 name = "google-re2"
@@ -1939,8 +1887,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "celery", extras = ["redis"], specifier = "==5.6.3" },
-    { name = "gewu-agent-runtime", extras = ["mysql"], editable = "../gewu/packages/agent-runtime" },
-    { name = "gewu-core", extras = ["apollo", "database", "http", "redis"], editable = "../gewu/packages/gewu-core" },
+    { name = "gewu-agent-runtime", extras = ["mysql"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fagent-runtime&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
+    { name = "gewu-core", extras = ["apollo", "database", "http", "redis"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
     { name = "zhizhi-application", extras = ["llm-admin"], editable = "packages/zhizhi-application" },
 ]
 
@@ -1977,8 +1925,8 @@ llm-admin = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", marker = "extra == 'llm-admin'", specifier = "==0.100.0" },
-    { name = "gewu-agent-runtime", editable = "../gewu/packages/agent-runtime" },
-    { name = "gewu-core", extras = ["database", "redis"], editable = "../gewu/packages/gewu-core" },
+    { name = "gewu-agent-runtime", git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fagent-runtime&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
+    { name = "gewu-core", extras = ["database", "redis"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "minio", specifier = "==7.2.20" },
     { name = "openai", marker = "extra == 'llm-admin'", specifier = "==2.36.0" },
@@ -2035,8 +1983,8 @@ dependencies = [
 requires-dist = [
     { name = "aiomysql", specifier = ">=0.3.2" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
-    { name = "gewu-agent-runtime", extras = ["mysql", "providers", "redis"], editable = "../gewu/packages/agent-runtime" },
-    { name = "gewu-core", extras = ["apollo", "database", "http", "redis"], editable = "../gewu/packages/gewu-core" },
+    { name = "gewu-agent-runtime", extras = ["mysql", "providers", "redis"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fagent-runtime&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
+    { name = "gewu-core", extras = ["apollo", "database", "http", "redis"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
     { name = "greenlet", specifier = ">=3.3.2" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "python-multipart", specifier = "==0.0.30" },
@@ -2060,8 +2008,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "celery", extras = ["redis"], specifier = "==5.6.3" },
-    { name = "gewu-agent-runtime", extras = ["mysql"], editable = "../gewu/packages/agent-runtime" },
-    { name = "gewu-core", extras = ["apollo", "database", "redis"], editable = "../gewu/packages/gewu-core" },
+    { name = "gewu-agent-runtime", extras = ["mysql"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fagent-runtime&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
+    { name = "gewu-core", extras = ["apollo", "database", "redis"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=f1e60877f81dd5523926dd840679a02cc33021cb" },
     { name = "pydantic", specifier = "==2.13.4" },
     { name = "sqlalchemy", specifier = "==2.0.49" },
     { name = "zhizhi-application", editable = "packages/zhizhi-application" },

@@ -8,17 +8,19 @@
 
 ## 开发
 
+在 Monorepo 根目录运行：
+
 ```bash
-corepack pnpm install
-corepack pnpm test
-corepack pnpm run typecheck
-corepack pnpm run dev
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter zhizhi-web test
+corepack pnpm --filter zhizhi-web run typecheck
+corepack pnpm --filter zhizhi-web run dev
 ```
 
 开发服务器运行在 `http://127.0.0.1:5174`，并将 `/api` 代理到 `http://127.0.0.1:8000`。
 
 ```bash
-ZHIZHI_API_PROXY_TARGET=http://127.0.0.1:8080 corepack pnpm run dev
+ZHIZHI_API_PROXY_TARGET=http://127.0.0.1:8080 corepack pnpm --filter zhizhi-web run dev
 ```
 
 跨域部署时，可在构建阶段设置 `VITE_ZHIZHI_API_BASE_URL`；同源部署无需设置。
@@ -28,7 +30,7 @@ ZHIZHI_API_PROXY_TARGET=http://127.0.0.1:8080 corepack pnpm run dev
 ## 生产构建
 
 ```bash
-corepack pnpm run build
+corepack pnpm --filter zhizhi-web run build
 ```
 
 ## 许可证

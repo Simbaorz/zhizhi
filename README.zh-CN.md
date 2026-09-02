@@ -54,6 +54,12 @@ corepack pnpm run typecheck
 corepack pnpm run build
 ```
 
+同时启动两个前端开发服务器，端口分别为 5173 和 5174：
+
+```bash
+corepack pnpm run dev
+```
+
 安装并验证后端：
 
 ```bash

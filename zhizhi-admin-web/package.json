@@ -3,12 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5174",
-    "dev:server": "ZHIZHI_ADMIN_API_PROXY_TARGET=http://127.0.0.1:8001 vite --host 0.0.0.0 --port 5174",
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "dev:server": "ZHIZHI_ADMIN_API_PROXY_TARGET=http://127.0.0.1:8001 vite --host 0.0.0.0 --port 5173",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 4174",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test": "node --test tests/*.test.ts && vitest run",
     "typecheck": "vue-tsc --noEmit"
   },

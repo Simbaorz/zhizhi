@@ -1,0 +1,151 @@
+# 致知 Web API configuration example.
+#
+# Bootstrap values are not YAML settings. Configure PROJECT_NAME, PROJECT_HOME,
+# MODE, TIMEZONE, and CONFIG_FILE through .env, .env.local, or process environment.
+# Replace secret placeholders before production deployment.
+
+blocking_io:
+  cpu:
+    max_workers: 4
+    queue_capacity: 16
+    admission_timeout_seconds: 1.0
+    execution_warn_seconds: 1.0
+  external:
+    max_workers: 8
+    queue_capacity: 32
+    admission_timeout_seconds: 2.0
+    execution_warn_seconds: 2.0
+  filesystem:
+    interactive:
+      max_workers: 8
+      queue_capacity: 32
+      admission_timeout_seconds: 2.0
+    bulk:
+      max_workers: 4
+      queue_capacity: 16
+      admission_timeout_seconds: 2.0
+    execution_warn_seconds: 2.0
+    saturation_unready_seconds: 60.0
+  upload:
+    max_concurrent_ingress: 16
+    queue_capacity: 32
+    admission_timeout_seconds: 2.0
+    body_timeout_seconds: 60.0
+    max_buffered_file_bytes: 128 MB
+  download:
+    max_concurrent_egress: 32
+    max_open_files: 64
+    max_media_bytes_in_flight: 64 MB
+    queue_capacity: 64
+    admission_timeout_seconds: 2.0
+
+log:
+  level: INFO
+  queue_capacity: 8192
+
+runtime:
+  temp_dir: /var/lib/zhizhi/runtime/temp
+
+http_ingress:
+  max_concurrent_bodies: 32
+  queue_capacity: 64
+  admission_timeout_seconds: 2.0
+
+db:
+  enabled: true
+  use_sqlite: true
+  sqlite_file_name: zhizhi.db
+  # Used when use_sqlite is false.
+  url: ""
+  echo: false
+  pool_size: 10
+  max_overflow: 10
+  pool_pre_ping: true
+  pool_recycle_seconds: 300
+  pool_timeout_seconds: 10
+  connect_timeout_seconds: 5
+
+redis:
+  enabled: true
+  connection:
+    # Supported modes: standalone, sentinel, cluster.
+    mode: standalone
+    host: 127.0.0.1
+    port: 6379
+    password: ""
+    nodes: []
+    master_name: ""
+    redis_password: ""
+    sentinel_password: ""
+    min_other_sentinels: 0
+    read_from_replicas: false
+    require_full_coverage: true
+    dynamic_startup_nodes: true
+  client:
+    # null selects the topology-specific default (100, or 32 for cluster).
+    max_connections: null
+    socket_timeout_seconds: 3.0
+    socket_connect_timeout_seconds: 3.0
+    socket_keepalive: true
+    health_check_interval_seconds: 30
+  databases:
+    app: 1
+    celery: 0
+
+storage_encryption:
+  # Web API, Admin API, and Worker must share this key.
+  key: ""
+
+media:
+  root: /data/zhizhi/media
+  oss_enable: false
+  max_image_bytes: 5 MB
+  max_images_per_message: 4
+  pending_attachment_ttl_hours: 24
+  cleanup_interval_seconds: 3600
+  oss:
+    endpoint: ""
+    bucket: ""
+    access_key: ""
+    secret_key: ""
+    region: ""
+    prefix: chat_attachments
+    max_connections: 10
+    connect_timeout_seconds: 5.0
+    read_timeout_seconds: 30.0
+
+workspace:
+  # Required by Web API.
+  storage_root: /data/zhizhi
+  max_file_bytes: 5 MB
+  max_skill_package_bytes: 50 MB
+  max_scene_package_bytes: 500 MB
+  max_listing_entries: 1000
+
+outbound_http:
+  max_connections: 100
+  max_keepalive_connections: 20
+  keepalive_expiry_seconds: 5.0
+  connect_timeout_seconds: 5.0
+  pool_timeout_seconds: 5.0
+
+agent:
+  max_iterations: 50
+  max_concurrent_turns_per_process: 32
+  queue_capacity: 128
+  admission_timeout_seconds: 5.0
+  state_cache_ttl_seconds: 86400
+  run_lease_ttl_seconds: 300
+  ask_user_timeout_seconds: 300
+  pending_ask_cleanup_interval_seconds: 60
+  micro_compact_keep_recent_tool_results: 5
+  encrypt_tool_results: false
+  encrypt_compaction_summaries: false
+  image_raw_in_flight_bytes: 128 MB
+  image_encoded_in_flight_bytes: 256 MB
+  image_provider_payload_in_flight_bytes: 256 MB
+  image_admission_timeout_seconds: 2.0
+
+data_source:
+  max_response_bytes: 4 MB
+  max_tool_result_bytes: 512 KB

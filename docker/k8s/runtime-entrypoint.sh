@@ -63,9 +63,6 @@ activate_pipeline_source() {
             )
         fi
     done
-    if [[ -d "${active_source_root}/lib/python_driver" ]]; then
-        python_paths+=("${active_source_root}/lib/python_driver")
-    fi
     ((${#python_paths[@]} > 0)) || die \
         "No runtime Python source directories found under ${active_source_root}."
 

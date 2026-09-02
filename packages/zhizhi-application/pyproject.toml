@@ -15,8 +15,7 @@ dependencies = [
     "opentelemetry-api==1.41.1",
     "pydantic==2.13.4",
     "pyjwt==2.12.1",
-    # GoldenDB's official driver is exposed through the workspace as PyMySQL 1.0.3.
-    "pymysql==1.0.3",
+    "pymysql>=1.1,<2",
     "sqlalchemy==2.0.49",
 ]
 

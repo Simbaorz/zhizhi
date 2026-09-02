@@ -19,7 +19,6 @@ index-url = "https://mirrors.aliyun.com/pypi/simple"
 
 [tool.uv.workspace]
 members = [
-    "lib/python_driver",
     "packages/zhizhi-application",
     "apps/zhizhi-web-api",
     "apps/zhizhi-admin-api",
@@ -30,7 +29,6 @@ members = [
 gewu-agent-runtime = { path = "../gewu/packages/agent-runtime", editable = true }
 gewu-core = { path = "../gewu/packages/gewu-core", editable = true }
 zhizhi-application = { workspace = true }
-pymysql = { workspace = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

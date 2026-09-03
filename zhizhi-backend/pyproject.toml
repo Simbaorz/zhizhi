@@ -26,8 +26,8 @@ members = [
 ]
 
 [tool.uv.sources]
-gewu-agent-runtime = { git = "https://github.com/Simbaorz/gewu.git", rev = "f1e60877f81dd5523926dd840679a02cc33021cb", subdirectory = "packages/agent-runtime" }
-gewu-core = { git = "https://github.com/Simbaorz/gewu.git", rev = "f1e60877f81dd5523926dd840679a02cc33021cb", subdirectory = "packages/gewu-core" }
+gewu-agent-runtime = { git = "https://github.com/Simbaorz/gewu.git", rev = "491a90f6ce097d820f4b9cfcfbb5a212476d843a", subdirectory = "packages/agent-runtime" }
+gewu-core = { git = "https://github.com/Simbaorz/gewu.git", rev = "491a90f6ce097d820f4b9cfcfbb5a212476d843a", subdirectory = "packages/gewu-core" }
 zhizhi-application = { workspace = true }
 
 [tool.pytest.ini_options]

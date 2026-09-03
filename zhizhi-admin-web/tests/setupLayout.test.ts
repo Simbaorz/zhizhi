@@ -16,4 +16,19 @@ describe("setup page layout", () => {
     assert.match(setupViewSource, /var\(--accent\)/);
     assert.match(setupViewSource, /var\(--accent-strong\)/);
   });
+
+  it("mirrors the backend password policy with explicit user feedback", () => {
+    assert.match(setupViewSource, /const MIN_PASSWORD_LENGTH = 12/);
+    assert.match(
+      setupViewSource,
+      /normalizedPasswordLength\.value\s*>=\s*MIN_PASSWORD_LENGTH/,
+    );
+    assert.match(setupViewSource, /至少 \$\{MIN_PASSWORD_LENGTH\} 个字符/);
+    assert.match(setupViewSource, /还需.*个字符/);
+    assert.match(setupViewSource, /两次输入的密码不一致/);
+    assert.match(
+      setupViewSource,
+      /:disabled="!bootstrapStore\.bootstrapEnabled \|\| bootstrapStore\.loading"/,
+    );
+  });
 });

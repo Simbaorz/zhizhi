@@ -123,6 +123,7 @@ async def test_super_admin_password_requires_twelve_characters() -> None:
             )
 
         assert error.value.status_code == 400
+        assert "at least 12 characters" in error.value.detail
         assert (await get_installation_status(sessions)).state is InstallationState.SETUP_REQUIRED
     finally:
         await engine.dispose()

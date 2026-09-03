@@ -11,6 +11,7 @@ import { useUiStore } from "@/stores/ui";
 const router = useRouter();
 const bootstrapStore = useBootstrapStore();
 const uiStore = useUiStore();
+const MIN_PASSWORD_LENGTH = 12;
 const form = reactive({
   bootstrapToken: "",
   username: "admin",
@@ -19,20 +20,36 @@ const form = reactive({
   confirmPassword: "",
 });
 
+const normalizedPasswordLength = computed(() => form.password.trim().length);
 const formReady = computed(
   () =>
     bootstrapStore.bootstrapEnabled
     && form.bootstrapToken.trim() !== ""
     && form.username.trim() !== ""
     && form.displayName.trim() !== ""
-    && form.password.length >= 12
+    && normalizedPasswordLength.value >= MIN_PASSWORD_LENGTH
     && form.password === form.confirmPassword,
 );
 const activeStep = computed(() => (bootstrapStore.bootstrapEnabled ? 1 : 0));
+const passwordLengthHint = computed(() => {
+  if (normalizedPasswordLength.value === 0) {
+    return `至少 ${MIN_PASSWORD_LENGTH} 个字符`;
+  }
+  if (normalizedPasswordLength.value < MIN_PASSWORD_LENGTH) {
+    return `还需 ${MIN_PASSWORD_LENGTH - normalizedPasswordLength.value} 个字符`;
+  }
+  return "已满足长度要求";
+});
+const passwordLengthInvalid = computed(
+  () => form.password !== "" && normalizedPasswordLength.value < MIN_PASSWORD_LENGTH,
+);
+const passwordMismatch = computed(
+  () => form.confirmPassword !== "" && form.password !== form.confirmPassword,
+);
 const passwordStrength = computed(() => {
   if (!form.password) return 0;
-  let score = form.password.length >= 8 ? 1 : 0;
-  if (form.password.length >= 12) score += 1;
+  let score = normalizedPasswordLength.value >= 8 ? 1 : 0;
+  if (normalizedPasswordLength.value >= MIN_PASSWORD_LENGTH) score += 1;
   if (
     /[a-z]/.test(form.password)
     && /[A-Z]/.test(form.password)
@@ -44,6 +61,19 @@ const passwordStrength = computed(() => {
 });
 const passwordStrengthLabel = computed(() => ["", "较弱", "中等", "较强"][passwordStrength.value]);
 const passwordStrengthPercentage = computed(() => Math.round((passwordStrength.value / 3) * 100));
+const validationMessage = computed(() => {
+  if (!bootstrapStore.bootstrapEnabled) return "初始化服务尚未启用，请先检查初始化令牌配置。";
+  if (!form.bootstrapToken.trim()) return "请输入初始化令牌。";
+  if (!form.username.trim()) return "请输入用户名。";
+  if (!form.displayName.trim()) return "请输入显示名称。";
+  if (!form.password.trim()) return "请输入密码。";
+  if (normalizedPasswordLength.value < MIN_PASSWORD_LENGTH) {
+    return `密码至少需要 ${MIN_PASSWORD_LENGTH} 个字符。`;
+  }
+  if (!form.confirmPassword) return "请再次输入密码。";
+  if (form.password !== form.confirmPassword) return "两次输入的密码不一致。";
+  return "";
+});
 
 async function retryStatus(): Promise<void> {
   try {
@@ -59,7 +89,10 @@ async function retryStatus(): Promise<void> {
 }
 
 async function submit(): Promise<void> {
-  if (!formReady.value) return;
+  if (!formReady.value) {
+    uiStore.pushNotice({ tone: "warning", title: validationMessage.value });
+    return;
+  }
   try {
     await bootstrapStore.initialize({
       bootstrapToken: form.bootstrapToken.trim(),
@@ -148,7 +181,12 @@ async function submit(): Promise<void> {
               show-password
             />
             <div class="setup-password-meta">
-              <small>至少 12 个字符</small>
+              <small
+                class="setup-field-hint"
+                :class="{ danger: passwordLengthInvalid, success: normalizedPasswordLength >= MIN_PASSWORD_LENGTH }"
+              >
+                {{ passwordLengthHint }}
+              </small>
               <div class="setup-strength" aria-live="polite">
                 <span>{{ passwordStrengthLabel ? `密码强度：${passwordStrengthLabel}` : "密码强度" }}</span>
                 <el-progress :percentage="passwordStrengthPercentage" :show-text="false" :stroke-width="5" />
@@ -166,6 +204,9 @@ async function submit(): Promise<void> {
               size="large"
               show-password
             />
+            <small v-if="passwordMismatch" class="setup-field-hint danger">
+              两次输入的密码不一致
+            </small>
           </label>
         </div>
 
@@ -175,7 +216,7 @@ async function submit(): Promise<void> {
             variant="primary"
             type="submit"
             size="large"
-            :disabled="!formReady || bootstrapStore.loading"
+            :disabled="!bootstrapStore.bootstrapEnabled || bootstrapStore.loading"
           >
             {{ bootstrapStore.loading ? "正在创建..." : "创建超级管理员" }}
           </AppButton>
@@ -420,10 +461,18 @@ async function submit(): Promise<void> {
   gap: 16px;
 }
 
-.setup-password-meta small,
+.setup-field-hint,
 .setup-strength > span {
   color: var(--text-tertiary);
   font-size: 12px;
+}
+
+.setup-field-hint.danger {
+  color: var(--danger);
+}
+
+.setup-field-hint.success {
+  color: var(--success);
 }
 
 .setup-strength {

@@ -44,7 +44,7 @@ ADMIN_NAVIGATION_ITEMS: tuple[AdminNavigationItem, ...] = (
     ),
     AdminNavigationItem(
         key="data-sources",
-        label="数据源源",
+        label="数据源管理",
         path="/data-sources",
         permission_code="data_source.view",
     ),

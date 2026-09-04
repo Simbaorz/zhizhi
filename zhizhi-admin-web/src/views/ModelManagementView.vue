@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { CirclePlus, Cpu, Delete, EditPen, Link, Refresh, Tickets } from "@element-plus/icons-vue";
+import { CirclePlus, Delete, EditPen, Refresh } from "@element-plus/icons-vue";
 
 import {
   createLLMBinding,
@@ -20,7 +20,7 @@ import {
   updateLLMModel,
 } from "@/api/admin";
 import { ApiError } from "@/api/http";
-import AppPanel from "@/components/AppPanel.vue";
+import FormDrawer from "@/components/FormDrawer.vue";
 import { useScopeStore } from "@/stores/scope";
 import type {
   LLMBindingScopeType,
@@ -89,10 +89,28 @@ const drawerTitle = computed(() => ({
   "binding-create": "绑定默认模型",
   "binding-edit": "修改默认模型",
 })[drawerMode.value ?? "model-create"]);
+const drawerSubtitle = computed(() => {
+  if (drawerMode.value === "model-create") return "添加一个可供平台分配的模型配置";
+  if (drawerMode.value === "model-edit") {
+    return selectedModel.value?.display_name || selectedModel.value?.alias || "";
+  }
+  if (drawerMode.value === "availability-create") {
+    return `为“${currentTenant.value?.tenant_name || "当前租户"}”配置可用模型`;
+  }
+  return `设置“${currentTenant.value?.tenant_name || "当前租户"}”的默认模型`;
+});
 const currentTenant = computed(() => tenants.value.find((item) => item.id === tenantId.value));
 const unitMap = computed(() => new Map(units.value.map((unit) => [unit.id, unit])));
 const modelMap = computed(() => new Map(models.value.map((model) => [model.id, model])));
 const availableModelIds = computed(() => new Set(entitlements.value.filter((item) => item.status === "active").map((item) => item.llm_config_id)));
+const activeRecordCount = computed(() => {
+  if (activeTab.value === "models") return models.value.length;
+  return activeTab.value === "availability" ? entitlements.value.length : bindings.value.length;
+});
+const activeRecordUnit = computed(() => {
+  if (activeTab.value === "models") return "个模型";
+  return activeTab.value === "availability" ? "条可用配置" : "条默认配置";
+});
 
 async function loadAll(): Promise<void> {
   loading.value = true;
@@ -310,6 +328,14 @@ function modelName(id: string): string {
   return model?.display_name || model?.alias || id;
 }
 
+function providerLabel(provider: LLMProvider): string {
+  return provider === "anthropic" ? "Anthropic" : "OpenAI";
+}
+
+function protocolLabel(protocol: LLMProtocol): string {
+  return protocol === "anthropic-messages" ? "Anthropic Messages" : "OpenAI Chat";
+}
+
 function scopeLabel(type: LLMBindingScopeType, unitId: string): string {
   if (type === "tenant") return currentTenant.value?.tenant_name || "租户级";
   const path: string[] = [];
@@ -327,102 +353,680 @@ function notifyError(error: unknown, fallback: string): void {
   ElMessage.error(error instanceof ApiError || error instanceof Error ? error.message : fallback);
 }
 
+function closeDrawer(): void {
+  if (!saving.value) drawerMode.value = null;
+}
+
 watch(tenantId, loadTenantResources);
 watch(() => scopeForm.scopeType, (value) => { if (value === "tenant") scopeForm.organizationUnitId = ""; });
 onMounted(loadAll);
 </script>
 
 <template>
-  <div class="resource-page" v-loading="loading">
-    <AppPanel class="resource-hero">
-      <div class="resource-title">
-        <span class="resource-icon"><el-icon><Cpu /></el-icon></span>
-        <div><span class="eyebrow">MODEL GOVERNANCE</span><h1>模型管理</h1><p>统一配置模型，并将可用范围和默认绑定分配到任意组织层级。</p></div>
+  <div
+    class="model-management-page"
+    :class="{ 'is-global-mode': mode === 'global' }"
+    v-loading="loading"
+  >
+    <header v-if="mode === 'tenant'" class="model-local-head">
+      <div>
+        <h1>模型管理</h1>
+        <p>管理当前租户的可用模型与默认模型。</p>
       </div>
-      <div class="hero-actions">
-        <el-select v-if="activeTab !== 'models'" v-model="tenantId" class="tenant-select" placeholder="选择租户">
-          <el-option v-for="tenant in tenants" :key="tenant.id" :label="tenant.tenant_name || tenant.tenant_code" :value="tenant.id" />
-        </el-select>
-        <el-button :icon="Refresh" circle @click="loadAll" />
+      <el-button :icon="Refresh" @click="loadAll">刷新</el-button>
+    </header>
+
+    <section class="model-management-surface">
+      <header class="model-management-toolbar">
+        <nav class="model-management-tabs" aria-label="模型管理范围">
+          <button
+            v-if="mode === 'global'"
+            type="button"
+            :class="{ active: activeTab === 'models' }"
+            @click="activeTab = 'models'"
+          >
+            模型配置
+          </button>
+          <button
+            type="button"
+            :class="{ active: activeTab === 'availability' }"
+            @click="activeTab = 'availability'"
+          >
+            可用模型
+          </button>
+          <button
+            type="button"
+            :class="{ active: activeTab === 'bindings' }"
+            @click="activeTab = 'bindings'"
+          >
+            默认模型
+          </button>
+        </nav>
+
+        <div class="model-management-tools">
+          <label v-if="activeTab !== 'models' && mode === 'global'" class="model-tenant-picker">
+            <span>当前租户</span>
+            <el-select v-model="tenantId" filterable placeholder="选择租户">
+              <el-option
+                v-for="tenant in tenants"
+                :key="tenant.id"
+                :label="tenant.tenant_name || tenant.tenant_code"
+                :value="tenant.id"
+              />
+            </el-select>
+          </label>
+          <span v-else-if="activeTab !== 'models'" class="model-tenant-context">
+            当前租户
+            <strong>{{ currentTenant?.tenant_name || "未选择租户" }}</strong>
+          </span>
+          <el-button
+            v-if="mode === 'global'"
+            :icon="Refresh"
+            circle
+            aria-label="刷新模型管理数据"
+            @click="loadAll"
+          />
+          <el-button
+            v-if="activeTab === 'models'"
+            type="primary"
+            :icon="CirclePlus"
+            @click="openCreateModel"
+          >
+            新建模型
+          </el-button>
+          <el-button
+            v-else-if="activeTab === 'availability'"
+            type="primary"
+            :icon="CirclePlus"
+            :disabled="!tenantId"
+            @click="openAvailability"
+          >
+            分配模型
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            :icon="CirclePlus"
+            :disabled="!tenantId"
+            @click="openBinding()"
+          >
+            设置默认模型
+          </el-button>
+        </div>
+      </header>
+
+      <div class="model-table-region">
+        <el-table
+          v-if="activeTab === 'models'"
+          :data="models"
+          class="model-data-table"
+          row-key="id"
+          height="100%"
+        >
+          <el-table-column label="模型" min-width="240">
+            <template #default="{ row }">
+              <div class="model-primary-cell">
+                <strong>{{ row.display_name || row.alias }}</strong>
+                <small>{{ row.model_name }}</small>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="供应商" width="140">
+            <template #default="{ row }">{{ providerLabel(row.provider) }}</template>
+          </el-table-column>
+          <el-table-column label="协议" min-width="180">
+            <template #default="{ row }">{{ protocolLabel(row.protocol) }}</template>
+          </el-table-column>
+          <el-table-column label="能力" min-width="250">
+            <template #default="{ row }">
+              <div class="model-capabilities">
+                <span v-if="row.support_stream">流式</span>
+                <span v-if="row.support_tools">工具调用</span>
+                <span v-if="row.support_vision">视觉</span>
+                <span v-if="row.support_thinking">思考</span>
+                <small v-if="!row.support_stream && !row.support_tools && !row.support_vision && !row.support_thinking">—</small>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="110">
+            <template #default="{ row }">
+              <span class="model-status" :class="row.status">
+                <i />{{ row.status === "active" ? "启用" : "停用" }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="170" fixed="right" align="right">
+            <template #default="{ row }">
+              <div class="model-row-actions">
+                <el-button link type="primary" :icon="EditPen" @click="openEditModel(row)">编辑</el-button>
+                <el-button link type="danger" :icon="Delete" @click="removeModel(row)">删除</el-button>
+              </div>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <el-empty description="还没有模型配置" :image-size="88" />
+          </template>
+        </el-table>
+
+        <el-table
+          v-else-if="activeTab === 'availability'"
+          :data="entitlements"
+          class="model-data-table"
+          row-key="id"
+          height="100%"
+        >
+          <el-table-column label="作用域" min-width="280">
+            <template #default="{ row }">
+              <div class="model-primary-cell">
+                <strong>{{ scopeLabel(row.scope_type, row.organization_unit_id) }}</strong>
+                <small>{{ row.scope_type === "tenant" ? "租户" : "组织单元" }}</small>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="可用模型" min-width="260">
+            <template #default="{ row }">{{ modelName(row.llm_config_id) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              <el-switch
+                :model-value="row.status === 'active'"
+                @change="toggleEntitlement(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" align="right">
+            <template #default="{ row }">
+              <el-button link type="danger" :icon="Delete" @click="removeEntitlement(row)">删除</el-button>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <el-empty
+              :description="tenantId ? '尚未分配可用模型' : '请先选择租户'"
+              :image-size="88"
+            />
+          </template>
+        </el-table>
+
+        <el-table
+          v-else
+          :data="bindings"
+          class="model-data-table"
+          row-key="id"
+          height="100%"
+        >
+          <el-table-column label="作用域" min-width="300">
+            <template #default="{ row }">
+              <div class="model-primary-cell">
+                <strong>{{ scopeLabel(row.scope_type, row.organization_unit_id) }}</strong>
+                <small>未绑定时向上回溯到最近的组织层级</small>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="默认模型" min-width="260">
+            <template #default="{ row }">{{ modelName(row.llm_config_id) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="110">
+            <template #default="{ row }">
+              <span class="model-status" :class="row.status">
+                <i />{{ row.status === "active" ? "启用" : "停用" }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="170" align="right">
+            <template #default="{ row }">
+              <div class="model-row-actions">
+                <el-button link type="primary" :icon="EditPen" @click="openBinding(row)">编辑</el-button>
+                <el-button link type="danger" :icon="Delete" @click="removeBinding(row)">删除</el-button>
+              </div>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <el-empty
+              :description="tenantId ? '尚未设置默认模型' : '请先选择租户'"
+              :image-size="88"
+            />
+          </template>
+        </el-table>
+
+        <footer v-if="activeRecordCount" class="model-table-footer">
+          共 {{ activeRecordCount }} {{ activeRecordUnit }}
+        </footer>
       </div>
-    </AppPanel>
+    </section>
 
-    <div class="resource-tabs">
-      <button v-if="mode === 'global'" :class="{ active: activeTab === 'models' }" @click="activeTab = 'models'"><el-icon><Cpu /></el-icon>模型配置</button>
-      <button :class="{ active: activeTab === 'availability' }" @click="activeTab = 'availability'"><el-icon><Tickets /></el-icon>可用模型</button>
-      <button :class="{ active: activeTab === 'bindings' }" @click="activeTab = 'bindings'"><el-icon><Link /></el-icon>默认绑定</button>
-    </div>
-
-    <AppPanel class="table-card">
-      <div class="table-head">
-        <div><strong>{{ activeTab === 'models' ? '全局模型配置' : activeTab === 'availability' ? '组织可用模型' : '组织默认模型' }}</strong><small v-if="activeTab !== 'models'">{{ currentTenant?.tenant_name || '未选择租户' }}</small></div>
-        <el-button v-if="activeTab === 'models'" type="primary" :icon="CirclePlus" @click="openCreateModel">新建模型</el-button>
-        <el-button v-else-if="activeTab === 'availability'" type="primary" :icon="CirclePlus" :disabled="!tenantId" @click="openAvailability">分配模型</el-button>
-        <el-button v-else type="primary" :icon="CirclePlus" :disabled="!tenantId" @click="openBinding()">新增绑定</el-button>
-      </div>
-
-      <el-table v-if="activeTab === 'models'" :data="models" class="resource-table">
-        <el-table-column label="模型"><template #default="{ row }"><div class="primary-cell"><span>{{ row.display_name || row.alias }}</span><small>{{ row.model_name }}</small></div></template></el-table-column>
-        <el-table-column prop="provider" label="供应商" width="140" />
-        <el-table-column prop="protocol" label="协议" width="190" />
-        <el-table-column label="能力" min-width="180"><template #default="{ row }"><el-space wrap><el-tag v-if="row.support_tools" size="small">Tools</el-tag><el-tag v-if="row.support_vision" size="small" type="success">Vision</el-tag><el-tag v-if="row.support_thinking" size="small" type="warning">Thinking</el-tag></el-space></template></el-table-column>
-        <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status === 'active' ? 'primary' : 'info'">{{ row.status === 'active' ? '启用' : '停用' }}</el-tag></template></el-table-column>
-        <el-table-column label="操作" width="150" fixed="right"><template #default="{ row }"><el-button link type="primary" :icon="EditPen" @click="openEditModel(row)">编辑</el-button><el-button link type="danger" :icon="Delete" @click="removeModel(row)">删除</el-button></template></el-table-column>
-      </el-table>
-
-      <el-table v-else-if="activeTab === 'availability'" :data="entitlements" class="resource-table">
-        <el-table-column label="作用域" min-width="240"><template #default="{ row }"><div class="primary-cell"><span>{{ scopeLabel(row.scope_type, row.organization_unit_id) }}</span><small>{{ row.scope_type === 'tenant' ? '租户' : '组织单元' }}</small></div></template></el-table-column>
-        <el-table-column label="可用模型" min-width="220"><template #default="{ row }">{{ modelName(row.llm_config_id) }}</template></el-table-column>
-        <el-table-column label="状态" width="110"><template #default="{ row }"><el-switch :model-value="row.status === 'active'" @change="toggleEntitlement(row)" /></template></el-table-column>
-        <el-table-column label="操作" width="90"><template #default="{ row }"><el-button link type="danger" :icon="Delete" @click="removeEntitlement(row)">删除</el-button></template></el-table-column>
-      </el-table>
-
-      <el-table v-else :data="bindings" class="resource-table">
-        <el-table-column label="作用域" min-width="240"><template #default="{ row }"><div class="primary-cell"><span>{{ scopeLabel(row.scope_type, row.organization_unit_id) }}</span><small>向上回溯时优先采用最深层绑定</small></div></template></el-table-column>
-        <el-table-column label="默认模型" min-width="220"><template #default="{ row }">{{ modelName(row.llm_config_id) }}</template></el-table-column>
-        <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status === 'active' ? 'primary' : 'info'">{{ row.status === 'active' ? '启用' : '停用' }}</el-tag></template></el-table-column>
-        <el-table-column label="操作" width="150"><template #default="{ row }"><el-button link type="primary" :icon="EditPen" @click="openBinding(row)">编辑</el-button><el-button link type="danger" :icon="Delete" @click="removeBinding(row)">删除</el-button></template></el-table-column>
-      </el-table>
-    </AppPanel>
-
-    <el-drawer v-model="drawerMode" :title="drawerTitle" size="500px" destroy-on-close>
-      <el-form v-if="drawerMode?.startsWith('model')" label-position="top">
-        <div class="form-grid"><el-form-item label="别名" required><el-input v-model="modelForm.alias" :disabled="drawerMode === 'model-edit'" /></el-form-item><el-form-item label="显示名称"><el-input v-model="modelForm.displayName" /></el-form-item></div>
-        <div class="form-grid"><el-form-item label="供应商"><el-select v-model="modelForm.provider" :disabled="drawerMode === 'model-edit'"><el-option value="openai" label="OpenAI" /><el-option value="anthropic" label="Anthropic" /></el-select></el-form-item><el-form-item label="协议"><el-select v-model="modelForm.protocol" disabled><el-option value="openai-chat" label="OpenAI Chat" /><el-option value="anthropic-messages" label="Anthropic Messages" /></el-select></el-form-item></div>
-        <el-form-item label="模型名称" required><el-input v-model="modelForm.modelName" /></el-form-item>
-        <el-form-item label="Endpoint"><el-input v-model="modelForm.endpointUrl" /></el-form-item>
-        <el-form-item label="能力"><el-checkbox v-model="modelForm.supportStream">流式</el-checkbox><el-checkbox v-model="modelForm.supportTools">工具调用</el-checkbox><el-checkbox v-model="modelForm.supportVision">视觉</el-checkbox><el-checkbox v-model="modelForm.supportThinking">思考</el-checkbox></el-form-item>
-        <el-form-item label="生成配置 JSON"><el-input v-model="modelForm.generationConfigText" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="供应商配置 JSON"><el-input v-model="modelForm.providerConfigText" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item v-if="drawerMode === 'model-create'" label="凭据 JSON"><el-input v-model="modelForm.credentialsText" type="textarea" :rows="4" /></el-form-item>
+    <FormDrawer
+      :open="drawerMode !== null"
+      :title="drawerTitle"
+      :subtitle="drawerSubtitle"
+      :saving="saving"
+      size="wide"
+      @close="closeDrawer"
+      @submit="saveDrawer"
+    >
+      <el-form
+        v-if="drawerMode?.startsWith('model')"
+        class="model-drawer-form"
+        label-position="top"
+      >
+        <div class="model-form-grid">
+          <el-form-item label="别名" required>
+            <el-input v-model="modelForm.alias" :disabled="drawerMode === 'model-edit'" />
+          </el-form-item>
+          <el-form-item label="显示名称">
+            <el-input v-model="modelForm.displayName" />
+          </el-form-item>
+          <el-form-item label="供应商">
+            <el-select v-model="modelForm.provider" :disabled="drawerMode === 'model-edit'">
+              <el-option value="openai" label="OpenAI" />
+              <el-option value="anthropic" label="Anthropic" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="协议">
+            <el-select v-model="modelForm.protocol" disabled>
+              <el-option value="openai-chat" label="OpenAI Chat" />
+              <el-option value="anthropic-messages" label="Anthropic Messages" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="模型名称" required>
+            <el-input v-model="modelForm.modelName" />
+          </el-form-item>
+          <el-form-item label="超时时间（秒）">
+            <el-input-number v-model="modelForm.timeoutSeconds" :min="1" controls-position="right" />
+          </el-form-item>
+        </div>
+        <el-form-item label="Endpoint">
+          <el-input v-model="modelForm.endpointUrl" placeholder="留空时使用供应商默认地址" />
+        </el-form-item>
+        <el-form-item label="能力">
+          <el-checkbox v-model="modelForm.supportStream">流式</el-checkbox>
+          <el-checkbox v-model="modelForm.supportTools">工具调用</el-checkbox>
+          <el-checkbox v-model="modelForm.supportVision">视觉</el-checkbox>
+          <el-checkbox v-model="modelForm.supportThinking">思考</el-checkbox>
+        </el-form-item>
+        <div class="model-form-grid">
+          <el-form-item label="生成配置 JSON">
+            <el-input v-model="modelForm.generationConfigText" type="textarea" :rows="5" />
+          </el-form-item>
+          <el-form-item label="供应商配置 JSON">
+            <el-input v-model="modelForm.providerConfigText" type="textarea" :rows="5" />
+          </el-form-item>
+        </div>
+        <el-form-item v-if="drawerMode === 'model-create'" label="凭据 JSON">
+          <el-input v-model="modelForm.credentialsText" type="textarea" :rows="5" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="modelForm.status">
+            <el-radio-button value="active">启用</el-radio-button>
+            <el-radio-button value="inactive">停用</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
-      <el-form v-else label-position="top">
-        <el-form-item label="作用域"><el-radio-group v-model="scopeForm.scopeType" :disabled="drawerMode === 'binding-edit'"><el-radio-button value="tenant">租户</el-radio-button><el-radio-button value="organization_unit">组织单元</el-radio-button></el-radio-group></el-form-item>
-        <el-form-item v-if="scopeForm.scopeType === 'organization_unit'" label="组织单元" required><el-select v-model="scopeForm.organizationUnitId" filterable :disabled="drawerMode === 'binding-edit'"><el-option v-for="unit in units" :key="unit.id" :label="scopeLabel('organization_unit', unit.id)" :value="unit.id" /></el-select></el-form-item>
-        <el-form-item v-if="drawerMode === 'availability-create'" label="可用模型" required><el-select v-model="resourceForm.modelIds" multiple filterable><el-option v-for="model in models" :key="model.id" :label="model.display_name || model.alias" :value="model.id" /></el-select></el-form-item>
-        <el-form-item v-else label="默认模型" required><el-select v-model="resourceForm.modelId" filterable><el-option v-for="model in models" :key="model.id" :label="model.display_name || model.alias" :value="model.id" :disabled="!availableModelIds.has(model.id) && drawerMode === 'binding-create'" /></el-select><small class="form-hint">绑定模型必须位于该作用域的可用资源集合中。</small></el-form-item>
-        <el-form-item label="状态"><el-radio-group v-model="resourceForm.status"><el-radio-button value="active">启用</el-radio-button><el-radio-button value="inactive">停用</el-radio-button></el-radio-group></el-form-item>
+
+      <el-form v-else class="model-drawer-form" label-position="top">
+        <el-form-item label="作用域">
+          <el-radio-group
+            v-model="scopeForm.scopeType"
+            :disabled="drawerMode === 'binding-edit'"
+          >
+            <el-radio-button value="tenant">租户</el-radio-button>
+            <el-radio-button value="organization_unit">组织单元</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="scopeForm.scopeType === 'organization_unit'"
+          label="组织单元"
+          required
+        >
+          <el-select
+            v-model="scopeForm.organizationUnitId"
+            filterable
+            :disabled="drawerMode === 'binding-edit'"
+          >
+            <el-option
+              v-for="unit in units"
+              :key="unit.id"
+              :label="scopeLabel('organization_unit', unit.id)"
+              :value="unit.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="drawerMode === 'availability-create'" label="可用模型" required>
+          <el-select v-model="resourceForm.modelIds" multiple filterable>
+            <el-option
+              v-for="model in models"
+              :key="model.id"
+              :label="model.display_name || model.alias"
+              :value="model.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else label="默认模型" required>
+          <el-select v-model="resourceForm.modelId" filterable>
+            <el-option
+              v-for="model in models"
+              :key="model.id"
+              :label="model.display_name || model.alias"
+              :value="model.id"
+              :disabled="!availableModelIds.has(model.id) && drawerMode === 'binding-create'"
+            />
+          </el-select>
+          <small class="model-form-hint">默认模型必须已经分配到该作用域的可用模型集合中。</small>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="resourceForm.status">
+            <el-radio-button value="active">启用</el-radio-button>
+            <el-radio-button value="inactive">停用</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
-      <template #footer><el-button @click="drawerMode = null">取消</el-button><el-button type="primary" :loading="saving" @click="saveDrawer">保存</el-button></template>
-    </el-drawer>
+    </FormDrawer>
   </div>
 </template>
 
 <style scoped>
-.resource-page { display: grid; gap: 18px; }
-.resource-hero { display: flex; align-items: center; justify-content: space-between; padding: 22px 26px; background: linear-gradient(118deg, #fff 58%, #eeebff); }
-.resource-title, .hero-actions, .table-head, .resource-tabs { display: flex; align-items: center; gap: 14px; }
-.resource-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: #fff; font-size: 22px; }
-.eyebrow { color: #6366f1; font-size: 10px; font-weight: 800; letter-spacing: .15em; }
-h1 { margin: 3px 0; color: #24213e; font-size: 22px; } .resource-title p { margin: 0; color: #818197; }
-.tenant-select { width: 220px; }
-.resource-tabs { gap: 4px; padding: 4px; width: max-content; border: 1px solid #e1def0; border-radius: 13px; background: #fff; }
-.resource-tabs button { display: flex; align-items: center; gap: 7px; padding: 9px 15px; border: 0; border-radius: 9px; background: transparent; color: #77758d; cursor: pointer; }
-.resource-tabs button.active { background: #eeecff; color: #4f46e5; font-weight: 700; }
-.table-card { padding: 0; overflow: hidden; }
-.table-head { justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #ebe9f3; }
-.table-head strong, .table-head small { display: block; } .table-head small { margin-top: 4px; color: #8c8ba0; }
-.primary-cell span, .primary-cell small { display: block; } .primary-cell span { color: #2e2c48; font-weight: 700; } .primary-cell small, .form-hint { margin-top: 3px; color: #8b899e; font-size: 11px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 760px) { .resource-hero, .table-head { align-items: flex-start; flex-direction: column; } .hero-actions, .tenant-select { width: 100%; } .form-grid { grid-template-columns: 1fr; } }
+.model-management-page {
+  --model-control-height: 2rem;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+
+.model-local-head {
+  display: flex;
+  min-height: 72px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(215, 222, 226, 0.9);
+  border-bottom: 0;
+  padding: 14px 24px;
+}
+
+.model-local-head h1,
+.model-local-head p {
+  margin: 0;
+}
+
+.model-local-head h1 {
+  font-size: 18px;
+}
+
+.model-local-head p {
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.model-management-surface {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(215, 222, 226, 0.9);
+  background: #fff;
+}
+
+.model-management-page.is-global-mode .model-management-surface {
+  border: 0;
+}
+
+.model-management-toolbar {
+  display: flex;
+  min-height: 3.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(219, 222, 234, 0.92);
+  padding: 0.75rem 1.25rem;
+}
+
+.model-management-tabs {
+  display: flex;
+  align-self: stretch;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+.model-management-tabs button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0 0.125rem;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 720;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+
+.model-management-tabs button:hover,
+.model-management-tabs button.active {
+  color: var(--accent);
+}
+
+.model-management-tabs button.active::after {
+  position: absolute;
+  right: 0;
+  bottom: -0.75rem;
+  left: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  content: "";
+}
+
+.model-management-tools {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.model-management-tools > .el-button:last-child {
+  min-width: 7.75rem;
+  height: var(--model-control-height);
+  min-height: var(--model-control-height);
+  padding-inline: 0.875rem;
+}
+
+.model-tenant-picker,
+.model-tenant-context {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.model-tenant-picker .el-select {
+  width: 13.75rem;
+}
+
+.model-tenant-picker :deep(.el-select__wrapper) {
+  min-height: var(--model-control-height);
+  border-radius: var(--el-border-radius-base);
+  box-shadow: 0 0 0 1px rgba(205, 209, 224, 0.95) inset;
+}
+
+.model-tenant-context strong {
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.model-table-region {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.model-data-table {
+  flex: 1 1 auto;
+  --el-table-border-color: rgba(220, 223, 234, 0.92);
+  --el-table-header-bg-color: #fbfbfd;
+  --el-table-row-hover-bg-color: #f8f7ff;
+}
+
+.model-data-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+.model-data-table :deep(th.el-table__cell) {
+  height: 2.875rem;
+  background: #fbfbfd;
+  color: #59586d;
+  font-size: 0.8125rem;
+  font-weight: 760;
+}
+
+.model-data-table :deep(td.el-table__cell) {
+  height: 3.25rem;
+  color: #3f3e54;
+  font-size: 0.8125rem;
+}
+
+.model-data-table :deep(.cell) {
+  padding-right: 0.875rem;
+  padding-left: 0.875rem;
+}
+
+.model-primary-cell strong,
+.model-primary-cell small {
+  display: block;
+}
+
+.model-primary-cell strong {
+  color: #29283d;
+  font-weight: 720;
+}
+
+.model-primary-cell small,
+.model-form-hint {
+  margin-top: 3px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.model-capabilities,
+.model-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.model-capabilities {
+  flex-wrap: wrap;
+}
+
+.model-capabilities span {
+  border: 1px solid rgba(207, 210, 227, 0.92);
+  border-radius: 999px;
+  padding: 0.125rem 0.4375rem;
+  background: #fafafe;
+  color: #65637b;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.model-row-actions {
+  justify-content: flex-end;
+}
+
+.model-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #4e4c62;
+}
+
+.model-status i {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: #a8a7b4;
+}
+
+.model-status.active i {
+  background: #18a566;
+}
+
+.model-table-footer {
+  display: flex;
+  min-height: 3.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  border-top: 1px solid rgba(220, 223, 234, 0.92);
+  padding: 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.model-drawer-form :deep(.el-select),
+.model-drawer-form :deep(.el-input-number) {
+  width: 100%;
+}
+
+.model-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+}
+
+.model-form-hint {
+  display: block;
+}
+
+@media (max-width: 980px) {
+  .model-management-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .model-management-tabs {
+    min-height: 2.25rem;
+  }
+
+  .model-management-tabs button.active::after {
+    bottom: -0.75rem;
+  }
+
+  .model-management-tools {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .model-management-tools > .el-button:last-child {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .model-management-tools {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .model-tenant-picker,
+  .model-tenant-context,
+  .model-tenant-picker .el-select {
+    width: 100%;
+  }
+
+  .model-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

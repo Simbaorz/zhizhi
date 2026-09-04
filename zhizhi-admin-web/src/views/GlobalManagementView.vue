@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import {
-  Coin as Database,
-  Monitor as Server,
-  OfficeBuilding as Building2,
-  Setting as Settings2,
-  Share,
-  User as UsersRound,
-} from "@element-plus/icons-vue";
 
-import AppPanel from "@/components/AppPanel.vue";
 import DataSourceView from "@/views/DataSourceView.vue";
 import GitRepositoryManagementView from "@/views/GitRepositoryManagementView.vue";
 import ModelManagementView from "@/views/ModelManagementView.vue";
@@ -20,11 +11,11 @@ type GlobalTab = "organization" | "roles" | "models" | "dataSources" | "sceneGit
 
 const activeTab = ref<GlobalTab>("organization");
 const tabs = [
-  { value: "organization" as const, label: "组织管理", icon: Building2 },
-  { value: "roles" as const, label: "角色管理", icon: UsersRound },
-  { value: "models" as const, label: "模型管理", icon: Server },
-  { value: "dataSources" as const, label: "数据源管理", icon: Database },
-  { value: "sceneGit" as const, label: "场景 Git", icon: Share },
+  { value: "organization" as const, label: "组织管理" },
+  { value: "roles" as const, label: "角色管理" },
+  { value: "models" as const, label: "模型管理" },
+  { value: "dataSources" as const, label: "数据源管理" },
+  { value: "sceneGit" as const, label: "场景 Git" },
 ];
 const activeTabLabel = computed(
   () => tabs.find((tab) => tab.value === activeTab.value)?.label ?? "",
@@ -33,46 +24,133 @@ const activeTabLabel = computed(
 
 <template>
   <div class="global-management-page">
-    <AppPanel class="global-management-shell">
-      <header class="global-management-head">
-        <el-space class="global-management-identity" alignment="center">
-          <el-icon class="global-management-mark" aria-hidden="true">
-            <Settings2 />
-          </el-icon>
-          <div class="global-management-title">
-            <h2>全局管理</h2>
-            <p>维护租户、组织架构、模型、数据源与平台级权限</p>
-          </div>
-        </el-space>
-        <el-tabs
-          v-model="activeTab"
-          class="global-management-tabs"
-          aria-label="全局管理分类"
-        >
-          <el-tab-pane
-            v-for="item in tabs"
-            :key="item.value"
-            :name="item.value"
-          >
-            <template #label>
-              <span class="global-management-tab-item">
-                <el-icon aria-hidden="true">
-                  <component :is="item.icon" />
-                </el-icon>
-                <span>{{ item.label }}</span>
-              </span>
-            </template>
-          </el-tab-pane>
-        </el-tabs>
-      </header>
-    </AppPanel>
+    <header class="global-management-header">
+      <div class="global-management-title">
+        <h2>全局管理</h2>
+        <p>维护企业组织、平台资源与权限边界</p>
+      </div>
+      <el-tabs
+        v-model="activeTab"
+        class="global-management-tabs"
+        aria-label="全局管理分类"
+      >
+        <el-tab-pane
+          v-for="item in tabs"
+          :key="item.value"
+          :label="item.label"
+          :name="item.value"
+        />
+      </el-tabs>
+    </header>
 
     <section class="global-management-body" :aria-label="activeTabLabel">
       <RolesView v-if="activeTab === 'roles'" />
-      <OrganizationView v-else-if="activeTab === 'organization'" />
+      <OrganizationView v-else-if="activeTab === 'organization'" mode="global" />
       <ModelManagementView v-else-if="activeTab === 'models'" mode="global" />
       <GitRepositoryManagementView v-else-if="activeTab === 'sceneGit'" mode="global" />
       <DataSourceView v-else mode="global" />
     </section>
   </div>
 </template>
+
+<style scoped>
+.global-management-page {
+  gap: 0;
+  background: #fff;
+}
+
+.global-management-header {
+  display: flex;
+  min-height: 86px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  border-bottom: 1px solid rgba(219, 222, 234, 0.92);
+  padding: 0 34px;
+  background: #fff;
+}
+
+.global-management-title {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 3px;
+  padding: 0;
+}
+
+.global-management-title h2,
+.global-management-title p {
+  margin: 0;
+}
+
+.global-management-title h2 {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.global-management-title p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.global-management-tabs {
+  align-self: stretch;
+}
+
+.global-management-tabs :deep(.el-tabs__header),
+.global-management-tabs :deep(.el-tabs__nav-wrap),
+.global-management-tabs :deep(.el-tabs__nav-scroll),
+.global-management-tabs :deep(.el-tabs__nav) {
+  height: 100%;
+}
+
+.global-management-tabs :deep(.el-tabs__header) {
+  margin: 0;
+}
+
+.global-management-tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.global-management-tabs :deep(.el-tabs__item) {
+  height: 100%;
+  padding: 0 22px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.global-management-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--accent);
+}
+
+.global-management-tabs :deep(.el-tabs__active-bar) {
+  height: 2px;
+}
+
+.global-management-tabs :deep(.el-tabs__content) {
+  display: none;
+}
+
+@media (max-width: 1040px) {
+  .global-management-header {
+    min-height: auto;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 24px 0;
+  }
+
+  .global-management-tabs {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .global-management-tabs :deep(.el-tabs__item) {
+    padding: 0 14px;
+  }
+}
+</style>

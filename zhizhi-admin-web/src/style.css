@@ -1230,6 +1230,10 @@ body.form-drawer-open .admin-topbar {
   overflow: hidden;
 }
 
+.admin-content:has(.global-management-page) {
+  padding: 0;
+}
+
 .dashboard-page {
   display: grid;
   min-height: calc(100vh - var(--admin-header-height) - 26px);

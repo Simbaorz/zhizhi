@@ -19,7 +19,7 @@ from gewu_agent_runtime.builtins import SceneCatalog, SkillCatalog
 from gewu_agent_runtime.invocation import InvocationTarget, InvocationTargetKind
 from gewu_agent_runtime.llm import ChatModel
 from gewu_agent_runtime.prompts import SystemPrompt
-from gewu_agent_runtime.tools import Tool, ToolRuntimeBindings
+from gewu_agent_runtime.tools import ToolRuntimeBindings
 from gewu_core.errors import ApplicationError, ApplicationErrorKind
 from zhizhi.capabilities import (
     ReadOnlyWorkspaceBackends,
@@ -39,7 +39,6 @@ class ResolvedTurnCapabilities(BaseModel):
     model: SkipValidation[ChatModel]
     prompt: SystemPrompt
     workspace_backends: ReadOnlyWorkspaceBackends
-    data_source_tool: SkipValidation[Tool | None] = None
     skill_catalog: SkipValidation[SkillCatalog]
     scene_catalog: SkipValidation[SceneCatalog]
     tool_runtime: ToolRuntimeBindings = Field(default_factory=ToolRuntimeBindings)
@@ -149,7 +148,6 @@ class ZhizhiRuntimeProvider:
             model=resolved.model,
             workspace=workspace,
             tool_set=build_read_only_tool_set(
-                resolved.data_source_tool,
                 ask_timeout_seconds=resolved.ask_timeout_seconds,
             ),
             tool_runtime=resolved.tool_runtime,

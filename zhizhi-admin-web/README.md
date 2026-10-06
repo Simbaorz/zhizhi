@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md) · [Back to the project overview](../README.md)
 
-An enterprise Agent does not become trustworthy because it has a better chat box. Someone must decide which organization may use which model, which knowledge is authoritative, where live facts come from, and who is allowed to change those decisions.
+An enterprise Agent does not become trustworthy because it has a better chat box. Someone must decide which organization may use which model, which knowledge is authoritative, and who is allowed to change those decisions.
 
 Zhizhi Admin Web is that control surface.
 
@@ -17,8 +17,8 @@ Inside the console, an administrator can:
 1. create tenants and an arbitrary-depth organization tree;
 2. create or bind administrator accounts and assign roles;
 3. configure model providers, credentials, capabilities, and connectivity;
-4. grant model and data-source entitlements to a tenant or organization unit;
-5. bind the effective model or data source at a selected scope;
+4. grant model entitlements to a tenant or organization unit;
+5. bind the effective model at a selected scope;
 6. register Git repositories and authorize them for tenants;
 7. create, edit, upload, package, and synchronize Scenes and Skills;
 8. inspect only the navigation and actions allowed by the current RBAC session.
@@ -33,7 +33,6 @@ The console distinguishes **available resources** from **bound resources**. Avai
 | Organizations | Tenants and recursive organization units without fixed depth |
 | Accounts and roles | Administrator accounts, tenant memberships, roles, permissions, and password reset |
 | Models | Provider configuration, encrypted credentials, validation, test calls, entitlements, and bindings |
-| Data sources | HTTP gateway configuration, encrypted credentials, entitlements, and bindings |
 | Git knowledge | Repository registration, credential updates, connectivity tests, and tenant entitlements |
 | Scenes | File editing, directory operations, package upload/download, Git association, manual sync, and sync history |
 | Skills | `SKILL.md`-based asset creation, file editing, package import/export, and manifest-aware updates |

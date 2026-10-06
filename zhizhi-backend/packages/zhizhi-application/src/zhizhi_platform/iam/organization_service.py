@@ -43,7 +43,6 @@ SCOPE_CATALOG_READ_PERMISSIONS = (
     "scenes.view",
     "scene_git.view",
     "llm.view",
-    "data_source.view",
 )
 
 

@@ -14,7 +14,6 @@ The process owns:
 - RBAC roles, permissions, tenant memberships, and permission-aware navigation;
 - tenants and arbitrary-depth organization units;
 - model definitions, encrypted credentials, validation, test calls, entitlements, and bindings;
-- HTTP data-source definitions, encrypted credentials, entitlements, and bindings;
 - Git repositories, credential rotation, connectivity tests, and tenant entitlements;
 - Scene and Skill assets, files, packages, and manifests;
 - Scene Git configuration, manual synchronization requests, and job history;
@@ -37,7 +36,7 @@ Important settings include:
 - database and Redis connectivity;
 - the Admin JWT signing key;
 - RSA private-key path for browser password transport;
-- storage-encryption key for model, data-source, and Git credentials;
+- storage-encryption key for model and Git credentials;
 - administrator login-throttle and IAM limits;
 - Workspace storage and Scene Git settings;
 - Celery queue settings for synchronization jobs.

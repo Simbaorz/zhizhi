@@ -49,7 +49,6 @@ const permissionModuleLabels: Record<string, string> = {
   admins: "账号管理",
   llm: "模型管理",
   scene_git: "场景 Git 授权",
-  data_source: "数据源",
   skills: "技能管理",
   scenes: "业务场景管理",
   system: "系统权限",
@@ -75,7 +74,6 @@ const permissionModuleOrder = [
   "admins",
   "llm",
   "scene_git",
-  "data_source",
   "skills",
   "scenes",
 ];

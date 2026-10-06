@@ -39,7 +39,7 @@ Do not create nested Git repositories. Do not commit dependency directories, vir
 - Organization units form an arbitrary-depth tree. Never encode fixed geographic or organizational levels.
 - Principals and groups may belong to organization units without changing the organization-tree model.
 - Resource entitlements define what a scope may use or delegate. Resource bindings define what is selected for execution.
-- Model and data-source selection use the nearest valid binding while walking from the active organization unit toward its ancestors and tenant.
+- Model selection uses the nearest valid binding while walking from the active organization unit toward its ancestors and tenant.
 - Runtime knowledge composes the tenant Workspace with every organization Workspace on the active path. Managed Scenes and Skills are tenant-scoped in the current release.
 - Credentials are resolved on the server and must never be returned to Runtime callers or frontend clients.
 - Runtime workspaces are read-only, and ToolSets use explicit allowlists. Do not expose shell execution or unrestricted file mutation.

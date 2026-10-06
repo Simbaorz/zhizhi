@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, SkipValidation
 
 from gewu_agent_runtime.builtins import ask_user_tool, skill
 from gewu_agent_runtime.builtins.files import FileToolDescriptionProfile, build_file_tools
-from gewu_agent_runtime.tools import Tool, ToolSet
+from gewu_agent_runtime.tools import ToolSet
 from gewu_agent_runtime.workspace import (
     AccessMode,
     WorkspaceBackend,
@@ -64,15 +64,9 @@ def build_read_only_workspace(backends: ReadOnlyWorkspaceBackends) -> WorkspaceS
     return WorkspaceSession(tuple(mounts), default_root=default_root)
 
 
-def build_read_only_tool_set(
-    data_source: Tool | None,
-    *,
-    ask_timeout_seconds: int = 300,
-) -> ToolSet:
+def build_read_only_tool_set(*, ask_timeout_seconds: int = 300) -> ToolSet:
     """Build the explicit server-safe tool whitelist."""
 
-    if data_source is not None and data_source.name != "query_data_source":
-        raise ValueError("data_source must be a bound query_data_source tool")
     file_tools = {tool.name: tool for tool in build_file_tools(_FILE_TOOL_DESCRIPTION_PROFILE)}
     tools = [
         file_tools["list"],
@@ -82,6 +76,4 @@ def build_read_only_tool_set(
         skill,
         ask_user_tool(timeout_seconds=ask_timeout_seconds),
     ]
-    if data_source is not None:
-        tools.insert(5, data_source)
     return ToolSet(tuple(tools), name="zhizhi-read-only", version="v1")

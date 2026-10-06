@@ -43,12 +43,6 @@ ADMIN_NAVIGATION_ITEMS: tuple[AdminNavigationItem, ...] = (
         permission_code="scene_git.view",
     ),
     AdminNavigationItem(
-        key="data-sources",
-        label="数据源管理",
-        path="/data-sources",
-        permission_code="data_source.view",
-    ),
-    AdminNavigationItem(
         key="skills", label="技能管理", path="/skills", permission_code="skills.view"
     ),
     AdminNavigationItem(

@@ -32,13 +32,6 @@ from zhizhi_platform.bootstrap import (
     should_auto_create_schema,
     should_enforce_strong_secrets,
 )
-from zhizhi_platform.data_source import (
-    ConfiguredDataSourceCredentialCipher,
-    ZhizhiDataSourceAdminService,
-)
-from zhizhi_platform.data_source.adapters.mysql import (
-    MysqlDataSourceAdminRepository,
-)
 from zhizhi_platform.git import (
     ConfiguredGitCredentialCipher,
     RestrictedGitRepositoryClient,
@@ -104,7 +97,6 @@ class ZhizhiAdminApiRuntime:
         self.tenant_member_service: TenantMemberAdminService | None = None
         self.git_service: ZhizhiGitAdminService | None = None
         self.llm_service: ZhizhiLLMAdminService | None = None
-        self.data_source_service: ZhizhiDataSourceAdminService | None = None
         self.skill_service: ZhizhiAssetAdminService | None = None
         self.scene_service: ZhizhiAssetAdminService | None = None
         self.audit_writer: AdminAuditWriter | None = None
@@ -250,14 +242,6 @@ class ZhizhiAdminApiRuntime:
             ),
             cipher=ConfiguredLLMCredentialCipher(settings.storage_encryption.key),
         )
-        self.data_source_service = ZhizhiDataSourceAdminService(
-            repository=MysqlDataSourceAdminRepository(
-                sessions,
-                self._iam.organization_directory,
-            ),
-            org_repository=self._iam.admin_org_repository,
-            cipher=ConfiguredDataSourceCredentialCipher(settings.storage_encryption.key),
-        )
         if settings.workspace.storage_root.strip():
             workspace_root = resolve_workspace_storage_root(
                 settings.workspace.storage_root, self.bootstrap.project_home
@@ -324,7 +308,6 @@ class ZhizhiAdminApiRuntime:
         self.tenant_member_service = None
         self.git_service = None
         self.llm_service = None
-        self.data_source_service = None
         self.skill_service = None
         self.scene_service = None
         self.audit_writer = None

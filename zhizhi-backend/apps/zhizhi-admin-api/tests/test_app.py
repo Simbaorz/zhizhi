@@ -28,7 +28,6 @@ from zhizhi_admin_api.dependencies import (
     get_admin_auth_service,
     get_admin_user_admin_service,
     get_current_admin_session,
-    get_data_source_admin_service,
     get_git_admin_service,
     get_llm_admin_service,
     get_organization_admin_service,
@@ -62,10 +61,6 @@ AUTH_CONTRACT_SHA256 = "e68c4f349fe5579c207e645150f40a2ae81fda6c7dce2e43a8f8129e
         ),
         (get_git_admin_service, "Git management service is not configured."),
         (get_llm_admin_service, "LLM management service is not configured."),
-        (
-            get_data_source_admin_service,
-            "Data source management service is not configured.",
-        ),
         (get_skill_admin_service, "Skill management service is not configured."),
         (get_scene_admin_service, "Scene management service is not configured."),
     ],
@@ -108,12 +103,6 @@ def test_admin_app_owns_a_started_runtime_and_health_contract(tmp_path: Path) ->
         "/api/admin/auth/navigation",
         "/api/admin/bootstrap",
         "/api/admin/bootstrap/status",
-        "/api/admin/data-sources/bindings",
-        "/api/admin/data-sources/bindings/{binding_id}",
-        "/api/admin/data-sources/entitlements",
-        "/api/admin/data-sources/entitlements/{entitlement_id}",
-        "/api/admin/data-sources/sources",
-        "/api/admin/data-sources/sources/{source_id}",
         "/api/admin/roles",
         "/api/admin/roles/{role_id}",
         "/api/admin/roles/{role_id}/permissions",
@@ -336,7 +325,7 @@ def test_complete_admin_openapi_publishes_the_management_surface() -> None:
     assert spec["info"]["title"] == "致知 Admin API"
     assert "/api/admin/org/tenants/{tenant_id}/organization-units" in paths
     assert "/api/admin/llm/bindings" in paths
-    assert "/api/admin/data-sources/bindings" in paths
+    assert not any(path.startswith("/api/admin/data-sources") for path in paths)
     assert "/api/admin/scenes" in paths
     assert "/api/admin/skills" in paths
     assert not any("/areas" in path for path in paths)

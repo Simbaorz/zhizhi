@@ -15,7 +15,6 @@ trusted caller context
 tenant and organization-path validation
         │
         ├─ nearest model binding
-        ├─ nearest data-source binding
         ├─ visible Scene and Skill catalog
         └─ tenant + organization workspace mounts
         │
@@ -86,7 +85,7 @@ Resource governance separates availability from selection:
 | Entitlement | The resource is available at a tenant or organization scope and may be delegated according to policy |
 | Binding | The authorized resource is selected for execution at that scope |
 
-Model and data-source bindings resolve from the active organization leaf toward its ancestors and finally the tenant. The first valid binding wins. If the nearest active binding exists but its capability cannot be created, the request fails instead of silently skipping to a broader scope.
+Model bindings resolve from the active organization leaf toward its ancestors and finally the tenant. The first valid binding wins. If the nearest active binding exists but its capability cannot be created, the request fails instead of silently skipping to a broader scope.
 
 Runtime knowledge is assembled differently: the tenant workspace and every organization workspace on the active path are mounted read-only. In the current release, managed Scene and Skill assets are tenant-scoped and are exposed only when visible to the resolved caller scope.
 
@@ -96,22 +95,9 @@ The first open-source release deliberately exposes a bounded ToolSet:
 
 - `list`, `read`, `glob`, and `grep` for read-only workspace discovery;
 - `skill` for loading a governed Skill;
-- `ask_user` for pausing a run and requesting structured clarification;
-- optional `query_data_source` when an authorized data-source binding resolves.
+- `ask_user` for pausing a run and requesting structured clarification.
 
 There is no shell tool and no unrestricted workspace mutation.
-
-### Business data without database credentials in the model
-
-`query_data_source` does not connect the Agent directly to a database. Zhizhi binds it to an administrator-configured HTTP data gateway. The current reference adapter:
-
-- accepts only a single `SELECT` or `WITH` statement;
-- rejects mutation and DDL keywords;
-- applies a configured row limit and maximum Tool result size;
-- keeps gateway credentials on the server;
-- normalizes the gateway response and masks values under sensitive-looking column names.
-
-The gateway protocol is an application adapter, not a Gewu requirement. Enterprises can replace it with an adapter for their own governed query service while keeping the Runtime contract bounded.
 
 ## Agent Web API
 
@@ -141,7 +127,6 @@ The management process is separate from Agent execution. It provides:
 - administrator login, encrypted password transport, session handling, login throttling, RBAC, and permission-aware navigation;
 - tenants, recursive organization units, administrator accounts, tenant memberships, and roles;
 - model definitions, encrypted credentials, connectivity tests, entitlements, and bindings;
-- HTTP data-source definitions, encrypted gateway credentials, entitlements, and bindings;
 - Git repositories and tenant entitlements;
 - managed Scene and Skill files, packages, manifests, and Scene Git synchronization;
 - mutation audit records and bounded upload/download handling.

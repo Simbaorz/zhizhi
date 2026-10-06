@@ -11,7 +11,6 @@ from zhizhi.capabilities import (
     build_read_only_tool_set,
     build_read_only_workspace,
 )
-from zhizhi_platform.data_source.tool import query_data_source_template
 
 
 async def _backends() -> ReadOnlyWorkspaceBackends:
@@ -43,7 +42,7 @@ async def test_workspace_mounts_tenant_and_active_organization_path_read_only() 
 
 
 def test_tool_set_is_an_explicit_read_only_whitelist() -> None:
-    tool_set = build_read_only_tool_set(query_data_source_template)
+    tool_set = build_read_only_tool_set()
     names = {tool.name for tool in tool_set.all()}
 
     assert names == {
@@ -52,7 +51,6 @@ def test_tool_set_is_an_explicit_read_only_whitelist() -> None:
         "glob",
         "grep",
         "skill",
-        "query_data_source",
         "ask_user",
     }
     assert not names.intersection({"write", "append", "edit", "delete", "bash"})
@@ -62,7 +60,7 @@ def test_tool_set_is_an_explicit_read_only_whitelist() -> None:
 def test_file_tool_descriptions_match_the_zhizhi_workspace() -> None:
     tools = {
         tool.name: tool
-        for tool in build_read_only_tool_set(None).all()
+        for tool in build_read_only_tool_set().all()
         if tool.name in {"list", "read", "glob", "grep"}
     }
 
@@ -76,10 +74,3 @@ def test_file_tool_descriptions_match_the_zhizhi_workspace() -> None:
     assert "active organization workspace" in tools["read"].description
     assert "/workspace/tenant/**/*.md" in tools["glob"].description
     assert tools["grep"].description.startswith("A powerful search tool")
-
-
-def test_data_source_tool_is_hidden_when_scope_has_no_binding() -> None:
-    names = {tool.name for tool in build_read_only_tool_set(None).all()}
-
-    assert "query_data_source" not in names
-    assert names == {"list", "read", "glob", "grep", "skill", "ask_user"}

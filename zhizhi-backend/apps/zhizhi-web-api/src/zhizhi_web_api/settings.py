@@ -45,11 +45,6 @@ class AgentSettings(SettingsModel):
     image_admission_timeout_seconds: float = Field(default=2.0, gt=0)
 
 
-class DataSourceSettings(SettingsModel):
-    max_response_bytes: int = Field(default=4 * 1024 * 1024, ge=1)
-    max_tool_result_bytes: int = Field(default=512 * 1024, ge=2048)
-
-
 class WebApiSettings(HttpInfrastructureSettings):
     db: ZhizhiDatabaseSettings = Field(default_factory=ZhizhiDatabaseSettings)
     redis: ZhizhiRedisSettings = Field(default_factory=ZhizhiRedisSettings)
@@ -58,7 +53,6 @@ class WebApiSettings(HttpInfrastructureSettings):
     workspace: ZhizhiWorkspaceSettings = Field(default_factory=ZhizhiWorkspaceSettings)
     outbound_http: OutboundHttpSettings = Field(default_factory=OutboundHttpSettings)
     agent: AgentSettings = Field(default_factory=AgentSettings)
-    data_source: DataSourceSettings = Field(default_factory=DataSourceSettings)
 
     @model_validator(mode="after")
     def require_workspace_root(self) -> "WebApiSettings":

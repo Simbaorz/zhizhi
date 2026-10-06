@@ -9,10 +9,6 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from zhizhi.assets import SharedAssetModel
 
-from zhizhi_platform.data_source.adapters.mysql.models import (
-    DataSourceSourceBindingModel,
-    DataSourceSourceEntitlementModel,
-)
 from zhizhi_platform.git.adapters.mysql.models import (
     GitEntitlementModel,
     WorkspaceSceneGitConfigModel,
@@ -72,16 +68,6 @@ class MysqlOrganizationReferenceQuery:
                 ),
                 ("llm_bindings", LLMBindingModel, LLMBindingModel.tenant_id == tenant_id),
                 (
-                    "data_source_entitlements",
-                    DataSourceSourceEntitlementModel,
-                    DataSourceSourceEntitlementModel.tenant_id == tenant_id,
-                ),
-                (
-                    "data_source_bindings",
-                    DataSourceSourceBindingModel,
-                    DataSourceSourceBindingModel.tenant_id == tenant_id,
-                ),
-                (
                     "git_entitlements",
                     GitEntitlementModel,
                     GitEntitlementModel.tenant_id == tenant_id,
@@ -119,21 +105,9 @@ class MysqlOrganizationReferenceQuery:
                 LLMEntitlementModel.organization_unit_id == organization_unit_id
             ]
             llm_binding_conditions = [LLMBindingModel.organization_unit_id == organization_unit_id]
-            business_entitlement_conditions = [
-                DataSourceSourceEntitlementModel.organization_unit_id == organization_unit_id
-            ]
-            business_binding_conditions = [
-                DataSourceSourceBindingModel.organization_unit_id == organization_unit_id
-            ]
             if tenant_id:
                 llm_entitlement_conditions.append(LLMEntitlementModel.tenant_id == tenant_id)
                 llm_binding_conditions.append(LLMBindingModel.tenant_id == tenant_id)
-                business_entitlement_conditions.append(
-                    DataSourceSourceEntitlementModel.tenant_id == tenant_id
-                )
-                business_binding_conditions.append(
-                    DataSourceSourceBindingModel.tenant_id == tenant_id
-                )
             count_queries.append(
                 (
                     "admin_scopes",
@@ -144,16 +118,6 @@ class MysqlOrganizationReferenceQuery:
             )
             add_count("llm_entitlements", LLMEntitlementModel, *llm_entitlement_conditions)
             add_count("llm_bindings", LLMBindingModel, *llm_binding_conditions)
-            add_count(
-                "data_source_entitlements",
-                DataSourceSourceEntitlementModel,
-                *business_entitlement_conditions,
-            )
-            add_count(
-                "data_source_bindings",
-                DataSourceSourceBindingModel,
-                *business_binding_conditions,
-            )
 
         return await self._load_nonzero_counts(count_queries)
 
@@ -196,26 +160,6 @@ class MysqlOrganizationReferenceQuery:
                     LLMBindingModel,
                     LLMBindingModel.tenant_id == tenant_id,
                     LLMBindingModel.organization_unit_id.in_(removed_organization_unit_ids),
-                ),
-            ),
-            (
-                "data_source_entitlements",
-                count(
-                    DataSourceSourceEntitlementModel,
-                    DataSourceSourceEntitlementModel.tenant_id == tenant_id,
-                    DataSourceSourceEntitlementModel.organization_unit_id.in_(
-                        removed_organization_unit_ids
-                    ),
-                ),
-            ),
-            (
-                "data_source_bindings",
-                count(
-                    DataSourceSourceBindingModel,
-                    DataSourceSourceBindingModel.tenant_id == tenant_id,
-                    DataSourceSourceBindingModel.organization_unit_id.in_(
-                        removed_organization_unit_ids
-                    ),
                 ),
             ),
         ]

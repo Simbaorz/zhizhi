@@ -12,7 +12,7 @@ For each turn, the process:
 
 1. validates the trusted caller context and request limits;
 2. resolves the active organization path;
-3. chooses the nearest model and data-source bindings;
+3. chooses the nearest model binding;
 4. mounts the tenant and organization Workspace roots read-only;
 5. exposes visible Scenes, Skills, and the bounded ToolSet;
 6. starts or resumes a Gewu run;
@@ -41,7 +41,7 @@ The chat and clarification endpoints return `text/event-stream`. Stream events i
 
 The process is not an identity provider. Context fields supplied by a browser are not inherently trusted. Deploy it behind an authenticated enterprise application or gateway and validate that callers cannot forge another tenant, organization, or principal.
 
-Runtime Workspace access is read-only. The ToolSet contains file discovery/read tools, Skill loading, `ask_user`, and an optional authorized data-source query tool; it contains no shell.
+Runtime Workspace access is read-only. The ToolSet contains file discovery/read tools, Skill loading, and `ask_user`; it contains no shell.
 
 ## Configuration
 
@@ -54,7 +54,7 @@ The process requires:
 - local media storage or configured object storage;
 - the same storage-encryption key used by Admin API and Worker;
 - Agent concurrency, timeout, compaction, and image-admission limits;
-- outbound HTTP and data-source result limits.
+- outbound HTTP limits.
 
 ## Run
 

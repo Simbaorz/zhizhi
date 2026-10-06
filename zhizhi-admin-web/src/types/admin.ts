@@ -283,52 +283,6 @@ export interface ManagedLLMEntitlement {
   updated_at?: string | null;
 }
 
-export type DataSourceScopeType = "tenant" | "organization_unit";
-
-export interface ManagedDataSource {
-  id: string;
-  source_key: string;
-  display_name: string;
-  description: string;
-  status: string;
-  api_url: string;
-  app_id: string;
-  credential_status: string;
-  has_credentials: boolean;
-  credential_fields: string[];
-  default_database_key: string;
-  exec_sources_code: string;
-  timeout_seconds: number;
-  default_max_rows: number;
-  hard_max_rows: number;
-  allow_databases: string;
-  log_sql: boolean;
-  created_at?: string | null;
-  updated_at?: string | null;
-}
-
-export interface ManagedDataSourceBinding {
-  id: string;
-  tenant_id: string;
-  scope_type: DataSourceScopeType;
-  organization_unit_id: string;
-  data_source_id: string;
-  status: string;
-  created_at?: string | null;
-  updated_at?: string | null;
-}
-
-export interface ManagedDataSourceEntitlement {
-  id: string;
-  tenant_id: string;
-  scope_type: DataSourceScopeType;
-  organization_unit_id: string;
-  data_source_id: string;
-  status: string;
-  created_at?: string | null;
-  updated_at?: string | null;
-}
-
 export interface LLMTestResult {
   ok: boolean;
   content: string;

@@ -38,7 +38,7 @@ def raise_if_organization_referenced(references: dict[str, int], label: str) -> 
     summary = ", ".join(f"{name}={count}" for name, count in sorted(references.items()))
     raise ApplicationError(
         ApplicationErrorKind.INVALID_INPUT,
-        f"{label}仍被数据源引用，无法删除或解绑：{summary}",
+        f"{label}仍被其他资源引用，无法删除或解绑：{summary}",
     )
 
 

@@ -29,8 +29,6 @@ from zhizhi import (
 from zhizhi.runtime_capabilities import ZhizhiCapabilityResolver
 from zhizhi.shared_catalogs import SharedCatalogs
 from zhizhi_platform import (
-    ZhizhiDataSourceCapabilityBuilder,
-    ZhizhiDataSourceSourceResolver,
     ZhizhiModelBindingResolver,
     resolve_instance_namespace,
     should_auto_create_schema,
@@ -40,13 +38,10 @@ from zhizhi_platform.adapters import build_zhizhi_chat_media_store
 from zhizhi_platform.adapters.filesystem import (
     ZhizhiFilesystemWorkspaceBackendFactory,
 )
-from zhizhi_platform.adapters.http import HttpDataSourceQueryGateway
 from zhizhi_platform.adapters.mysql import (
-    MysqlDataSourceRuntimeRepository,
     MysqlModelRuntimeRepository,
 )
 from zhizhi_platform.chat_media import ZhizhiChatMediaStore
-from zhizhi_platform.data_source import ConfiguredDataSourceCredentialCipher
 from zhizhi_platform.iam.adapters.mysql import MysqlOrganizationDirectory
 from zhizhi_platform.llm import ConfiguredLLMCredentialCipher
 from zhizhi_platform.llm.capability import ZhizhiModelCapabilityBuilder
@@ -76,7 +71,6 @@ class ZhizhiApiRuntime:
         self._redis: RedisClient | None = None
         self._http_client: httpx.AsyncClient | None = None
         self._model_factory: DefaultProviderChatModelFactory | None = None
-        self._data_source_gateway: HttpDataSourceQueryGateway | None = None
         self._agent_runtime: AgentRuntime | None = None
         self._media_store: ZhizhiChatMediaStore | None = None
         self.service: AgentWorkbenchService | None = None
@@ -164,19 +158,6 @@ class ZhizhiApiRuntime:
                 ConfiguredLLMCredentialCipher(settings.storage_encryption.key),
             ),
         )
-        self._data_source_gateway = HttpDataSourceQueryGateway(
-            max_response_bytes=settings.data_source.max_response_bytes,
-            client=self._http_client,
-        )
-        business_repository = MysqlDataSourceRuntimeRepository(sessions)
-        business_resolver = ZhizhiDataSourceSourceResolver(
-            business_repository,
-            ZhizhiDataSourceCapabilityBuilder(
-                business_repository,
-                self._data_source_gateway,  # noqa
-                ConfiguredDataSourceCredentialCipher(settings.storage_encryption.key),
-            ),
-        )
         shared_assets = MysqlSharedAssetRepository(sessions)
         catalog_resolver = SharedCatalogs(shared_assets, workspace_backends)
         store = SqlAlchemyRuntimeStore(
@@ -235,12 +216,10 @@ class ZhizhiApiRuntime:
             scopes=scopes,
             capabilities=ZhizhiCapabilityResolver(
                 models=model_resolver,  # noqa
-                data_source=business_resolver,  # noqa
                 catalogs=catalog_resolver,
                 workspace_backends=workspace_backends,
                 max_iterations=settings.agent.max_iterations,
                 ask_timeout_seconds=settings.agent.ask_user_timeout_seconds,
-                data_source_max_result_bytes=settings.data_source.max_tool_result_bytes,
             ),
             attachment_loader=self._media_store,
         )
@@ -269,9 +248,6 @@ class ZhizhiApiRuntime:
         self._media_store = None
         if media_store is not None:
             await media_store.close()
-        if self._data_source_gateway is not None:
-            await self._data_source_gateway.aclose()
-            self._data_source_gateway = None
         if self._model_factory is not None:
             await self._model_factory.aclose()
             self._model_factory = None

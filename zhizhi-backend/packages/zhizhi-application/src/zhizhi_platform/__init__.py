@@ -6,16 +6,6 @@ from zhizhi_platform.bootstrap import (
     should_auto_create_schema,
     should_enforce_strong_secrets,
 )
-from zhizhi_platform.data_source.capability import (
-    ZhizhiDataSourceCapabilityBuilder,
-    ZhizhiDataSourceRuntimeConfig,
-    ZhizhiHttpDataSourceCapability,
-)
-from zhizhi_platform.data_source.resolution import (
-    ZhizhiDataSourceBindingRecord,
-    ZhizhiDataSourceSourceRecord,
-    ZhizhiDataSourceSourceResolver,
-)
 from zhizhi_platform.database_settings import ZhizhiDatabaseSettings
 from zhizhi_platform.llm.resolution import (
     ZhizhiModelBindingRecord,
@@ -31,13 +21,7 @@ __all__ = [
     "should_auto_create_schema",
     "should_enforce_strong_secrets",
     "ChatMediaSettings",
-    "ZhizhiDataSourceBindingRecord",
-    "ZhizhiDataSourceCapabilityBuilder",
-    "ZhizhiDataSourceRuntimeConfig",
-    "ZhizhiDataSourceSourceRecord",
-    "ZhizhiDataSourceSourceResolver",
     "ZhizhiDatabaseSettings",
-    "ZhizhiHttpDataSourceCapability",
     "ZhizhiModelBindingRecord",
     "ZhizhiModelBindingResolver",
     "ZhizhiRedisSettings",

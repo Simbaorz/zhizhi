@@ -16,7 +16,6 @@ from zhizhi_admin_api.bootstrap_service import AdminBootstrapService
 from zhizhi_admin_api.mutation_audit import attach_admin_audit_context
 from zhizhi_admin_api.shared_asset_admin import ZhizhiAssetAdminService
 from zhizhi_platform.audit import AdminAuditActor, AdminAuditWriter
-from zhizhi_platform.data_source import ZhizhiDataSourceAdminService
 from zhizhi_platform.git import ZhizhiGitAdminService
 from zhizhi_platform.iam import (
     AdminAuthService,
@@ -157,26 +156,6 @@ def get_llm_admin_service(request: Request) -> ZhizhiLLMAdminService:
 
 
 LLMAdminServiceDep = Annotated[ZhizhiLLMAdminService, Depends(get_llm_admin_service)]
-
-
-def get_data_source_admin_service(request: Request) -> ZhizhiDataSourceAdminService:
-    service = getattr(
-        getattr(request.app.state, "runtime", None),
-        "data_source_service",
-        None,
-    )
-    if not isinstance(service, ZhizhiDataSourceAdminService):
-        raise HTTPException(
-            status_code=503,
-            detail="Data source management service is not configured.",
-        )
-    return service
-
-
-DataSourceAdminServiceDep = Annotated[
-    ZhizhiDataSourceAdminService,
-    Depends(get_data_source_admin_service),
-]
 
 
 def get_skill_admin_service(request: Request) -> ZhizhiAssetAdminService:

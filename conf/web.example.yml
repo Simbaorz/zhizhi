@@ -145,7 +145,3 @@ agent:
   image_encoded_in_flight_bytes: 256 MB
   image_provider_payload_in_flight_bytes: 256 MB
   image_admission_timeout_seconds: 2.0
-
-data_source:
-  max_response_bytes: 4 MB
-  max_tool_result_bytes: 512 KB

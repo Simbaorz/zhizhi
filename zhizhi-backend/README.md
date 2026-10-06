@@ -89,6 +89,14 @@ Model bindings resolve from the active organization leaf toward its ancestors an
 
 Runtime knowledge is assembled differently: the tenant workspace and every organization workspace on the active path are mounted read-only. In the current release, managed Scene and Skill assets are tenant-scoped and are exposed only when visible to the resolved caller scope.
 
+Zhizhi owns a read-only Wiki assistant prompt, including source-based answers and rules for
+loading a selected Scene's bound Skill. The user selects Scenes in the trial client; the Agent
+navigates within that Wiki instead of discovering or switching Scenes autonomously. Runtime
+reminders carry the Skills listing and explicitly selected Scene context. The System Prompt
+contains actual Workspace context and any explicitly supplied extra context or memory, with
+empty sections omitted and no automatic timestamp injection. No default Scene configuration
+is added by this prompt preset.
+
 ## Runtime capabilities
 
 The first open-source release deliberately exposes a bounded ToolSet:

@@ -89,6 +89,11 @@ Web API 接收以下上下文：
 
 Runtime 知识采用另一种组合方式：租户 Workspace 与当前完整组织路径上的 Workspace 都会以只读方式挂载。当前版本中，受管理的 Scene 和 Skill 为租户级资源，只在解析后的调用范围可见时暴露。
 
+Zhizhi 自己定义只读 Wiki 助手提示词，要求根据来源回答，并在使用选中 Scene 时加载其绑定 Skill。
+用户在试用客户端选择 Scene，Agent 在该 Wiki 内导航，不自主发现或切换 Scene。
+Runtime reminder 提供 Skills 列表和用户显式选中的 Scene 上下文。System Prompt 只装配实际提供的
+Workspace、额外上下文及 Memory；空段落整体省略，不自动注入时间。本提示词改动不新增默认 Scene 配置。
+
 ## Runtime 能力
 
 首个开源版本有意限制 ToolSet：

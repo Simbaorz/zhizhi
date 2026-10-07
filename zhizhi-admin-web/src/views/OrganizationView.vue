@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 import {
   ArrowRight,
   CirclePlus,
   Delete,
   EditPen,
   OfficeBuilding,
-  Refresh,
+  Refresh as RotateCcw,
   Search,
 } from "@element-plus/icons-vue";
 
@@ -23,6 +24,8 @@ import {
 } from "@/api/admin";
 import { ApiError } from "@/api/http";
 import FormDrawer from "@/components/FormDrawer.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
+import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
 import { useAuthStore } from "@/stores/auth";
 import { useScopeStore } from "@/stores/scope";
 import type { ManagedOrganizationUnit, ManagedTenant } from "@/types/admin";
@@ -39,7 +42,7 @@ interface OrganizationTableRow extends ManagedOrganizationUnit {
 type DrawerMode = "tenant-create" | "tenant-edit" | "unit-create" | "unit-edit";
 type ManagementSection = "tenants" | "organization";
 
-const TENANT_PAGE_SIZE = 20;
+const TENANT_PAGE_SIZE = RESOURCE_PAGE_SIZE;
 const TENANT_CATALOG_SIZE = 100;
 
 const props = withDefaults(defineProps<{ mode?: "global" | "tenant" }>(), {
@@ -48,11 +51,12 @@ const props = withDefaults(defineProps<{ mode?: "global" | "tenant" }>(), {
 
 const authStore = useAuthStore();
 const scopeStore = useScopeStore();
+const router = useRouter();
 
 const loading = ref(false);
 const tableLoading = ref(false);
 const saving = ref(false);
-const activeSection = ref<ManagementSection>("organization");
+const activeSection = computed<ManagementSection>(() => props.mode === "global" ? "tenants" : "organization");
 const tenantRows = ref<ManagedTenant[]>([]);
 const tenantOptions = ref<ManagedTenant[]>([]);
 const tenantTotal = ref(0);
@@ -60,7 +64,6 @@ const tenantPage = ref(1);
 const tenantSearch = ref("");
 const activeTenantId = ref("");
 const units = ref<ManagedOrganizationUnit[]>([]);
-const organizationSearch = ref("");
 const expandedUnitIds = ref<string[]>([]);
 const editingTenantId = ref("");
 const editingUnitId = ref("");
@@ -112,7 +115,7 @@ const drawerSubtitle = computed(() => {
   return editingUnit.value?.external_key ?? "";
 });
 const organizationTree = computed<OrganizationTreeNode[]>(() =>
-  filterOrganizationTree(buildOrganizationTree(units.value), organizationSearch.value),
+  buildOrganizationTree(units.value),
 );
 const organizationRows = computed<OrganizationTableRow[]>(() =>
   flattenOrganizationTree(organizationTree.value),
@@ -151,23 +154,6 @@ function buildOrganizationTree(source: ManagedOrganizationUnit[]): OrganizationT
   return roots;
 }
 
-function filterOrganizationTree(
-  source: OrganizationTreeNode[],
-  search: string,
-): OrganizationTreeNode[] {
-  const keyword = search.trim().toLocaleLowerCase("zh-CN");
-  if (!keyword) return source;
-  return source.flatMap((node) => {
-    const children = filterOrganizationTree(node.children, keyword);
-    const searchable = [node.name, node.external_key, node.unit_type]
-      .join(" ")
-      .toLocaleLowerCase("zh-CN");
-    return searchable.includes(keyword) || children.length
-      ? [{ ...node, children }]
-      : [];
-  });
-}
-
 function flattenOrganizationTree(
   source: OrganizationTreeNode[],
   depth = 0,
@@ -180,10 +166,7 @@ function flattenOrganizationTree(
       tree_depth: depth,
       has_children: children.length > 0,
     });
-    if (
-      children.length
-      && (organizationSearch.value.trim() || expandedUnitIds.value.includes(node.id))
-    ) {
+    if (children.length && expandedUnitIds.value.includes(node.id)) {
       rows.push(...flattenOrganizationTree(children, depth + 1));
     }
   }
@@ -224,6 +207,12 @@ async function loadTenantRows(): Promise<void> {
       search: tenantSearch.value.trim(),
       status: "all",
     });
+    const lastPage = Math.max(1, Math.ceil(result.pagination.total / TENANT_PAGE_SIZE));
+    if (tenantPage.value > lastPage) {
+      tenantPage.value = lastPage;
+      await loadTenantRows();
+      return;
+    }
     tenantRows.value = result.items;
     tenantTotal.value = result.pagination.total;
   } catch (error) {
@@ -236,13 +225,11 @@ async function loadTenantRows(): Promise<void> {
 async function loadPage(): Promise<void> {
   loading.value = true;
   try {
-    await Promise.all([
-      loadTenantCatalog(),
-      canManageTenants.value ? loadTenantRows() : Promise.resolve(),
-    ]);
-    if (canManageTenants.value && tenantOptions.value.length === 0) {
-      activeSection.value = "tenants";
+    if (props.mode === "global") {
+      await loadTenantRows();
+      return;
     }
+    await loadTenantCatalog();
     await loadUnits();
   } catch (error) {
     notifyError(error, "加载组织管理数据失败");
@@ -277,14 +264,6 @@ async function selectTenant(tenantId: string): Promise<void> {
   syncTenantContext(tenantId);
   if (activeTenantId.value === tenantId) return;
   activeTenantId.value = tenantId;
-  organizationSearch.value = "";
-  expandedUnitIds.value = [];
-  await loadUnits();
-}
-
-async function handleTenantSelectionChange(): Promise<void> {
-  syncTenantContext(activeTenantId.value);
-  organizationSearch.value = "";
   expandedUnitIds.value = [];
   await loadUnits();
 }
@@ -306,17 +285,10 @@ function toggleUnitExpanded(unit: OrganizationTableRow): void {
     : [...expandedUnitIds.value, unit.id];
 }
 
-function showTenantManagement(): void {
-  if (canManageTenants.value) activeSection.value = "tenants";
-}
-
-function showOrganizationManagement(): void {
-  activeSection.value = "organization";
-}
-
 async function openTenantOrganization(tenant: ManagedTenant): Promise<void> {
-  showOrganizationManagement();
-  await selectTenant(tenant.id);
+  await scopeStore.fetchCatalog();
+  syncTenantContext(tenant.id);
+  await router.push("/org");
 }
 
 async function submitTenantSearch(): Promise<void> {
@@ -328,6 +300,8 @@ async function changeTenantPage(page: number): Promise<void> {
   tenantPage.value = page;
   await loadTenantRows();
 }
+
+function resetTenantSearch(): void { tenantSearch.value = ""; void submitTenantSearch(); }
 
 function openCreateTenant(): void {
   Object.assign(tenantForm, { tenantCode: "", tenantName: "", status: "active" });
@@ -381,22 +355,20 @@ async function saveDrawer(): Promise<void> {
     if (drawerMode.value === "tenant-create") {
       if (!tenantForm.tenantCode.trim()) throw new Error("请填写租户编码");
       if (!tenantForm.tenantName.trim()) throw new Error("请填写租户名称");
-      const created = await createOrgTenant({
+      await createOrgTenant({
         tenantCode: tenantForm.tenantCode.trim(),
         tenantName: tenantForm.tenantName.trim(),
         status: tenantForm.status,
       });
-      await Promise.all([loadTenantCatalog(), loadTenantRows()]);
-      activeTenantId.value = created.id;
-      showOrganizationManagement();
-      await loadUnits();
+      tenantPage.value = 1;
+      await Promise.all([scopeStore.fetchCatalog(), loadTenantRows()]);
     } else if (drawerMode.value === "tenant-edit" && editingTenant.value) {
       if (!tenantForm.tenantName.trim()) throw new Error("请填写租户名称");
       await updateOrgTenant(editingTenant.value.id, {
         tenantName: tenantForm.tenantName.trim(),
         status: tenantForm.status,
       });
-      await Promise.all([loadTenantCatalog(), loadTenantRows()]);
+      await Promise.all([scopeStore.fetchCatalog(), loadTenantRows()]);
     } else {
       const metadata = parseMetadata();
       if (!unitForm.externalKey.trim()) throw new Error("请填写外部标识");
@@ -446,8 +418,7 @@ async function removeTenant(tenant: ManagedTenant): Promise<void> {
   try {
     await deleteOrgTenant(tenant.id);
     if (activeTenantId.value === tenant.id) activeTenantId.value = "";
-    await Promise.all([loadTenantCatalog(), loadTenantRows()]);
-    await loadUnits();
+    await Promise.all([scopeStore.fetchCatalog(), loadTenantRows()]);
     ElMessage.success("租户已删除");
   } catch (error) {
     notifyError(error, "删除租户失败");
@@ -527,10 +498,6 @@ watch(
   },
 );
 
-watch(canManageTenants, (allowed) => {
-  if (!allowed) showOrganizationManagement();
-});
-
 onMounted(loadPage);
 </script>
 
@@ -545,36 +512,22 @@ onMounted(loadPage);
         <h1>组织管理</h1>
         <p>维护当前租户的组织层级与基础信息。</p>
       </div>
-      <el-button :icon="Refresh" @click="loadPage">刷新</el-button>
     </header>
 
     <section class="organization-surface">
-      <header class="organization-primary-toolbar">
-        <nav
+      <header class="organization-primary-toolbar global-resource-toolbar">
+        <div
           v-if="canManageTenants"
-          class="organization-section-tabs"
-          aria-label="组织管理范围"
+          class="organization-section-tabs global-resource-title"
         >
-          <button
-            type="button"
-            :class="{ active: activeSection === 'organization' }"
-            @click="showOrganizationManagement"
-          >
-            组织管理
-          </button>
-          <button
-            type="button"
-            :class="{ active: activeSection === 'tenants' }"
-            @click="showTenantManagement"
-          >
-            租户管理
-          </button>
-        </nav>
+          <h2>租户管理</h2>
+        </div>
         <div v-else class="organization-view-title">
           <h2>组织管理</h2>
         </div>
 
-        <div v-if="activeSection === 'tenants'" class="organization-toolbar-tools">
+        <div v-if="activeSection === 'tenants'" class="organization-toolbar-tools global-resource-tools">
+          <div class="global-resource-filters">
           <el-input
             v-model="tenantSearch"
             class="organization-search"
@@ -584,37 +537,17 @@ onMounted(loadPage);
             @keydown.enter="submitTenantSearch"
             @clear="submitTenantSearch"
           />
+          <el-button :icon="RotateCcw" :disabled="tableLoading" @click="resetTenantSearch">重置</el-button>
+          <el-button :icon="Search" type="primary" :disabled="tableLoading" @click="submitTenantSearch">搜索</el-button>
+          </div>
+          <div class="global-resource-actions">
           <el-button type="primary" :icon="CirclePlus" @click="openCreateTenant">
             新建租户
           </el-button>
+          </div>
         </div>
 
         <div v-else class="organization-toolbar-tools">
-          <label class="organization-tenant-picker">
-            <span>当前租户</span>
-            <el-select
-              v-if="canManageTenants"
-              v-model="activeTenantId"
-              filterable
-              placeholder="选择租户"
-              @change="handleTenantSelectionChange"
-            >
-              <el-option
-                v-for="tenant in tenantOptions"
-                :key="tenant.id"
-                :label="tenant.tenant_name || tenant.tenant_code"
-                :value="tenant.id"
-              />
-            </el-select>
-            <strong v-else>{{ activeTenant?.tenant_name || "未选择租户" }}</strong>
-          </label>
-          <el-input
-            v-model="organizationSearch"
-            class="organization-search"
-            :prefix-icon="Search"
-            placeholder="搜索组织名称或外部标识"
-            clearable
-          />
           <el-button
             v-if="canManageOrganization"
             type="primary"
@@ -629,11 +562,11 @@ onMounted(loadPage);
 
       <div
         v-if="activeSection === 'tenants'"
-        class="organization-table-region"
+        class="organization-table-region global-resource-table-region"
       >
         <el-table
           v-loading="tableLoading"
-          class="tenant-management-table organization-data-table"
+          class="tenant-management-table organization-data-table global-resource-table"
           :data="tenantRows"
           row-key="id"
           height="100%"
@@ -651,18 +584,15 @@ onMounted(loadPage);
           </el-table-column>
           <el-table-column label="状态" width="150">
             <template #default="{ row: tenant }">
-              <span class="status-text" :class="tenant.status">
-                <i />
-                {{ tenant.status === "active" ? "启用" : "停用" }}
-              </span>
+              <el-tag :type="tenant.status === 'active' ? 'success' : 'info'">{{ tenant.status === "active" ? "启用" : "停用" }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="创建时间" width="190">
             <template #default="{ row: tenant }">{{ formatDate(tenant.created_at) }}</template>
           </el-table-column>
-          <el-table-column label="操作" min-width="310" align="right">
+          <el-table-column label="操作" min-width="220" align="right" fixed="right">
             <template #default="{ row: tenant }">
-              <div class="row-actions">
+              <div class="row-actions global-resource-row-actions">
                 <el-button type="primary" link @click="openTenantOrganization(tenant)">
                   管理组织
                 </el-button>
@@ -672,25 +602,25 @@ onMounted(loadPage);
             </template>
           </el-table-column>
           <template #empty>
-            <div class="organization-empty">
-              <el-empty description="还没有租户" :image-size="92" />
-              <el-button type="primary" :icon="CirclePlus" @click="openCreateTenant">
+            <ManagementEmptyState
+              :title="tenantSearch.trim() ? '未找到匹配的租户' : '暂无租户'"
+              :description="tenantSearch.trim() ? '请调整搜索条件后重试。' : '新建租户后，可在组织管理中维护组织层级。'"
+            >
+              <el-button v-if="!tenantSearch.trim()" type="primary" @click="openCreateTenant">
                 创建第一个租户
               </el-button>
-            </div>
+            </ManagementEmptyState>
           </template>
         </el-table>
-        <footer v-if="tenantRows.length" class="organization-table-footer">
-          <span>共 {{ tenantTotal }} 个租户</span>
           <el-pagination
-            background
-            layout="prev, pager, next"
+            v-if="tenantTotal > 0"
+            class="admin-pagination"
+            layout="total, prev, pager, next"
             :current-page="tenantPage"
             :page-size="TENANT_PAGE_SIZE"
             :total="tenantTotal"
             @current-change="changeTenantPage"
           />
-        </footer>
       </div>
 
       <div v-else class="organization-table-region">
@@ -752,11 +682,11 @@ onMounted(loadPage);
           <template #empty>
             <div class="organization-empty">
               <el-empty
-                :description="organizationSearch ? '没有匹配的组织单元' : '尚未创建组织单元'"
+                description="尚未创建组织单元"
                 :image-size="92"
               />
               <el-button
-                v-if="canManageOrganization && !organizationSearch"
+                v-if="canManageOrganization"
                 type="primary"
                 :icon="CirclePlus"
                 @click="openCreateUnit('')"
@@ -958,6 +888,15 @@ onMounted(loadPage);
   gap: 1.5rem;
 }
 
+.organization-section-tabs h2 {
+  align-self: center;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: 780;
+  white-space: nowrap;
+}
+
 .organization-section-tabs button {
   position: relative;
   border: 0;
@@ -1002,33 +941,31 @@ onMounted(loadPage);
   padding-inline: 0.875rem;
 }
 
+.organization-page.is-global-mode .organization-toolbar-tools {
+  justify-content: flex-end;
+}
+
+.organization-page.is-global-mode .organization-toolbar-tools > .el-button {
+  min-width: auto;
+  margin-left: 0;
+}
+
+.organization-page.is-global-mode .organization-toolbar-tools > .el-button:last-child {
+  min-width: 7.75rem;
+}
+
+.organization-page.is-global-mode .organization-search {
+  width: 240px;
+}
+
 .organization-search {
   width: clamp(14rem, 22vw, 22rem);
 }
 
-.organization-search :deep(.el-input__wrapper),
-.organization-tenant-picker :deep(.el-select__wrapper) {
+.organization-search :deep(.el-input__wrapper) {
   min-height: var(--organization-control-height);
   border-radius: var(--el-border-radius-base);
   box-shadow: 0 0 0 1px rgba(205, 209, 224, 0.95) inset;
-}
-
-.organization-tenant-picker {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  color: var(--text-tertiary);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.organization-tenant-picker .el-select {
-  width: 13.75rem;
-}
-
-.organization-tenant-picker strong {
-  color: var(--text-primary);
-  font-size: 0.8125rem;
 }
 
 .organization-table-region {
@@ -1233,12 +1170,6 @@ onMounted(loadPage);
     flex-direction: column;
   }
 
-  .organization-tenant-picker {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .organization-tenant-picker .el-select,
   .organization-search,
   .organization-toolbar-tools > .el-button {
     width: 100%;

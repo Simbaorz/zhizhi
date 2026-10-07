@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import {
+  CirclePlus,
   Delete as Trash2,
   Edit as Pencil,
   Key as KeyRound,
@@ -29,6 +30,8 @@ import { ApiError } from "@/api/http";
 import AppPanel from "@/components/AppPanel.vue";
 import FormDrawer from "@/components/FormDrawer.vue";
 import LoadingBlock from "@/components/LoadingBlock.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
+import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
 import StatusBanner from "@/components/StatusBanner.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useScopeStore } from "@/stores/scope";
@@ -39,7 +42,7 @@ import { tenantScopeDisplayLabel } from "@/utils/scope";
 
 type DrawerMode = "create" | "edit" | "credentials" | "entitlement-create";
 
-const GIT_PAGE_SIZE = 10;
+const GIT_PAGE_SIZE = RESOURCE_PAGE_SIZE;
 
 const statusFilterOptions = [
   { label: "全部", value: "all" },
@@ -436,12 +439,12 @@ onMounted(refresh);
     </AppPanel>
 
     <AppPanel class="model-list-panel">
-      <header class="model-toolbar">
-        <div class="model-toolbar-title">
+      <header class="model-toolbar global-resource-toolbar">
+        <div class="model-toolbar-title global-resource-title">
           <h2>{{ isGlobalMode ? "场景 Git 仓库" : "可用场景 Git" }}</h2>
         </div>
-        <div class="model-toolbar-actions admin-toolbar-layout">
-          <div v-if="isGlobalMode" class="admin-filter-group">
+        <div class="model-toolbar-actions admin-toolbar-layout global-resource-tools">
+          <div v-if="isGlobalMode" class="admin-filter-group global-resource-filters">
             <el-input
               v-model="repositorySearchInput"
               class="admin-toolbar-search"
@@ -471,8 +474,8 @@ onMounted(refresh);
             <el-button :icon="RotateCcw" :disabled="loading" @click="resetEntitlementSearch">重置</el-button>
             <el-button type="primary" :icon="Search" :disabled="loading" @click="submitEntitlementSearch">搜索</el-button>
           </div>
-          <div class="admin-action-group">
-            <el-button v-if="isGlobalMode" type="primary" :icon="Plus" @click="openCreate">新增仓库</el-button>
+          <div class="admin-action-group global-resource-actions">
+            <el-button v-if="isGlobalMode" type="primary" :icon="CirclePlus" @click="openCreate">新建仓库</el-button>
             <el-button
               v-else
               type="primary"
@@ -486,11 +489,11 @@ onMounted(refresh);
         </div>
       </header>
 
-      <LoadingBlock v-if="loading" />
+      <LoadingBlock v-if="loading && !isGlobalMode" />
 
       <template v-else-if="isGlobalMode">
-        <div class="admin-table-region">
-          <el-table class="admin-data-table" :data="repositories" height="100%" stripe row-key="id">
+        <div v-loading="loading" class="admin-table-region global-resource-table-region">
+          <el-table class="admin-data-table global-resource-table" :data="repositories" height="100%" row-key="id">
             <el-table-column label="仓库" min-width="230">
               <template #default="{ row }">
                 <el-space direction="vertical" alignment="start" :size="2">
@@ -527,9 +530,9 @@ onMounted(refresh);
             <el-table-column label="更新时间" min-width="160">
               <template #default="{ row }">{{ formatDate(row.updated_at ?? undefined) }}</template>
             </el-table-column>
-            <el-table-column label="操作" align="right" min-width="270">
+            <el-table-column label="操作" align="right" min-width="270" fixed="right">
               <template #default="{ row }">
-                <el-space :size="8" wrap>
+                <el-space :size="8" class="global-resource-row-actions">
                   <el-button link type="primary" :loading="testingId === row.id" @click="runTest(row)">测试</el-button>
                   <el-button link type="primary" :icon="KeyRound" @click="openCredentials(row)">凭据</el-button>
                   <el-button link type="primary" :icon="Pencil" @click="openEdit(row)">编辑</el-button>
@@ -538,9 +541,12 @@ onMounted(refresh);
               </template>
             </el-table-column>
             <template #empty>
-              <el-empty description="暂无场景 Git 仓库">
-                <span class="admin-empty-description">新增仓库后，可在租户范围内分配给业务场景使用。</span>
-              </el-empty>
+              <ManagementEmptyState
+                :title="repositorySearch || repositoryStatus !== 'all' ? '未找到匹配的仓库' : '暂无场景 Git 仓库'"
+                :description="repositorySearch || repositoryStatus !== 'all' ? '请调整筛选条件后重试。' : '登记仓库后，可在场景 Git 授权中分配给租户使用。'"
+              >
+                <el-button v-if="!repositorySearch && repositoryStatus === 'all'" type="primary" @click="openCreate">创建第一个仓库</el-button>
+              </ManagementEmptyState>
             </template>
           </el-table>
         </div>

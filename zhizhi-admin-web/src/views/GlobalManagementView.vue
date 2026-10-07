@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
+import "@/styles/globalManagement.css";
 
 import GitRepositoryManagementView from "@/views/GitRepositoryManagementView.vue";
 import ModelManagementView from "@/views/ModelManagementView.vue";
@@ -43,6 +45,7 @@ const activeTabLabel = computed(
       </el-tabs>
     </header>
 
+    <el-config-provider :locale="zhCn">
     <section class="global-management-body" :aria-label="activeTabLabel">
       <RolesView v-if="activeTab === 'roles'" />
       <OrganizationView v-else-if="activeTab === 'organization'" mode="global" />
@@ -50,6 +53,7 @@ const activeTabLabel = computed(
       <DataSourcesView v-else-if="activeTab === 'dataSources'" mode="global" />
       <GitRepositoryManagementView v-else mode="global" />
     </section>
+    </el-config-provider>
   </div>
 </template>
 

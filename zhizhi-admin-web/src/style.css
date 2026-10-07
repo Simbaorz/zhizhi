@@ -10519,6 +10519,12 @@ body.form-drawer-open .admin-topbar {
   white-space: nowrap;
 }
 
+.global-management-body .app-panel-card.el-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .global-management-body :where(.org-card, .roles-table-card, .model-list-panel, .bd-list-panel) {
   display: flex;
   height: 100%;
@@ -10635,7 +10641,7 @@ body.form-drawer-open .admin-topbar {
   line-height: 1.5;
 }
 
-.global-management-body .admin-pagination {
+.admin-pagination {
   display: flex;
   flex: 0 0 auto;
   justify-content: flex-end;
@@ -10643,7 +10649,7 @@ body.form-drawer-open .admin-topbar {
   border-top: 1px solid rgba(220, 229, 232, 0.9);
 }
 
-.global-management-body .admin-table-region + .admin-pagination {
+.admin-table-region + .admin-pagination {
   border-top: 0;
 }
 

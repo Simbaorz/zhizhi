@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { CirclePlus, Refresh } from "@element-plus/icons-vue";
+import { CirclePlus, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
 import FormDrawer from "@/components/FormDrawer.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
+import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
 import { useAuthStore } from "@/stores/auth";
 import { useScopeStore } from "@/stores/scope";
 import { scopeKey, scopeBreadcrumb } from "@/utils/scope";
@@ -11,6 +13,7 @@ import type { DataSourceBinding, DataSourceResource, DataSourceScope, DataSource
 import { deleteDataSource, deleteDataSourceBinding, grantDataSource, listAssignableDataSources, listDataSourceBindings, listDataSources, revokeDataSource, saveDataSource, saveDataSourceBinding, testDataSource } from "@/api/dataSources";
 
 const props = withDefaults(defineProps<{ mode?: "global" | "tenant" }>(), { mode: "tenant" });
+const PAGE_SIZE = RESOURCE_PAGE_SIZE;
 const auth = useAuthStore();
 const scopes = useScopeStore();
 const tab = ref(props.mode === "global" ? "resources" : "availability");
@@ -57,7 +60,7 @@ function allowed(code: string, parent = false): boolean {
 const canGrant = computed(() => allowed("data_sources.entitlements.edit", true));
 const canBind = computed(() => allowed("data_sources.bindings.edit"));
 const sourceTab = computed(() => props.mode === "global" && tab.value === "resources");
-const title = computed(() => drawer.value === "source" ? (editing.value ? "编辑数据源" : "新建数据源") : drawer.value === "grant" ? "分配可用数据源" : "设置多源绑定");
+const title = computed(() => drawer.value === "source" ? (editing.value ? "编辑数据源" : "新建数据源") : drawer.value === "grant" ? "分配数据源" : "配置运行数据源");
 const defaults = (): DataSourceWrite => ({ source_key: "", tag: "", display_name: "", description: "", driver: "mysql", status: "active", host: "", port: 3306, database: "", username: "", server_id: "main", endpoint_url: "http://127.0.0.1:8002/mcp", pool_size: 3, pool_timeout_seconds: 5, connect_timeout_seconds: 5, query_timeout_seconds: 30, max_rows: 500, max_result_bytes: 262144, allowed_schemas: [], tls: false });
 const form = reactive<DataSourceWrite>(defaults());
 const password = ref("");
@@ -69,11 +72,13 @@ function selectScope(key: string): void { scopes.setSelectedScope(scopeOptions.v
 
 async function refresh(): Promise<void> {
   const version = ++refreshVersion;
-  if (!sourceTab.value && !scope.value.tenant_id) { sources.value = []; binding.value = null; return; }
+  if (!sourceTab.value && !scope.value.tenant_id) { sources.value = []; total.value = 0; binding.value = null; return; }
   loading.value = true; error.value = "";
   try {
-    const query = { page: page.value, page_size: 50, search: search.value, ...(sourceTab.value ? {} : scope.value) };
+    const query = { page: page.value, page_size: PAGE_SIZE, search: search.value, ...(sourceTab.value ? {} : scope.value) };
     const result = await listDataSources(query);
+    const lastPage = Math.max(1, Math.ceil(result.pagination.total / PAGE_SIZE));
+    if (page.value > lastPage) { page.value = lastPage; await refresh(); return; }
     const nextBinding = sourceTab.value ? null : (await listDataSourceBindings({ tenant_id: query.tenant_id ?? "", organization_unit_id: query.organization_unit_id ?? "" })).items[0] ?? null;
     if (version !== refreshVersion) return;
     sources.value = result.items; total.value = result.pagination.total; remember(result.items);
@@ -82,6 +87,7 @@ async function refresh(): Promise<void> {
   } catch (cause) { error.value = cause instanceof Error ? cause.message : "加载数据源失败。"; }
   finally { loading.value = false; }
 }
+function resetSearch(): void { search.value = ""; page.value = 1; void refresh(); }
 function openSource(item?: DataSourceResource): void {
   editing.value = item ?? null;
   Object.assign(form, defaults(), item ?? {});
@@ -141,21 +147,19 @@ async function probe(item: DataSourceResource): Promise<void> {
   catch (cause) { ElMessage.error(cause instanceof Error ? cause.message : "连接测试失败。"); }
 }
 watch(() => form.driver, (value, old) => { if (!editing.value && value !== old) form.port = value === "postgresql" ? 5432 : 3306; });
-watch(() => `${tab.value}:${scope.value.tenant_id}:${scope.value.organization_unit_id}`, () => { page.value = 1; drawer.value = null; sourceCache.clear(); void refresh(); });
+watch(() => sourceTab.value ? "global" : `${tab.value}:${scope.value.tenant_id}:${scope.value.organization_unit_id}`, () => { page.value = 1; drawer.value = null; sourceCache.clear(); void refresh(); });
 watch(boundIds, ids => { if (!ids.includes(defaultId.value)) defaultId.value = ""; });
-onMounted(async () => { if (!scopes.nodes.length) await scopes.fetchCatalog(); await refresh(); });
+onMounted(async () => { if (props.mode === "tenant" && !scopes.nodes.length) await scopes.fetchCatalog(); await refresh(); });
 </script>
 
 <template>
-  <section class="data-sources-page">
-    <header class="source-header">
-      <div><h2>数据源管理</h2><p>维护数据库资源、组织可用池与多数据源绑定</p></div>
-      <el-button :icon="Refresh" :loading="loading" @click="refresh">刷新</el-button>
+  <section class="data-sources-page" :class="{ 'is-global-mode': props.mode === 'global' }">
+    <header v-if="props.mode === 'tenant'" class="source-header">
+      <div><h2>数据源管理</h2><p>管理当前租户和组织的数据源授权与运行配置</p></div>
     </header>
-    <el-tabs v-model="tab">
-      <el-tab-pane v-if="props.mode === 'global'" label="全局数据源" name="resources" />
-      <el-tab-pane label="可用资源" name="availability" />
-      <el-tab-pane label="执行绑定" name="bindings" />
+    <el-tabs v-if="props.mode === 'tenant'" v-model="tab" class="source-tabs">
+      <el-tab-pane label="数据源授权" name="availability" />
+      <el-tab-pane label="运行数据源" name="bindings" />
     </el-tabs>
     <div v-if="!sourceTab" class="scope-toolbar">
       <span>当前作用域</span>
@@ -165,29 +169,51 @@ onMounted(async () => { if (!scopes.nodes.length) await scopes.fetchCatalog(); a
     </div>
     <el-alert v-if="error" type="error" :title="error" :closable="false" />
     <template v-if="tab !== 'bindings'">
-      <div class="resource-toolbar">
-        <el-input v-model="search" clearable placeholder="搜索编号、名称或标签" @keyup.enter="page = 1; refresh()" />
-        <el-button @click="page = 1; refresh()">搜索</el-button>
+      <div class="resource-toolbar global-resource-toolbar">
+        <h2 class="global-resource-title">{{ sourceTab ? '数据源配置' : '数据源授权' }}</h2>
+        <div class="source-tools global-resource-tools">
+        <div class="global-resource-filters">
+        <el-input v-model="search" :prefix-icon="Search" clearable placeholder="搜索编号、名称或标签" @keyup.enter="page = 1; refresh()" />
+        <el-button :icon="RotateCcw" :disabled="loading" @click="resetSearch">重置</el-button>
+        <el-button :icon="Search" type="primary" :disabled="loading" @click="page = 1; refresh()">搜索</el-button>
+        </div>
+        <div class="global-resource-actions">
         <el-button v-if="sourceTab && auth.isSuper" type="primary" :icon="CirclePlus" @click="openSource()">新建数据源</el-button>
-        <el-button v-else-if="canGrant" type="primary" :icon="CirclePlus" @click="openResources('grant')">分配可用资源</el-button>
+        <el-button v-else-if="canGrant" type="primary" :icon="CirclePlus" @click="openResources('grant')">分配数据源</el-button>
+        </div>
+        </div>
       </div>
-      <el-table v-loading="loading" :data="sources" empty-text="当前范围没有数据源资源">
+      <div class="admin-table-region source-table-region global-resource-table-region">
+      <el-table v-loading="loading" :data="sources" height="100%" row-key="id" class="admin-data-table global-resource-table">
         <el-table-column label="数据源" min-width="190"><template #default="{ row }"><strong>{{ row.display_name || row.source_key }}</strong><div class="muted">{{ row.source_key }}</div></template></el-table-column>
         <el-table-column prop="tag" label="逻辑标签" width="120" />
         <el-table-column prop="driver" label="数据库类型" width="130" />
         <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status === 'active' ? 'success' : 'info'">{{ row.status === 'active' ? '启用' : '停用' }}</el-tag></template></el-table-column>
         <el-table-column v-if="sourceTab" label="连接" min-width="190"><template #default="{ row }">{{ row.host }}:{{ row.port }} / {{ row.database }}</template></el-table-column>
         <el-table-column v-if="sourceTab" label="测试状态" width="110"><template #default="{ row }">{{ row.last_test_status === 'success' ? '成功' : row.last_test_status === 'failed' ? '失败' : '未测试' }}</template></el-table-column>
-        <el-table-column label="操作" :width="sourceTab ? 230 : 110"><template #default="{ row }">
+        <el-table-column label="操作" :width="sourceTab ? 230 : 110" align="right" fixed="right"><template #default="{ row }">
+          <div class="global-resource-row-actions">
           <template v-if="sourceTab"><el-button link type="primary" @click="openSource(row)">编辑</el-button><el-button link type="primary" @click="probe(row)">测试连接</el-button></template>
           <el-button v-if="sourceTab || canGrant" link type="danger" @click="remove(row)">{{ sourceTab ? '删除' : '撤销授权' }}</el-button>
+          </div>
         </template></el-table-column>
+        <template #empty>
+          <ManagementEmptyState
+            v-if="sourceTab"
+            :title="search.trim() ? '未找到匹配的数据源' : '暂无数据源配置'"
+            :description="search.trim() ? '请调整搜索条件后重试。' : '登记数据库并测试连接，再到数据源管理配置授权与运行数据源。'"
+          >
+            <el-button v-if="!search.trim() && auth.isSuper" type="primary" @click="openSource()">创建第一个数据源</el-button>
+          </ManagementEmptyState>
+          <span v-else>当前范围没有数据源资源</span>
+        </template>
       </el-table>
-      <el-pagination v-model:current-page="page" :page-size="50" :total="total" layout="total, prev, pager, next" @current-change="refresh" />
+      </div>
+      <el-pagination v-if="total > 0" v-model:current-page="page" class="admin-pagination" :page-size="PAGE_SIZE" :total="total" layout="total, prev, pager, next" @current-change="refresh" />
     </template>
     <div v-else class="binding-panel">
-      <div class="resource-toolbar"><h3>本级执行绑定</h3><el-button v-if="canBind" type="primary" @click="openResources('binding')">{{ binding ? '编辑绑定' : '设置绑定' }}</el-button><el-button v-if="binding && canBind" type="danger" plain @click="unbind">解除绑定</el-button></div>
-      <el-alert v-if="!binding" title="本级未设置绑定，运行时查找最近上级有效绑定。" type="info" :closable="false" />
+      <div class="resource-toolbar"><h3>本级运行数据源</h3><el-button v-if="canBind" type="primary" @click="openResources('binding')">{{ binding ? '编辑运行数据源' : '配置运行数据源' }}</el-button><el-button v-if="binding && canBind" type="danger" plain @click="unbind">清除本级配置</el-button></div>
+      <el-alert v-if="!binding" title="本级未配置运行数据源，将使用最近上级满足授权的配置。" type="info" :closable="false" />
       <template v-else><p>状态：{{ binding.status === 'active' ? '启用' : '停用' }} · 默认数据源：{{ label(binding.default_source_id) }}</p><el-tag v-for="id in binding.source_ids" :key="id" class="source-chip">{{ label(id) }}{{ id === binding.default_source_id ? '（默认）' : '' }}</el-tag></template>
       <p class="muted">模型依据 Wiki 表字典中的标签选择绑定源；未指定标签时使用默认源，指定标签不可用时不自动换源。</p>
     </div>
@@ -223,7 +249,7 @@ onMounted(async () => { if (!scopes.nodes.length) await scopes.fetchCatalog(); a
         <div class="resource-toolbar"><el-input v-model="candidateSearch" placeholder="搜索候选资源" @keyup.enter="candidatePage = 1; loadCandidates()" /><el-button @click="candidatePage = 1; loadCandidates()">搜索</el-button></div>
         <el-checkbox-group v-if="drawer === 'grant'" v-model="chosenGrants"><div v-for="item in candidates" :key="item.id" class="candidate"><el-checkbox :value="item.id">{{ item.display_name || item.source_key }} · {{ item.tag }}</el-checkbox></div></el-checkbox-group>
         <el-checkbox-group v-else v-model="boundIds" :max="32"><div v-for="item in candidates" :key="item.id" class="candidate"><el-checkbox :value="item.id">{{ item.display_name || item.source_key }} · {{ item.tag }}</el-checkbox></div></el-checkbox-group>
-        <el-pagination v-model:current-page="candidatePage" :page-size="50" :total="candidateTotal" layout="total, prev, pager, next" @current-change="loadCandidates" />
+        <el-pagination v-model:current-page="candidatePage" class="admin-pagination" :page-size="50" :total="candidateTotal" layout="total, prev, pager, next" @current-change="loadCandidates" />
         <template v-if="drawer === 'binding'"><label>默认数据源<el-select v-model="defaultId" placeholder="从已选数据源中指定默认源"><el-option v-for="id in boundIds" :key="id" :value="id" :label="label(id)" /></el-select></label><label>状态<el-select v-model="bindingStatus"><el-option value="active" label="启用" /><el-option value="inactive" label="停用" /></el-select></label><p class="muted">同一绑定集合中的标签必须唯一。绑定集合整体继承，不与上级集合合并。</p></template>
       </template>
     </FormDrawer>
@@ -231,15 +257,26 @@ onMounted(async () => { if (!scopes.nodes.length) await scopes.fetchCatalog(); a
 </template>
 
 <style scoped>
-.data-sources-page { display: flex; flex-direction: column; gap: 18px; padding: 26px 30px; background: white; min-height: 100%; }
+.data-sources-page { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; background: white; overflow: hidden; }
 .source-header, .resource-toolbar, .scope-toolbar { display: flex; align-items: center; gap: 12px; }
-.source-header { justify-content: space-between; }
-h2 { font-size: 22px; font-weight: 700; } h3 { font-size: 16px; font-weight: 650; }
+.source-header { flex: 0 0 auto; padding: 14px 24px; border-bottom: 1px solid rgba(219, 222, 234, 0.92); }
+.source-header h2 { font-size: 18px; }
+.resource-toolbar { flex: 0 0 auto; min-height: 3.75rem; padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(219, 222, 234, 0.92); }
+.resource-toolbar h2 { margin: 0; white-space: nowrap; }
+.source-tools { display: flex; flex: 1; justify-content: flex-end; align-items: center; gap: 0.625rem; }
+.source-tools > .el-input { width: 240px; }
+.source-tools > .global-resource-filters, .source-tools > .global-resource-actions { display: flex; align-items: center; gap: 0.625rem; }
+.source-tools .global-resource-filters > .el-input { width: 240px; }
+.scope-toolbar { flex: 0 0 auto; padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(219, 222, 234, 0.92); }
+.source-tabs { flex: 0 0 auto; padding: 0 1.25rem; }
+.source-tabs :deep(.el-tabs__header) { margin: 0; }
+.source-table-region { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+h2 { font-size: 0.9375rem; font-weight: 700; } h3 { font-size: 16px; font-weight: 650; }
 .source-header p, .muted { color: #64748b; font-size: 13px; margin-top: 5px; }
 .resource-toolbar > .el-input { max-width: 320px; } .scope-toolbar .el-select { min-width: 320px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0 22px; }
 label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; } label .el-input-number { width: 100%; }
 .candidate { padding: 10px 0; border-bottom: 1px solid #eef2f7; } .source-chip { margin: 10px 10px 10px 0; }
-.binding-panel { display: flex; flex-direction: column; gap: 16px; }
-@media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .data-sources-page { padding: 18px; } .resource-toolbar { flex-wrap: wrap; } }
+.binding-panel { display: flex; flex: 1; min-height: 0; overflow: auto; flex-direction: column; gap: 16px; padding: 0 1.25rem; }
+@media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .resource-toolbar, .source-tools, .source-tools > .global-resource-filters { flex-wrap: wrap; } .source-tools > .el-input, .source-tools .global-resource-filters > .el-input { width: 100%; } }
 </style>

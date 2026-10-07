@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { storeToRefs } from "pinia";
-import { Delete as Trash2, Edit as Pencil, Key, Plus, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
+import { CirclePlus, Delete as Trash2, Edit as Pencil, Key, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
 import { ElMessageBox } from "element-plus";
 
 import AppPanel from "@/components/AppPanel.vue";
 import FieldInput from "@/components/FieldInput.vue";
 import FormDrawer from "@/components/FormDrawer.vue";
 import FormModal from "@/components/FormModal.vue";
-import LoadingBlock from "@/components/LoadingBlock.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
 import StatusBanner from "@/components/StatusBanner.vue";
 import { useRoleAdminStore } from "@/stores/roleAdmin";
 import { useUiStore } from "@/stores/ui";
 import type { AdminPermission, AdminRole } from "@/types/rbac";
 import { formatDate } from "@/utils/format";
+import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
 
 interface PermissionGroup {
   module: string;
@@ -21,7 +22,7 @@ interface PermissionGroup {
   permissions: AdminPermission[];
 }
 
-const ROLE_PAGE_SIZE = 10;
+const ROLE_PAGE_SIZE = RESOURCE_PAGE_SIZE;
 const statusFilterOptions = [
   { label: "全部", value: "all" },
   { label: "启用", value: "active" },
@@ -331,13 +332,13 @@ onMounted(async () => {
 <template>
   <div class="roles-page">
     <AppPanel class="roles-table-card">
-      <header class="roles-toolbar">
-        <div class="roles-toolbar-copy">
+      <header class="roles-toolbar global-resource-toolbar">
+        <div class="roles-toolbar-copy global-resource-title">
           <h2>角色与权限</h2>
         </div>
 
-        <div class="roles-toolbar-actions admin-toolbar-layout">
-          <div class="admin-filter-group">
+        <div class="roles-toolbar-actions admin-toolbar-layout global-resource-tools">
+          <div class="admin-filter-group global-resource-filters">
             <el-input
               v-model="searchInput"
               class="admin-toolbar-search"
@@ -362,26 +363,24 @@ onMounted(async () => {
               搜索
             </el-button>
           </div>
-          <div class="admin-action-group">
-            <el-button type="primary" :icon="Plus" @click="openCreate">新建角色</el-button>
+          <div class="admin-action-group global-resource-actions">
+            <el-button type="primary" :icon="CirclePlus" @click="openCreate">新建角色</el-button>
           </div>
         </div>
       </header>
 
-      <LoadingBlock v-if="roleListRefreshing" />
       <StatusBanner
-        v-else-if="roleRefs.errorMessage.value"
+        v-if="!roleListRefreshing && roleRefs.errorMessage.value"
         tone="danger"
         title="角色数据加载失败"
         :body="roleRefs.errorMessage.value"
       />
-      <div v-else class="admin-table-region">
+      <div v-else v-loading="roleListRefreshing" class="admin-table-region global-resource-table-region">
         <el-table
-          class="admin-data-table"
+          class="admin-data-table global-resource-table"
           :data="filteredRoles"
           height="100%"
           row-key="id"
-          stripe
         >
           <el-table-column label="角色" min-width="220">
             <template #default="{ row: role }">
@@ -413,9 +412,9 @@ onMounted(async () => {
               {{ role.updated_at ? formatDate(role.updated_at) : "暂无记录" }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="right" min-width="170">
+          <el-table-column label="操作" align="right" min-width="210" fixed="right">
             <template #default="{ row: role }">
-              <el-space :size="8">
+              <el-space :size="8" class="global-resource-row-actions">
                 <el-button link type="primary" :icon="Key" @click="openPermissions(role)">权限</el-button>
                 <el-button link type="primary" :icon="Pencil" @click="openEdit(role)">编辑</el-button>
                 <el-button link type="danger" :icon="Trash2" :disabled="roleRefs.saving.value" @click="deleteRole(role)">删除</el-button>
@@ -423,9 +422,9 @@ onMounted(async () => {
             </template>
           </el-table-column>
           <template #empty>
-            <el-empty :description="roleEmptyTitle">
-              <span class="admin-empty-description">{{ roleEmptyBody }}</span>
-            </el-empty>
+            <ManagementEmptyState :title="roleEmptyTitle" :description="roleEmptyBody">
+              <el-button v-if="!keyword && statusFilter === 'all'" type="primary" @click="openCreate">创建第一个角色</el-button>
+            </ManagementEmptyState>
           </template>
         </el-table>
       </div>

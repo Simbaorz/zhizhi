@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { CirclePlus, Delete, EditPen, Refresh } from "@element-plus/icons-vue";
+import { CirclePlus, Delete, EditPen, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
 
 import {
   createLLMBinding,
@@ -13,6 +13,7 @@ import {
   listLLMBindingPage,
   listLLMEntitlements,
   listLLMModels,
+  listLLMModelPage,
   listOrganizationUnits,
   listOrgTenants,
   updateLLMBinding,
@@ -21,6 +22,8 @@ import {
 } from "@/api/admin";
 import { ApiError } from "@/api/http";
 import FormDrawer from "@/components/FormDrawer.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
+import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
 import { useScopeStore } from "@/stores/scope";
 import type {
   LLMBindingScopeType,
@@ -50,6 +53,10 @@ const tenantId = ref("");
 const drawerMode = ref<DrawerMode | null>(null);
 const selectedModel = ref<ManagedLLMConfig | null>(null);
 const selectedBinding = ref<ManagedLLMBinding | null>(null);
+const MODEL_PAGE_SIZE = RESOURCE_PAGE_SIZE;
+const modelPage = ref(1);
+const modelTotal = ref(0);
+const modelSearch = ref("");
 
 const scopeForm = reactive({
   scopeType: "tenant" as LLMBindingScopeType,
@@ -115,6 +122,10 @@ const activeRecordUnit = computed(() => {
 async function loadAll(): Promise<void> {
   loading.value = true;
   try {
+    if (props.mode === "global") {
+      await loadModels();
+      return;
+    }
     [tenants.value, models.value] = await Promise.all([
       listOrgTenants(),
       listLLMModels({ pageSize: 100 }),
@@ -131,7 +142,30 @@ async function loadAll(): Promise<void> {
   }
 }
 
+async function loadModels(): Promise<void> {
+  if (props.mode !== "global") {
+    models.value = await listLLMModels({ pageSize: 100 });
+    return;
+  }
+  const result = await listLLMModelPage({
+    page: modelPage.value, pageSize: MODEL_PAGE_SIZE, search: modelSearch.value.trim(),
+  });
+  const lastPage = Math.max(1, Math.ceil(result.pagination.total / MODEL_PAGE_SIZE));
+  if (modelPage.value > lastPage) {
+    modelPage.value = lastPage;
+    await loadModels();
+    return;
+  }
+  models.value = result.items;
+  modelTotal.value = result.pagination.total;
+}
+
+function submitModelSearch(): void { modelPage.value = 1; void loadAll(); }
+function resetModelSearch(): void { modelSearch.value = ""; submitModelSearch(); }
+function changeModelPage(page: number): void { modelPage.value = page; void loadAll(); }
+
 async function loadTenantResources(): Promise<void> {
+  if (props.mode === "global") return;
   if (!tenantId.value) {
     units.value = [];
     entitlements.value = [];
@@ -208,11 +242,11 @@ async function saveDrawer(): Promise<void> {
   try {
     if (drawerMode.value === "model-create") {
       await createLLMModel(modelPayload());
-      models.value = await listLLMModels({ pageSize: 100 });
+      await loadModels();
     } else if (drawerMode.value === "model-edit" && selectedModel.value) {
       const payload = modelPayload();
       await updateLLMModel(selectedModel.value.id, payload);
-      models.value = await listLLMModels({ pageSize: 100 });
+      await loadModels();
     } else if (drawerMode.value === "availability-create") {
       if (!resourceForm.modelIds.length) throw new Error("请选择至少一个模型");
       validateScope();
@@ -294,7 +328,7 @@ async function removeModel(model: ManagedLLMConfig): Promise<void> {
   await confirmDelete(model.display_name || model.alias);
   try {
     await deleteLLMModel(model.id);
-    models.value = await listLLMModels({ pageSize: 100 });
+    await loadModels();
   } catch (error) { notifyError(error, "删除模型失败"); }
 }
 
@@ -373,20 +407,12 @@ onMounted(loadAll);
         <h1>模型管理</h1>
         <p>管理当前租户的可用模型与默认模型。</p>
       </div>
-      <el-button :icon="Refresh" @click="loadAll">刷新</el-button>
     </header>
 
     <section class="model-management-surface">
-      <header class="model-management-toolbar">
-        <nav class="model-management-tabs" aria-label="模型管理范围">
-          <button
-            v-if="mode === 'global'"
-            type="button"
-            :class="{ active: activeTab === 'models' }"
-            @click="activeTab = 'models'"
-          >
-            模型配置
-          </button>
+      <header class="model-management-toolbar global-resource-toolbar">
+        <h2 v-if="mode === 'global'" class="model-global-title global-resource-title">模型配置</h2>
+        <nav v-else class="model-management-tabs" aria-label="模型管理范围">
           <button
             type="button"
             :class="{ active: activeTab === 'availability' }"
@@ -403,37 +429,25 @@ onMounted(loadAll);
           </button>
         </nav>
 
-        <div class="model-management-tools">
-          <label v-if="activeTab !== 'models' && mode === 'global'" class="model-tenant-picker">
-            <span>当前租户</span>
-            <el-select v-model="tenantId" filterable placeholder="选择租户">
-              <el-option
-                v-for="tenant in tenants"
-                :key="tenant.id"
-                :label="tenant.tenant_name || tenant.tenant_code"
-                :value="tenant.id"
-              />
-            </el-select>
-          </label>
-          <span v-else-if="activeTab !== 'models'" class="model-tenant-context">
+        <div class="model-management-tools global-resource-tools">
+          <div v-if="mode === 'global'" class="model-search-tools global-resource-filters">
+            <el-input v-model="modelSearch" :prefix-icon="Search" clearable placeholder="搜索别名、名称或模型" @keydown.enter="submitModelSearch" />
+            <el-button :icon="RotateCcw" :disabled="loading" @click="resetModelSearch">重置</el-button>
+            <el-button :icon="Search" type="primary" :disabled="loading" @click="submitModelSearch">搜索</el-button>
+          </div>
+          <span v-else class="model-tenant-context">
             当前租户
             <strong>{{ currentTenant?.tenant_name || "未选择租户" }}</strong>
           </span>
+          <div v-if="activeTab === 'models'" class="global-resource-actions">
           <el-button
-            v-if="mode === 'global'"
-            :icon="Refresh"
-            circle
-            aria-label="刷新模型管理数据"
-            @click="loadAll"
-          />
-          <el-button
-            v-if="activeTab === 'models'"
             type="primary"
             :icon="CirclePlus"
             @click="openCreateModel"
           >
             新建模型
           </el-button>
+          </div>
           <el-button
             v-else-if="activeTab === 'availability'"
             type="primary"
@@ -455,11 +469,11 @@ onMounted(loadAll);
         </div>
       </header>
 
-      <div class="model-table-region">
+      <div class="model-table-region global-resource-table-region">
         <el-table
           v-if="activeTab === 'models'"
           :data="models"
-          class="model-data-table"
+          class="model-data-table global-resource-table"
           row-key="id"
           height="100%"
         >
@@ -490,21 +504,24 @@ onMounted(loadAll);
           </el-table-column>
           <el-table-column label="状态" width="110">
             <template #default="{ row }">
-              <span class="model-status" :class="row.status">
-                <i />{{ row.status === "active" ? "启用" : "停用" }}
-              </span>
+              <el-tag :type="row.status === 'active' ? 'success' : 'info'">{{ row.status === "active" ? "启用" : "停用" }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="170" fixed="right" align="right">
             <template #default="{ row }">
-              <div class="model-row-actions">
+              <div class="model-row-actions global-resource-row-actions">
                 <el-button link type="primary" :icon="EditPen" @click="openEditModel(row)">编辑</el-button>
                 <el-button link type="danger" :icon="Delete" @click="removeModel(row)">删除</el-button>
               </div>
             </template>
           </el-table-column>
           <template #empty>
-            <el-empty description="还没有模型配置" :image-size="88" />
+            <ManagementEmptyState
+              :title="modelSearch.trim() ? '未找到匹配的模型' : '暂无模型配置'"
+              :description="modelSearch.trim() ? '请调整搜索条件后重试。' : '登记模型后，可在模型管理中分配可用模型和配置默认模型。'"
+            >
+              <el-button v-if="!modelSearch.trim()" type="primary" @click="openCreateModel">创建第一个模型</el-button>
+            </ManagementEmptyState>
           </template>
         </el-table>
 
@@ -588,10 +605,19 @@ onMounted(loadAll);
           </template>
         </el-table>
 
-        <footer v-if="activeRecordCount" class="model-table-footer">
+        <footer v-if="activeTab !== 'models' && activeRecordCount" class="model-table-footer">
           共 {{ activeRecordCount }} {{ activeRecordUnit }}
         </footer>
       </div>
+      <el-pagination
+        v-if="activeTab === 'models' && modelTotal > 0"
+        class="admin-pagination"
+        :current-page="modelPage"
+        :page-size="MODEL_PAGE_SIZE"
+        :total="modelTotal"
+        layout="total, prev, pager, next"
+        @current-change="changeModelPage"
+      />
     </section>
 
     <FormDrawer
@@ -786,6 +812,10 @@ onMounted(loadAll);
   border-bottom: 1px solid rgba(219, 222, 234, 0.92);
   padding: 0.75rem 1.25rem;
 }
+
+.model-global-title { margin: 0; font-size: 0.9375rem; font-weight: 700; white-space: nowrap; }
+.model-search-tools { display: flex; align-items: center; gap: 0.625rem; }
+.model-search-tools .el-input { width: 240px; }
 
 .model-management-tabs {
   display: flex;

@@ -6,7 +6,7 @@ const source = readFileSync("src/views/ModelManagementView.vue", "utf-8");
 
 describe("model management layout", () => {
   it("uses a single flat management surface with peer tabs", () => {
-    assert.match(source, /class="model-management-toolbar"/);
+    assert.match(source, /class="model-management-toolbar(?:\s[^"]*)?"/);
     assert.match(source, /class="model-management-tabs"/);
     assert.match(source, />\s*模型配置\s*</);
     assert.match(source, />\s*可用模型\s*</);

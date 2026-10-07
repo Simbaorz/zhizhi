@@ -6,10 +6,10 @@ const organizationSource = readFileSync("src/views/OrganizationView.vue", "utf-8
 const globalSource = readFileSync("src/views/GlobalManagementView.vue", "utf-8");
 
 describe("organization management layout", () => {
-  it("keeps tenant lifecycle and organization hierarchy as compact peer workflows", () => {
+  it("keeps tenant lifecycle and organization hierarchy in their own modes", () => {
     assert.match(organizationSource, /租户管理/);
     assert.match(organizationSource, /组织管理/);
-    assert.match(organizationSource, /class="organization-section-tabs"/);
+    assert.match(organizationSource, /class="organization-section-tabs(?:\s[^"]*)?"/);
     assert.doesNotMatch(organizationSource, /组织架构/);
     assert.match(organizationSource, /class="tenant-management-table/);
     assert.match(organizationSource, /class="organization-tree-table/);
@@ -29,8 +29,8 @@ describe("organization management layout", () => {
   });
 
   it("matches the reference density with a single toolbar directly above each table", () => {
-    assert.match(organizationSource, /class="organization-primary-toolbar"/);
-    assert.match(organizationSource, /class="organization-table-region"/);
+    assert.match(organizationSource, /class="organization-primary-toolbar(?:\s[^"]*)?"/);
+    assert.match(organizationSource, /class="organization-table-region(?:\s[^"]*)?"/);
     assert.match(organizationSource, /--organization-control-height: 2rem/);
     assert.match(organizationSource, /font-size: 0\.9375rem/);
     assert.doesNotMatch(organizationSource, /class="management-stack"/);

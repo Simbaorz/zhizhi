@@ -1316,7 +1316,7 @@ function fileKind(entry: ManagedFileEntry): string {
 </script>
 
 <template>
-  <div class="skills-page skill-manager-page" @click="closeContextMenu">
+  <div class="skills-page skill-manager-page admin-management-page" @click="closeContextMenu">
     <AppPanel class="finder-card skills-finder-card" :class="{ 'inline-editing': fileMode }">
       <header class="finder-toolbar skills-finder-toolbar">
         <el-button v-if="fileMode" class="inline-editor-back" :icon="ArrowLeft" @click="closeFileMode">
@@ -1669,12 +1669,14 @@ function fileKind(entry: ManagedFileEntry): string {
 
     <FormDrawer
       :open="createOpen"
+      class="global-resource-form-dialog"
+      placement="modal"
       :title="createMode === 'git' ? '新建 Git Scene' : '新建 Scene'"
       :subtitle="createMode === 'git'
         ? 'Git Scene 内容由仓库同步生成，创建后不支持手动编辑目录或文件。'
         : 'Scene 名称作为展示名，asset_key 由后端生成，内容目录由 Server 管理。'"
       :saving="sceneRefs.saving.value"
-      :size="createMode === 'git' ? 'wide' : 'default'"
+      size="default"
       submit-text="创建"
       @close="closeCreate"
       @submit="submitCreate"
@@ -1740,12 +1742,14 @@ function fileKind(entry: ManagedFileEntry): string {
 
     <FormDrawer
       :open="metadataOpen"
+      class="global-resource-form-dialog"
+      placement="modal"
       :title="metadataForm.isGit ? '编辑 Git Scene 元信息' : '编辑 Scene 元信息'"
       :subtitle="metadataForm.isGit
         ? 'Git Scene 内容由仓库同步，元信息和同步配置写入数据库。'
         : '元信息写入数据库；内部文件与子目录只维护在文件系统。'"
       :saving="sceneRefs.saving.value"
-      :size="metadataForm.isGit ? 'wide' : 'default'"
+      size="default"
       @close="metadataOpen = false"
       @submit="submitMetadata"
     >

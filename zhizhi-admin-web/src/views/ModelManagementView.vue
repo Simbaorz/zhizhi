@@ -121,9 +121,9 @@ const drawerSubtitle = computed(() => {
     return selectedModel.value?.display_name || selectedModel.value?.alias || "";
   }
   if (drawerMode.value === "availability-create") {
-    return `为“${currentTenant.value?.tenant_name || "当前租户"}”配置可用模型`;
+    return "选择授权范围与可用模型";
   }
-  return `设置“${currentTenant.value?.tenant_name || "当前租户"}”的默认模型`;
+  return "选择组织范围与默认模型";
 });
 const currentTenant = computed(() => tenants.value.find((item) => item.id === tenantId.value));
 const unitMap = computed(() => new Map(units.value.map((unit) => [unit.id, unit])));
@@ -499,7 +499,7 @@ onMounted(loadAll);
 
 <template>
   <div
-    class="model-management-page"
+    class="model-management-page admin-management-page"
     :class="{ 'is-global-mode': mode === 'global' }"
     v-loading="loading"
   >
@@ -536,10 +536,6 @@ onMounted(loadAll);
             <el-button :icon="RotateCcw" :disabled="loading" @click="resetModelSearch">重置</el-button>
             <el-button :icon="Search" type="primary" :disabled="loading" @click="submitModelSearch">搜索</el-button>
           </div>
-          <span v-else class="model-tenant-context">
-            当前租户
-            <strong>{{ currentTenant?.tenant_name || "未选择租户" }}</strong>
-          </span>
           <div v-if="activeTab === 'models'" class="global-resource-actions">
           <el-button
             type="primary"
@@ -641,7 +637,7 @@ onMounted(loadAll);
         <el-table
           v-else-if="activeTab === 'availability'"
           :data="entitlements"
-          class="model-data-table"
+          class="model-data-table global-resource-table"
           row-key="id"
           height="100%"
         >
@@ -680,7 +676,7 @@ onMounted(loadAll);
         <el-table
           v-else
           :data="bindings"
-          class="model-data-table"
+          class="model-data-table global-resource-table"
           row-key="id"
           height="100%"
         >
@@ -735,14 +731,14 @@ onMounted(loadAll);
 
     <FormDrawer
       :open="drawerMode !== null"
-      :class="{ 'global-resource-form-dialog': props.mode === 'global' }"
+      class="global-resource-form-dialog"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
       :saving="saving || testing"
       :submit-text="drawerMode === 'model-test' ? '开始测试' : drawerMode === 'model-credentials' ? '保存凭据' : '保存'"
       :submit-disabled="drawerMode === 'model-credentials' && !credentialsDirty"
-      :placement="drawerMode?.startsWith('model') ? 'modal' : 'drawer'"
-      :size="drawerMode?.startsWith('model') ? 'default' : 'wide'"
+      placement="modal"
+      size="default"
       @close="closeDrawer"
       @submit="saveDrawer"
     >

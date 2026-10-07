@@ -38,7 +38,6 @@ import { useScopeStore } from "@/stores/scope";
 import { useUiStore } from "@/stores/ui";
 import type { ManagedGitEntitlement, ManagedGitRepository, PaginationInfo } from "@/types/admin";
 import { formatDate } from "@/utils/format";
-import { tenantScopeDisplayLabel } from "@/utils/scope";
 
 type DrawerMode = "create" | "edit" | "credentials" | "entitlement-create";
 
@@ -61,10 +60,6 @@ const scopeRefs = storeToRefs(scopeStore);
 
 const isGlobalMode = computed(() => props.mode === "global");
 const currentTenantId = computed(() => scopeRefs.currentTenantId.value);
-const currentTenantLabel = computed(() => {
-  const scope = scopeRefs.currentTenantScope.value;
-  return scope ? tenantScopeDisplayLabel(scope, scopeRefs.nodes.value) : "未选择租户";
-});
 const canEditEntitlements = computed(() => {
   if (authStore.isSuper) return true;
   const tenantId = currentTenantId.value;
@@ -136,7 +131,7 @@ const drawerTitle = computed(() => {
 });
 const drawerSubtitle = computed(() =>
   drawerMode.value === "entitlement-create"
-    ? `分配到当前租户：${currentTenantLabel.value}`
+    ? "选择可用于场景同步的仓库"
     : selectedRepository.value?.display_name || selectedRepository.value?.alias || "",
 );
 
@@ -418,7 +413,7 @@ onMounted(refresh);
 </script>
 
 <template>
-  <div class="model-page scene-git-page">
+  <div class="model-page scene-git-page admin-management-page">
     <StatusBanner
       v-if="errorMessage"
       tone="danger"
@@ -564,7 +559,7 @@ onMounted(refresh);
       <template v-else>
         <el-empty v-if="!currentTenantId" description="请先在顶部选择当前租户。" />
         <div v-else class="admin-table-region">
-          <el-table class="admin-data-table" :data="entitlements" height="100%" stripe row-key="id">
+          <el-table class="admin-data-table global-resource-table" :data="entitlements" height="100%" row-key="id">
             <el-table-column label="场景 Git 仓库" min-width="260">
               <template #default="{ row }">
                 <el-space direction="vertical" alignment="start" :size="2">
@@ -607,8 +602,8 @@ onMounted(refresh);
 
     <FormDrawer
       :open="drawerOpen"
-      :class="{ 'global-resource-form-dialog': isGlobalMode }"
-      :placement="isGlobalMode ? 'modal' : 'drawer'"
+      class="global-resource-form-dialog"
+      placement="modal"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
       :saving="saving"
@@ -638,7 +633,6 @@ onMounted(refresh);
       </el-form>
 
       <el-form v-else label-position="top">
-        <el-alert :title="`当前租户：${currentTenantLabel}`" type="info" :closable="false" show-icon />
         <el-form-item label="可用场景 Git 仓库" required>
           <el-select v-model="entitlementForm.repositoryIds" multiple filterable collapse-tags collapse-tags-tooltip style="width: 100%">
             <el-option v-for="item in assignableRepositories" :key="item.id" :value="item.id" :label="item.display_name || item.alias" />

@@ -110,7 +110,7 @@ const drawerSubtitle = computed(() => {
   if (drawerMode.value === "unit-create") {
     return unitForm.parentId
       ? `在“${parentNameById(unitForm.parentId)}”下创建下级组织`
-      : `在“${activeTenant.value?.tenant_name ?? "当前租户"}”下创建根组织`;
+      : "创建根组织单元";
   }
   return editingUnit.value?.external_key ?? "";
 });
@@ -503,7 +503,7 @@ onMounted(loadPage);
 
 <template>
   <div
-    class="org-page organization-page"
+    class="org-page organization-page admin-management-page"
     :class="{ 'is-global-mode': mode === 'global' }"
     v-loading="loading"
   >
@@ -547,7 +547,8 @@ onMounted(loadPage);
           </div>
         </div>
 
-        <div v-else class="organization-toolbar-tools">
+        <div v-else class="organization-toolbar-tools global-resource-tools">
+          <div class="global-resource-actions">
           <el-button
             v-if="canManageOrganization"
             type="primary"
@@ -557,6 +558,7 @@ onMounted(loadPage);
           >
             新建组织单元
           </el-button>
+          </div>
         </div>
       </header>
 
@@ -623,10 +625,10 @@ onMounted(loadPage);
           />
       </div>
 
-      <div v-else class="organization-table-region">
+      <div v-else class="organization-table-region global-resource-table-region">
         <el-table
           v-if="activeTenant"
-          class="organization-tree-table organization-data-table"
+          class="organization-tree-table organization-data-table global-resource-table"
           :data="organizationRows"
           row-key="id"
           height="100%"
@@ -652,9 +654,6 @@ onMounted(loadPage);
                 <strong>{{ unit.name || unit.external_key }}</strong>
               </div>
             </template>
-          </el-table-column>
-          <el-table-column label="类型" width="150">
-            <template #default="{ row: unit }">{{ unit.unit_type || "未分类" }}</template>
           </el-table-column>
           <el-table-column label="外部标识" min-width="180" prop="external_key" />
           <el-table-column label="直属下级" width="120" align="center">
@@ -717,8 +716,8 @@ onMounted(loadPage);
 
     <FormDrawer
       :open="drawerMode !== null"
-      :class="{ 'global-resource-form-dialog': props.mode === 'global' }"
-      :placement="props.mode === 'global' ? 'modal' : 'drawer'"
+      class="global-resource-form-dialog"
+      placement="modal"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
       :saving="saving"
@@ -932,6 +931,7 @@ onMounted(loadPage);
   min-width: 0;
   flex: 1 1 auto;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.625rem;
 }
 

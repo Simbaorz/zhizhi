@@ -27,7 +27,7 @@ describe("model management layout", () => {
     assert.match(source, /import FormDrawer from "@\/components\/FormDrawer\.vue"/);
     assert.match(source, /<FormDrawer/);
     assert.match(source, /class="model-drawer-form"/);
-    assert.match(source, /:placement="drawerMode\?\.startsWith\('model'\) \? 'modal' : 'drawer'"/);
+    assert.match(source, /placement="modal"/);
     assert.doesNotMatch(source, /<el-drawer/);
   });
 

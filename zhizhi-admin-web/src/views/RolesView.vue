@@ -330,7 +330,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="roles-page">
+  <div class="roles-page admin-management-page">
     <AppPanel class="roles-table-card">
       <header class="roles-toolbar global-resource-toolbar">
         <div class="roles-toolbar-copy global-resource-title">

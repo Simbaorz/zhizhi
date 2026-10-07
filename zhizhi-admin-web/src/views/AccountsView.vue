@@ -5,6 +5,8 @@ import { Edit, Key, Plus, Refresh, Search, Tickets, User as UserIcon } from "@el
 import { ElMessage } from "element-plus";
 
 import AppPanel from "@/components/AppPanel.vue";
+import FormDrawer from "@/components/FormDrawer.vue";
+import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
 import StatusBanner from "@/components/StatusBanner.vue";
 import { useAdminTenantMemberStore } from "@/stores/adminTenantMember";
 import { useAuthStore } from "@/stores/auth";
@@ -255,7 +257,7 @@ function userInitial(value: string): string {
 </script>
 
 <template>
-  <div class="accounts-page">
+  <div class="accounts-page admin-management-page">
     <AppPanel class="global-management-shell accounts-management-shell">
       <header class="global-management-head accounts-management-head">
         <el-space class="global-management-identity" alignment="center">
@@ -272,12 +274,12 @@ function userInitial(value: string): string {
 
     <section class="accounts-section">
       <AppPanel class="accounts-card">
-        <header class="accounts-card-header">
-          <div class="accounts-card-title">
+        <header class="accounts-card-header global-resource-toolbar">
+          <div class="accounts-card-title global-resource-title">
             <h3>管理员</h3>
           </div>
-          <div class="accounts-card-actions admin-toolbar-layout">
-            <div class="admin-filter-group">
+          <div class="accounts-card-actions admin-toolbar-layout global-resource-tools">
+            <div class="admin-filter-group global-resource-filters">
               <el-input
                 v-model="searchInput"
                 class="admin-toolbar-search"
@@ -300,7 +302,7 @@ function userInitial(value: string): string {
               <el-button :icon="Refresh" :disabled="userRefs.loading.value" @click="resetFilters">重置</el-button>
               <el-button type="primary" :icon="Search" :disabled="userRefs.loading.value" @click="applyFilters">搜索</el-button>
             </div>
-            <div class="admin-action-group">
+            <div class="admin-action-group global-resource-actions">
               <el-button v-if="canCreate" type="primary" :icon="Plus" :disabled="!currentManagementScope" @click="openCreate">
                 新增管理员
               </el-button>
@@ -320,10 +322,9 @@ function userInitial(value: string): string {
         <div v-else class="admin-table-region">
           <el-table
             v-loading="userRefs.loading.value"
-            class="admin-data-table"
+            class="admin-data-table global-resource-table"
             :data="userRefs.users.value"
             height="100%"
-            stripe
             row-key="id"
           >
             <el-table-column label="账号" min-width="200" show-overflow-tooltip>
@@ -363,7 +364,7 @@ function userInitial(value: string): string {
               </template>
             </el-table-column>
             <template #empty>
-              <el-empty :description="search ? '没有匹配的管理员' : '暂无管理员'" />
+              <ManagementEmptyState :title="search ? '没有匹配的管理员' : '暂无管理员'" description="创建管理员并分配角色和组织管理范围。" />
             </template>
           </el-table>
         </div>
@@ -380,7 +381,7 @@ function userInitial(value: string): string {
       </AppPanel>
     </section>
 
-    <el-dialog :model-value="dialogMode !== null" :title="dialogTitle" width="min(560px, 92vw)" destroy-on-close @close="closeDialog">
+    <FormDrawer :open="dialogMode !== null" :title="dialogTitle" :saving="dialogSaving" class="global-resource-form-dialog" placement="modal" @close="closeDialog" @submit="submitDialog">
       <StatusBanner v-if="memberRefs.errorMessage.value" tone="danger" title="权限保存失败" :body="memberRefs.errorMessage.value" />
       <el-form v-if="dialogMode === 'create' || dialogMode === 'edit'" label-position="top">
         <el-form-item label="用户名" required><el-input v-model="accountForm.username" :disabled="dialogMode === 'edit'" maxlength="64" /></el-form-item>
@@ -408,13 +409,9 @@ function userInitial(value: string): string {
             <el-option v-for="option in authorizationScopes" :key="option.key" :label="option.label" :value="option.key" />
           </el-select>
         </el-form-item>
-        <el-alert title="管理员范围仅支持触点、省或市。" type="info" :closable="false" show-icon />
+        <el-alert title="管理范围可以选择租户或任意层级的组织单元。" type="info" :closable="false" show-icon />
       </el-form>
-      <template #footer>
-        <el-button @click="closeDialog">取消</el-button>
-        <el-button type="primary" :loading="dialogSaving" @click="submitDialog">保存</el-button>
-      </template>
-    </el-dialog>
+    </FormDrawer>
   </div>
 </template>
 

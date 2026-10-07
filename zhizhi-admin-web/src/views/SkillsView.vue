@@ -1042,7 +1042,7 @@ function fileKind(entry: ManagedFileEntry): string {
 </script>
 
 <template>
-  <div class="skills-page skill-manager-page" @click="closeContextMenu">
+  <div class="skills-page skill-manager-page admin-management-page" @click="closeContextMenu">
     <AppPanel class="finder-card skills-finder-card" :class="{ 'inline-editing': fileMode }">
       <header class="finder-toolbar skills-finder-toolbar">
         <el-button v-if="fileMode" class="inline-editor-back" :icon="ArrowLeft" @click="closeFileMode">
@@ -1367,6 +1367,8 @@ function fileKind(entry: ManagedFileEntry): string {
 
     <FormDrawer
       :open="createOpen"
+      class="global-resource-form-dialog"
+      placement="modal"
       title="新建 Skill"
       subtitle="Skill 名称会作为 .skills 下的目录名，asset_key 由后端生成。"
       :saving="skillRefs.saving.value"
@@ -1393,6 +1395,8 @@ function fileKind(entry: ManagedFileEntry): string {
 
     <FormDrawer
       :open="metadataOpen"
+      class="global-resource-form-dialog"
+      placement="modal"
       title="编辑 Skill 元信息"
       subtitle="重命名会同步移动 .skills 下的 Skill 目录。"
       :saving="skillRefs.saving.value"

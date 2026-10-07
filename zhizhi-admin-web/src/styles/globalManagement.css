@@ -1,4 +1,39 @@
-/* Platform resource catalogs share one visual contract inside Global Management. */
+/* Management menus share the Global Management visual contract. */
+.admin-management-page.admin-management-page :is(.model-local-head, .organization-local-head, .source-header, .global-management-head) {
+  min-height: 80px;
+  border-bottom: 1px solid rgba(220, 229, 232, 0.9);
+  padding: 20px;
+  background: #fff;
+}
+
+.admin-management-page.admin-management-page :is(.model-local-head, .organization-local-head, .source-header, .global-management-head) :is(h1, h2) {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.admin-management-page.admin-management-page :is(.model-local-head, .organization-local-head, .source-header, .global-management-head) p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.admin-management-page.admin-management-page .global-management-mark { display: none; }
+.admin-management-page.admin-management-page .global-management-identity > .el-space__item:has(.global-management-mark) { display: none; }
+.admin-management-page.admin-management-page .global-resource-title h3 { margin: 0; font-size: 15px; font-weight: 780; }
+.admin-management-page.admin-management-page .app-panel-card.el-card { border-radius: 0; box-shadow: none; }
+.admin-management-page.admin-management-page :is(.model-table-footer, .organization-table-footer) { display: flex; justify-content: flex-end; height: 56px; padding: 16px 20px; border-top: 1px solid rgba(220, 229, 232, 0.9); font-size: 13px; }
+.admin-management-page.admin-management-page .finder-column-header { height: 46px; background: #f4f8f8; border-color: rgba(220, 229, 232, 0.9); }
+.admin-management-page.admin-management-page .finder-column-header span { font-size: 13px; font-weight: 760; color: var(--text-secondary); }
+.admin-management-page.admin-management-page .finder-toolbar { min-height: 60px; background: #fff; border-color: rgba(220, 229, 232, 0.9); }
+.admin-management-page.admin-management-page .finder-heading h2 { font-size: 18px; font-weight: 700; }
+.admin-management-page.admin-management-page .finder-heading p { font-size: 13px; font-weight: 400; color: var(--text-secondary); }
+.admin-management-page.admin-management-page .el-empty__description p { color: var(--text-secondary); font-size: 13px; line-height: 20px; }
+.admin-management-page.admin-management-page .el-empty__image { width: 88px; }
+
 .global-resource-form-dialog.app-form-dialog .app-form-surface-body .el-form-item {
   margin-bottom: 12px;
 }
@@ -38,13 +73,28 @@
   font-weight: 600;
 }
 
-.global-management-page .global-management-body {
+.global-resource-form-dialog.app-form-dialog .app-form-surface-body :is(.asset-form, .grid) > label {
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.global-resource-form-dialog.app-form-dialog .admin-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  border-top: 1px solid var(--border-weak);
+  padding-top: 12px;
+}
+
+.admin-management-page.admin-management-page {
   background: #fff;
   --resource-table-header-bg: #f4f8f8;
   --resource-list-border: rgba(220, 229, 232, 0.9);
 }
 
-.global-management-page .global-management-body > :is(.roles-page, .model-page, .model-management-page, .organization-page, .data-sources-page) {
+.admin-management-page.admin-management-page > :is(.roles-page, .model-page, .model-management-page, .organization-page, .data-sources-page) {
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -54,14 +104,14 @@
   background: #fff;
 }
 
-.global-management-page .global-management-body .app-panel-card.el-card {
+.admin-management-page.admin-management-page .app-panel-card.el-card {
   border: 0;
   border-radius: 0;
   background: #fff;
   box-shadow: none;
 }
 
-.global-management-page .global-management-body .global-resource-toolbar {
+.admin-management-page.admin-management-page .global-resource-toolbar {
   display: flex;
   min-height: 60px;
   flex: 0 0 auto;
@@ -73,8 +123,8 @@
   background: #fff;
 }
 
-.global-management-page .global-management-body .global-resource-title,
-.global-management-page .global-management-body .global-resource-title h2 {
+.admin-management-page.admin-management-page .global-resource-title,
+.admin-management-page.admin-management-page .global-resource-title h2 {
   min-width: 88px;
   flex: 0 0 auto;
   margin: 0;
@@ -85,7 +135,7 @@
   white-space: nowrap;
 }
 
-.global-management-page .global-management-body .global-resource-toolbar .global-resource-tools {
+.admin-management-page.admin-management-page .global-resource-toolbar .global-resource-tools {
   display: flex !important;
   width: auto;
   min-width: 0;
@@ -96,8 +146,8 @@
   gap: 16px;
 }
 
-.global-management-page .global-management-body .global-resource-toolbar .global-resource-filters,
-.global-management-page .global-management-body .global-resource-toolbar .global-resource-actions {
+.admin-management-page.admin-management-page .global-resource-toolbar .global-resource-filters,
+.admin-management-page.admin-management-page .global-resource-toolbar .global-resource-actions {
   display: flex;
   width: auto;
   min-width: 0;
@@ -107,24 +157,24 @@
   gap: 8px;
 }
 
-.global-management-page .global-management-body .global-resource-toolbar .global-resource-filters .el-input {
+.admin-management-page.admin-management-page .global-resource-toolbar .global-resource-filters .el-input {
   width: 240px;
   flex: 0 0 auto;
   font-size: 13px;
 }
 
-.global-management-page .global-management-body .global-resource-filters .el-input__wrapper {
+.admin-management-page.admin-management-page .global-resource-filters .el-input__wrapper {
   min-height: 32px;
   padding-inline: 12px;
   background: #fff;
   box-shadow: 0 0 0 1px var(--resource-list-border) inset;
 }
 
-.global-management-page .global-management-body .global-resource-filters .el-input__wrapper.is-focus {
+.admin-management-page.admin-management-page .global-resource-filters .el-input__wrapper.is-focus {
   box-shadow: 0 0 0 1px var(--accent) inset;
 }
 
-.global-management-page .global-management-body .global-resource-toolbar .el-button {
+.admin-management-page.admin-management-page .global-resource-toolbar .el-button {
   height: 32px;
   min-height: 32px;
   margin-left: 0;
@@ -133,21 +183,21 @@
   font-weight: 650;
 }
 
-.global-management-page .global-management-body .global-resource-filters > .el-button {
+.admin-management-page.admin-management-page .global-resource-filters > .el-button {
   min-width: 80px;
 }
 
-.global-management-page .global-management-body .global-resource-actions > .el-button {
+.admin-management-page.admin-management-page .global-resource-actions > .el-button {
   min-width: 124px;
 }
 
-.global-management-page .global-management-body .global-resource-filters .el-segmented {
+.admin-management-page.admin-management-page .global-resource-filters .el-segmented {
   height: 32px;
   min-height: 32px;
   font-size: 13px;
 }
 
-.global-management-page .global-management-body .global-resource-table-region {
+.admin-management-page.admin-management-page .global-resource-table-region {
   display: flex;
   min-height: 0;
   flex: 1 1 0;
@@ -156,7 +206,7 @@
   background: #fff;
 }
 
-.global-management-page .global-management-body .global-resource-table.el-table {
+.admin-management-page.admin-management-page .global-resource-table.el-table {
   min-height: 0;
   flex: 1 1 auto;
   --el-table-header-bg-color: var(--resource-table-header-bg);
@@ -168,7 +218,7 @@
   --el-table-row-hover-bg-color: #f7f7fd;
 }
 
-.global-management-page .global-management-body .global-resource-table.el-table th.el-table__cell {
+.admin-management-page.admin-management-page .global-resource-table.el-table th.el-table__cell {
   height: 46px;
   background: var(--resource-table-header-bg);
   color: var(--text-secondary);
@@ -176,69 +226,69 @@
   font-weight: 760;
 }
 
-.global-management-page .global-management-body .global-resource-table.el-table td.el-table__cell {
+.admin-management-page.admin-management-page .global-resource-table.el-table td.el-table__cell {
   height: 52px;
   color: var(--text-primary);
   font-size: 13px;
 }
 
-.global-management-page .global-management-body .global-resource-table .el-table__cell {
+.admin-management-page.admin-management-page .global-resource-table .el-table__cell {
   padding-block: 10px;
 }
 
-.global-management-page .global-management-body .global-resource-table .cell {
+.admin-management-page.admin-management-page .global-resource-table .cell {
   padding-inline: 14px;
   font-size: 13px;
   line-height: 18px;
 }
 
-.global-management-page .global-management-body .global-resource-table .cell strong {
+.admin-management-page.admin-management-page .global-resource-table .cell strong {
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 700;
 }
 
-.global-management-page .global-management-body .global-resource-table .cell :is(small, .muted) {
+.admin-management-page.admin-management-page .global-resource-table .cell :is(small, .muted) {
   color: var(--text-tertiary);
   font-size: 11px;
   line-height: 16px;
 }
 
-.global-management-page .global-management-body .global-resource-table .el-tag {
+.admin-management-page.admin-management-page .global-resource-table .el-tag {
   height: 22px;
   padding-inline: 6px;
   font-size: 12px;
   font-weight: 650;
 }
 
-.global-management-page .global-management-body .global-resource-table .el-button.is-link {
+.admin-management-page.admin-management-page .global-resource-table .el-button.is-link {
   margin-left: 0;
   padding: 0;
   font-size: 13px;
   font-weight: 650;
 }
 
-.global-management-page .global-management-body .global-resource-row-actions {
+.admin-management-page.admin-management-page .global-resource-row-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.global-management-page .global-management-body .global-resource-table .el-table__empty-text {
+.admin-management-page.admin-management-page .global-resource-table .el-table__empty-text {
   width: 100%;
   line-height: normal;
 }
 
-.global-management-page .global-management-body .global-resource-table .el-table__empty-block {
+.admin-management-page.admin-management-page .global-resource-table .el-table__empty-block {
   min-height: 260px;
 }
 
-.global-management-page .global-management-body .global-resource-table .management-empty-state {
+.admin-management-page.admin-management-page .global-resource-table .management-empty-state {
   padding: 24px 16px;
 }
 
-.global-management-page .global-management-body .admin-pagination {
+.admin-management-page.admin-management-page .admin-pagination {
   height: 56px;
   min-height: 56px;
   flex: 0 0 auto;
@@ -250,43 +300,43 @@
   font-size: 13px;
 }
 
-.global-management-page .global-management-body .admin-pagination :is(.el-pagination__total, .el-pager li, .btn-prev, .btn-next) {
+.admin-management-page.admin-management-page .admin-pagination :is(.el-pagination__total, .el-pager li, .btn-prev, .btn-next) {
   font-size: 13px;
 }
 
 @media (max-width: 1100px) {
-  .global-management-page .global-management-body .global-resource-toolbar,
-  .global-management-page .global-management-body .global-resource-tools,
-  .global-management-page .global-management-body .global-resource-filters {
+  .admin-management-page.admin-management-page .global-resource-toolbar,
+  .admin-management-page.admin-management-page .global-resource-tools,
+  .admin-management-page.admin-management-page .global-resource-filters {
     flex-wrap: wrap;
   }
 }
 
 @media (max-width: 680px) {
-  .global-management-page .global-management-body .global-resource-toolbar .global-resource-tools {
+  .admin-management-page.admin-management-page .global-resource-toolbar .global-resource-tools {
     width: 100%;
     flex-basis: 100%;
   }
 
-  .global-management-page .global-management-body .global-resource-toolbar .global-resource-filters {
+  .admin-management-page.admin-management-page .global-resource-toolbar .global-resource-filters {
     flex: 1 1 100%;
   }
 
-  .global-management-page .global-management-body .global-resource-toolbar .global-resource-filters .el-input {
+  .admin-management-page.admin-management-page .global-resource-toolbar .global-resource-filters .el-input {
     width: 100%;
     flex-basis: 100%;
   }
 
-  .global-management-page .global-management-body .global-resource-filters > .el-button {
+  .admin-management-page.admin-management-page .global-resource-filters > .el-button {
     flex: 1 1 80px;
   }
 
-  .global-management-page .global-management-body .global-resource-toolbar .global-resource-actions {
+  .admin-management-page.admin-management-page .global-resource-toolbar .global-resource-actions {
     width: 100%;
     flex-basis: 100%;
   }
 
-  .global-management-page .global-management-body .global-resource-actions > .el-button {
+  .admin-management-page.admin-management-page .global-resource-actions > .el-button {
     width: 100%;
   }
 }

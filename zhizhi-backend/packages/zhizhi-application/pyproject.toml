@@ -11,12 +11,15 @@ dependencies = [
     "gewu-agent-runtime",
     "gewu-core[database,redis]",
     "httpx==0.28.1",
+    "httpx2==2.13.1",
+    "mcp==2.3.0",
     "minio==7.2.20",
     "opentelemetry-api==1.41.1",
     "pydantic==2.13.4",
     "pyjwt==2.12.1",
-    "pymysql>=1.1,<2",
+    "pymysql==1.1.2",
     "sqlalchemy==2.0.49",
+    "sqlglot==30.21.0",
 ]
 
 [project.optional-dependencies]

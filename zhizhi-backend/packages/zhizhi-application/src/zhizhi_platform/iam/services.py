@@ -37,6 +37,12 @@ ADMIN_NAVIGATION_ITEMS: tuple[AdminNavigationItem, ...] = (
     ),
     AdminNavigationItem(key="models", label="模型管理", path="/models", permission_code="llm.view"),
     AdminNavigationItem(
+        key="data-sources",
+        label="数据源管理",
+        path="/data-sources",
+        permission_code="data_sources.view",
+    ),
+    AdminNavigationItem(
         key="scene-git",
         label="场景 Git 授权",
         path="/scene-git",

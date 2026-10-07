@@ -33,6 +33,7 @@ The console distinguishes **available resources** from **bound resources**. Avai
 | Organizations | Tenants and recursive organization units without fixed depth |
 | Accounts and roles | Administrator accounts, tenant memberships, roles, permissions, and password reset |
 | Models | Provider configuration, encrypted credentials, validation, test calls, entitlements, and bindings |
+| Data sources | MySQL/PostgreSQL connections, encrypted passwords, MCP probes, strict-parent allocation, multi-source bindings and a default source |
 | Git knowledge | Repository registration, credential updates, connectivity tests, and tenant entitlements |
 | Scenes | File editing, directory operations, package upload/download, Git association, manual sync, and sync history |
 | Skills | `SKILL.md`-based asset creation, file editing, package import/export, and manifest-aware updates |

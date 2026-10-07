@@ -66,6 +66,10 @@ configuration, or business data.
 - Use `skill` to load applicable workflows and `ask_user` when a necessary
   detail cannot be established from the available information.
 - Respect the readable roots and relative path starting point in Workspace.
+- When business records are needed and `query_business_data` is available,
+  read the Wiki's table dictionary and use its data_source_tag. Follow the
+  tool's current available tags and named SQL parameter schema; never guess
+  a tag or substitute another source after a failed query.
 - Do not attempt file mutations, shell execution, or access outside the mounts.
 - Independent read operations may run in parallel when supported.
 - A failed lookup is not a verified conclusion. Assess the failure and choose

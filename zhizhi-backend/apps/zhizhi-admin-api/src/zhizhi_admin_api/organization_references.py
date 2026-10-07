@@ -9,6 +9,10 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from zhizhi.assets import SharedAssetModel
 
+from zhizhi_platform.data_source.repository import (
+    DataSourceBindingModel,
+    DataSourceEntitlementModel,
+)
 from zhizhi_platform.git.adapters.mysql.models import (
     GitEntitlementModel,
     WorkspaceSceneGitConfigModel,
@@ -46,7 +50,7 @@ class MysqlOrganizationReferenceQuery:
 
         count_queries: list[tuple[str, Any]] = []
 
-        def add_count(name_: str, model_: type[Any], *conditions: Any) -> None:
+        def add_count(name_: str, model_: type[Any], *conditions: Any) -> None:  # noqa
             count_queries.append(
                 (
                     name_,
@@ -67,6 +71,16 @@ class MysqlOrganizationReferenceQuery:
                     LLMEntitlementModel.tenant_id == tenant_id,
                 ),
                 ("llm_bindings", LLMBindingModel, LLMBindingModel.tenant_id == tenant_id),
+                (
+                    "data_source_entitlements",
+                    DataSourceEntitlementModel,
+                    DataSourceEntitlementModel.tenant_id == tenant_id,
+                ),
+                (
+                    "data_source_bindings",
+                    DataSourceBindingModel,
+                    DataSourceBindingModel.tenant_id == tenant_id,
+                ),
                 (
                     "git_entitlements",
                     GitEntitlementModel,
@@ -118,6 +132,14 @@ class MysqlOrganizationReferenceQuery:
             )
             add_count("llm_entitlements", LLMEntitlementModel, *llm_entitlement_conditions)
             add_count("llm_bindings", LLMBindingModel, *llm_binding_conditions)
+            for model, name in (
+                (DataSourceEntitlementModel, "data_source_entitlements"),
+                (DataSourceBindingModel, "data_source_bindings"),
+            ):
+                conditions = [model.organization_unit_id == organization_unit_id]
+                if tenant_id:
+                    conditions.append(model.tenant_id == tenant_id)
+                add_count(name, model, *conditions)
 
         return await self._load_nonzero_counts(count_queries)
 
@@ -138,7 +160,7 @@ class MysqlOrganizationReferenceQuery:
                 OrganizationUnitModel.id.not_in(retained_ids)
             )
 
-        def count(model: type[Any], *conditions: Any) -> Any:
+        def count(model: type[Any], *conditions: Any) -> Any:  # noqa
             return select(func.count()).select_from(model).where(*conditions).scalar_subquery()
 
         count_queries = [
@@ -163,6 +185,20 @@ class MysqlOrganizationReferenceQuery:
                 ),
             ),
         ]
+        for model, name in (
+            (DataSourceEntitlementModel, "data_source_entitlements"),
+            (DataSourceBindingModel, "data_source_bindings"),
+        ):
+            count_queries.append(
+                (
+                    name,
+                    count(
+                        model,
+                        model.tenant_id == tenant_id,
+                        model.organization_unit_id.in_(removed_organization_unit_ids),
+                    ),
+                )
+            )
         return await self._load_nonzero_counts(count_queries)
 
     async def _load_nonzero_counts(

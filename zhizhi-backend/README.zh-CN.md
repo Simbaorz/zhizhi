@@ -96,11 +96,17 @@ Workspace、额外上下文及 Memory；空段落整体省略，不自动注入�
 
 ## Runtime 能力
 
+可选的 [`zhizhi-data-mcp`](apps/zhizhi-data-mcp/README.md) 服务提供受治理的 SQL 查询。
+全局管理员配置加密的 MySQL/PostgreSQL 连接，上级管理员逐级分配可用资源，当前范围绑定多个源并指定默认源。
+Agent 根据 Wiki 表字典中的标签选择源；Zhizhi 校验授权并使用官方 MCP Client 调用，仅查询服务连接业务数据库。
+启用前需配置 Web/Admin 和服务的 `data_mcp` 设置。未启用 MCP 或未绑定资源时不提供查询工具。
+
 首个开源版本有意限制 ToolSet：
 
 - `list`、`read`、`glob`、`grep`：发现和阅读只读 Workspace；
 - `skill`：加载受治理的 Skill；
 - `ask_user`：挂起运行并请求结构化澄清。
+- `query_business_data`：仅在启用 MCP 且已绑定授权数据源时提供。
 
 系统不提供 Shell 工具，也不允许 Runtime 不受限制地修改 Workspace。
 
@@ -220,11 +226,26 @@ Admin API 使用刚生成的私钥。启动前：
 
 脚本会启动：
 
+- 根据本地连接配置启动 Docker MySQL、Redis，并等待依赖就绪；
 - `http://127.0.0.1:8000` 的 Web API；
 - `http://127.0.0.1:8001` 的 Admin API；
 - 带 Beat 的 Celery Worker；
 - `http://127.0.0.1:5173` 的 Admin Web；
 - `http://127.0.0.1:5174` 的致知 Web。
+
+需要先启动 Docker Desktop。脚本读取 `conf/*.yml` 中现有的数据库与 Redis 连接配置，
+并应用 `.env` / `.env.local` 覆盖值，凭据不会打印或写入提交文件。MySQL 8.4.11、
+Redis 7.4.11 容器只绑定本机端口。已有的 `zhizhi-mysql-data`、`zhizhi-redis-data`
+数据卷会复用，不存在时自动创建；已有 MySQL 账号密码只验证，不重置。
+SQLite 和远程依赖按原配置使用。各进程的本地 MySQL 连接信息、Redis 端口及密码需要一致。
+
+按 Ctrl+C 只停止应用进程，依赖容器和数据仍然保留。设置 `START_LOCAL_DOCKER=0`
+可自行管理依赖；使用 Apollo 配置时默认不自动启动 Docker。也可以单独启动或检查依赖：
+
+```bash
+uv --directory zhizhi-backend run --no-sync python ../scripts/local_dependencies.py
+uv --directory zhizhi-backend run --no-sync python ../scripts/local_dependencies.py --verify-only
+```
 
 访问 `http://127.0.0.1:5173`。全新数据库会自动跳转到 `/setup`，输入
 `ADMIN_BOOTSTRAP_TOKEN` 后创建首个超级管理员。初始化状态会写入数据库且无法重复执行。

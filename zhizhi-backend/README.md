@@ -99,11 +99,20 @@ is added by this prompt preset.
 
 ## Runtime capabilities
 
+Admin-governed SQL sources are available through the optional
+[`zhizhi-data-mcp`](apps/zhizhi-data-mcp/README.md) service. Global administrators configure
+encrypted MySQL/PostgreSQL connections; scope administrators manage strict-parent entitlements
+and multi-source bindings with a default. The Agent chooses a logical tag from the Wiki table
+dictionary. Zhizhi rechecks authorization and uses the official MCP client; only the query
+service connects to business databases. Configure `data_mcp` in Web/Admin and the service
+before enabling queries. Unconfigured or unbound sources do not add a query tool.
+
 The first open-source release deliberately exposes a bounded ToolSet:
 
 - `list`, `read`, `glob`, and `grep` for read-only workspace discovery;
 - `skill` for loading a governed Skill;
 - `ask_user` for pausing a run and requesting structured clarification.
+- `query_business_data` only when MCP is enabled and an authorized source set is bound.
 
 There is no shell tool and no unrestricted workspace mutation.
 
@@ -224,11 +233,29 @@ Start the complete local stack:
 
 The script starts:
 
+- Docker MySQL and Redis when local connection settings require them, and waits for readiness;
 - Web API at `http://127.0.0.1:8000`;
 - Admin API at `http://127.0.0.1:8001`;
 - Celery Worker with Beat;
 - Admin Web at `http://127.0.0.1:5173`;
 - Zhizhi Web at `http://127.0.0.1:5174`.
+
+Docker Desktop must be running. The launcher reads the existing `db` and `redis` connection
+settings from `conf/*.yml`, with `.env` / `.env.local` overrides, and passes credentials to
+Compose without printing or checking them into source control. MySQL 8.4.11 and Redis 7.4.11
+containers bind only to localhost. Existing `zhizhi-mysql-data` and `zhizhi-redis-data` volumes
+are reused; missing volumes are created. Existing MySQL accounts/passwords are verified, never
+reset. SQLite and remote dependencies are left to their configured deployments. Different
+processes must agree on the local MySQL connection and Redis port/password.
+
+Ctrl+C stops application processes while dependency containers and their data remain available.
+Set `START_LOCAL_DOCKER=0` to manage dependencies yourself; automatic Docker startup defaults
+to disabled for Apollo configuration. To start or check dependencies separately:
+
+```bash
+uv --directory zhizhi-backend run --no-sync python ../scripts/local_dependencies.py
+uv --directory zhizhi-backend run --no-sync python ../scripts/local_dependencies.py --verify-only
+```
 
 Open Admin Web at `http://127.0.0.1:5173`. A fresh database is redirected to `/setup`; enter the
 `ADMIN_BOOTSTRAP_TOKEN` and create the first super administrator. Initialization is recorded in the

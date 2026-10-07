@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zhizhi-data-mcp"
+version = "0.1.0"
+description = "MCP SQL query service for Admin-governed Zhizhi data sources"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "zhizhi-application",
+    "asyncmy>=0.2.11,<1",
+    "asyncpg==0.31.0",
+    "uvicorn==0.46.0",
+]
+
+[project.scripts]
+zhizhi-data-mcp = "zhizhi_data_mcp.__main__:main"
+
+[tool.uv.sources]
+zhizhi-application = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zhizhi_data_mcp"]

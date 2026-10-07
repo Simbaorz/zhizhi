@@ -1,0 +1,52 @@
+name: zhizhi-local
+
+services:
+  mysql:
+    image: mysql:8.4.11
+    container_name: zhizhi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ZHIZHI_LOCAL_MYSQL_ROOT_PASSWORD:?}
+      MYSQL_DATABASE: ${ZHIZHI_LOCAL_MYSQL_DATABASE:-zhizhi}
+      MYSQL_USER: ${ZHIZHI_LOCAL_MYSQL_USER:-}
+      MYSQL_PASSWORD: ${ZHIZHI_LOCAL_MYSQL_PASSWORD:-}
+    ports:
+      - "127.0.0.1:${ZHIZHI_LOCAL_MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent", "--host=127.0.0.1"]
+      interval: 2s
+      timeout: 5s
+      retries: 45
+      start_period: 10s
+
+  redis:
+    image: redis:7.4.11-alpine
+    container_name: zhizhi-redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${ZHIZHI_LOCAL_REDIS_PASSWORD:-}
+    command:
+      - sh
+      - -c
+      - 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+    ports:
+      - "127.0.0.1:${ZHIZHI_LOCAL_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'if [ -n "$$REDIS_PASSWORD" ]; then export REDISCLI_AUTH="$$REDIS_PASSWORD"; fi; redis-cli ping | grep -q PONG'
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mysql-data:
+    name: zhizhi-mysql-data
+    external: true
+  redis-data:
+    name: zhizhi-redis-data
+    external: true

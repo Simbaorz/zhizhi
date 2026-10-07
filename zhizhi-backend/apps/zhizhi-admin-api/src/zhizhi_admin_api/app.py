@@ -15,6 +15,7 @@ from gewu_core.http import (
 from gewu_core.http.lifecycle import HttpProcessRuntime
 from zhizhi_admin_api.auth import router as auth_router
 from zhizhi_admin_api.bootstrap import router as bootstrap_router
+from zhizhi_admin_api.data_sources import router as data_sources_router
 from zhizhi_admin_api.git_repositories import router as git_repositories_router
 from zhizhi_admin_api.http_policy import (
     admin_request_body_limit,
@@ -74,6 +75,7 @@ def create_admin_app(
     app_.include_router(users_router)
     app_.include_router(git_repositories_router)
     app_.include_router(llm_router)
+    app_.include_router(data_sources_router)
     app_.include_router(organization_router)
     app_.include_router(roles_router)
     app_.include_router(scopes_router)

@@ -107,6 +107,12 @@ def test_admin_app_owns_a_started_runtime_and_health_contract(tmp_path: Path) ->
         "/api/admin/roles/{role_id}",
         "/api/admin/roles/{role_id}/permissions",
         "/api/admin/permissions",
+        "/api/admin/data-sources",
+        "/api/admin/data-sources/{source_id}",
+        "/api/admin/data-sources/{source_id}/test",
+        "/api/admin/data-sources/assignable",
+        "/api/admin/data-sources/entitlements",
+        "/api/admin/data-sources/bindings",
         "/api/admin/tenant-members/assignable-roles",
         "/api/admin/tenant-members",
         "/api/admin/tenant-members/{member_id}",
@@ -325,7 +331,8 @@ def test_complete_admin_openapi_publishes_the_management_surface() -> None:
     assert spec["info"]["title"] == "致知 Admin API"
     assert "/api/admin/org/tenants/{tenant_id}/organization-units" in paths
     assert "/api/admin/llm/bindings" in paths
-    assert not any(path.startswith("/api/admin/data-sources") for path in paths)
+    assert "/api/admin/data-sources" in paths
+    assert "/api/admin/data-sources/bindings" in paths
     assert "/api/admin/scenes" in paths
     assert "/api/admin/skills" in paths
     assert not any("/areas" in path for path in paths)

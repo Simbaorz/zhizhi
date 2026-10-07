@@ -13,6 +13,7 @@ from zhizhi_platform import (
     ZhizhiDatabaseSettings,
     ZhizhiRedisSettings,
 )
+from zhizhi_platform.data_source.settings import DataMcpClientSettings
 from zhizhi_platform.llm import OutboundHttpSettings
 from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 
@@ -46,6 +47,7 @@ class AgentSettings(SettingsModel):
 
 
 class WebApiSettings(HttpInfrastructureSettings):
+    data_mcp: DataMcpClientSettings = Field(default_factory=DataMcpClientSettings)
     db: ZhizhiDatabaseSettings = Field(default_factory=ZhizhiDatabaseSettings)
     redis: ZhizhiRedisSettings = Field(default_factory=ZhizhiRedisSettings)
     storage_encryption: StorageEncryptionSettings = Field(default_factory=StorageEncryptionSettings)

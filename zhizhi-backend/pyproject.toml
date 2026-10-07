@@ -23,6 +23,7 @@ members = [
     "apps/zhizhi-web-api",
     "apps/zhizhi-admin-api",
     "apps/zhizhi-worker",
+    "apps/zhizhi-data-mcp",
 ]
 
 [tool.uv.sources]
@@ -57,13 +58,14 @@ known-first-party = [
     "zhizhi_admin_api",
     "zhizhi_platform",
     "zhizhi_worker",
+    "zhizhi_data_mcp",
 ]
 
 [tool.mypy]
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
-mypy_path = "packages/zhizhi-application/src:apps/zhizhi-web-api/src:apps/zhizhi-admin-api/src:apps/zhizhi-worker/src"
-packages = ["zhizhi", "zhizhi_web_api", "zhizhi_platform", "zhizhi_admin_api", "zhizhi_worker"]
+mypy_path = "packages/zhizhi-application/src:apps/zhizhi-web-api/src:apps/zhizhi-admin-api/src:apps/zhizhi-worker/src:apps/zhizhi-data-mcp/src"
+packages = ["zhizhi", "zhizhi_web_api", "zhizhi_platform", "zhizhi_admin_api", "zhizhi_worker", "zhizhi_data_mcp"]
 disallow_untyped_defs = true
 check_untyped_defs = true
 warn_return_any = true

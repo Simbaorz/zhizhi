@@ -34,7 +34,7 @@ from zhizhi_platform.iam.organization_policy import (
 )
 from zhizhi_platform.iam.ports import AdminOrgManageRepository, AdminOrgReadRepository
 
-ORG_READ_PERMISSIONS = ("org.view", "admins.view", "llm.view")
+ORG_READ_PERMISSIONS = ("org.view", "admins.view", "llm.view", "data_sources.view")
 SCOPE_CATALOG_READ_PERMISSIONS = (
     "admins.view",
     "admins.assign_role",
@@ -43,6 +43,7 @@ SCOPE_CATALOG_READ_PERMISSIONS = (
     "scenes.view",
     "scene_git.view",
     "llm.view",
+    "data_sources.view",
 )
 
 

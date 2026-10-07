@@ -8,6 +8,7 @@ from sqlalchemy.sql.schema import MetaData
 from gewu_agent_runtime.adapters.mysql import AgentRuntimeBase
 from zhizhi import assets as _assets
 from zhizhi_platform.audit import mysql as _audit_mysql
+from zhizhi_platform.data_source import repository as _data_source_models
 from zhizhi_platform.database import ZhizhiBase
 from zhizhi_platform.git.adapters.mysql import models as _git_models
 from zhizhi_platform.iam.adapters.mysql import models as _iam_models
@@ -20,6 +21,7 @@ _MODEL_MODULES = (
     _git_models,
     _iam_models,
     _llm_models,
+    _data_source_models,
     _workspace_models,
 )
 

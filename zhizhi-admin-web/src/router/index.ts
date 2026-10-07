@@ -5,6 +5,7 @@ import { useBootstrapStore } from "@/stores/bootstrap";
 import { useNavigationStore } from "@/stores/navigation";
 import AccountsView from "@/views/AccountsView.vue";
 import DashboardView from "@/views/DashboardView.vue";
+import DataSourcesView from "@/views/DataSourcesView.vue";
 import GlobalManagementView from "@/views/GlobalManagementView.vue";
 import GitRepositoryManagementView from "@/views/GitRepositoryManagementView.vue";
 import LoginView from "@/views/LoginView.vue";
@@ -68,6 +69,11 @@ export const router = createRouter({
       path: "/scene-git",
       component: GitRepositoryManagementView,
       meta: { title: "场景 Git 授权", auth: true },
+    },
+    {
+      path: "/data-sources",
+      component: DataSourcesView,
+      meta: { title: "数据源管理", auth: true },
     },
     {
       path: "/roles",

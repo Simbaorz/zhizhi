@@ -5,6 +5,15 @@
 # .env.local, or process environment. Replace secret placeholders and enable the
 # secure session cookie before production deployment.
 
+# MCP client for source connection probes. Routing (server_id/endpoint_url) is
+# configured per source in Admin, not in this process's YAML.
+# Set DATA_MCP_ENABLED=true and DATA_MCP_SIGNING_KEY to enable connection probes.
+data_mcp:
+  enabled: false
+  signing_key: ""
+  token_ttl_seconds: 60
+  max_client_connections: 64
+
 blocking_io:
   cpu:
     max_workers: 4
@@ -79,7 +88,7 @@ jwt:
   leeway_seconds: 300
 
 storage_encryption:
-  # Web API, Admin API, and Worker must share this key.
+  # Web API, Admin API, Worker, and Data MCP must share this key.
   key: ""
 
 login_throttle:

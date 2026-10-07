@@ -12,7 +12,7 @@
 
 This is one Git repository containing three independently buildable and deployable projects:
 
-- `zhizhi-backend/`: Python `uv workspace` containing the application layer, Web API, Admin API, and Worker.
+- `zhizhi-backend/`: Python `uv workspace` containing the application layer, Web API, Admin API, Worker, and independently deployed Data MCP service.
 - `zhizhi-admin-web/`: Vue management console for platform and tenant administrators.
 - `zhizhi-web/`: Lightweight Web API trial client and enterprise integration reference.
 

@@ -32,9 +32,11 @@ export PROJECT_HOME
 WEB_CONFIG="${PROJECT_ROOT}/conf/web.yml"
 ADMIN_CONFIG="${PROJECT_ROOT}/conf/admin.yml"
 WORKER_CONFIG="${PROJECT_ROOT}/conf/worker.yml"
+DATA_MCP_CONFIG="${PROJECT_ROOT}/conf/data-mcp.yml"
 
 WEB_API_HOST="${WEB_API_HOST:-127.0.0.1}"
 WEB_API_PORT="${WEB_API_PORT:-8000}"
+DATA_MCP_PORT="${DATA_MCP_PORT:-8002}"
 ADMIN_API_HOST="${ADMIN_API_HOST:-127.0.0.1}"
 ADMIN_API_PORT="${ADMIN_API_PORT:-8001}"
 WORKER_LOG_LEVEL="${WORKER_LOG_LEVEL:-INFO}"
@@ -136,6 +138,21 @@ if [[ "${SKIP_UV_SYNC:-0}" != "1" ]]; then
   )
 fi
 
+# Apollo deployments may use remote dependencies unavailable in the local YAML.
+if [[ "${CONFIG_SOURCE}" == "apollo" ]]; then
+  START_LOCAL_DOCKER="${START_LOCAL_DOCKER:-0}"
+else
+  START_LOCAL_DOCKER="${START_LOCAL_DOCKER:-1}"
+fi
+if [[ "${START_LOCAL_DOCKER}" == "1" ]]; then
+  require_command docker
+  echo "Starting configured local MySQL/Redis dependencies..."
+  (
+    cd "${BACKEND_ROOT}"
+    uv run --no-sync python "${SCRIPT_DIR}/local_dependencies.py"
+  )
+fi
+
 if [[ "${SKIP_PNPM_INSTALL:-0}" != "1" ]]; then
   echo "Installing Admin Web dependencies..."
   (
@@ -173,6 +190,14 @@ start_service \
   worker \
   --beat \
   --loglevel="${WORKER_LOG_LEVEL}"
+
+if [[ "${DATA_MCP_ENABLED:-false}" == "true" || "${DATA_MCP_ENABLED:-0}" == "1" ]]; then
+  require_file "${DATA_MCP_CONFIG}"
+  start_service "Data MCP (127.0.0.1:${DATA_MCP_PORT})" \
+    run_in_directory "${BACKEND_ROOT}" \
+    env CONFIG_FILE="${DATA_MCP_CONFIG}" \
+    uv run --no-sync zhizhi-data-mcp --host 127.0.0.1 --port "${DATA_MCP_PORT}"
+fi
 
 start_service \
   "Admin Web (127.0.0.1:5173)" \

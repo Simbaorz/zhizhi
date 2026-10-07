@@ -1,0 +1,34 @@
+# Independent query service. Uses the same PLATFORM db and encryption key as Admin.
+# Supply STORAGE_ENCRYPTION_KEY and DATA_MCP_SIGNING_KEY through process environment.
+# DATA_MCP_SIGNING_KEY must contain at least 32 random bytes and match Web/Admin.
+# Platform configuration database, not a business query source. Use the same
+# database as Admin/Web; pool sizes and timeouts are local to this process.
+db:
+  enabled: true
+  use_sqlite: true
+  sqlite_file_name: zhizhi.db
+  # Used when use_sqlite is false. Must target the same platform database as Admin.
+  url: ""
+  echo: false
+  pool_size: 10
+  max_overflow: 10
+  pool_pre_ping: true
+  pool_recycle_seconds: 300
+  pool_timeout_seconds: 10
+  connect_timeout_seconds: 5
+
+storage_encryption:
+  # Must match Admin so stored source passwords can be decrypted.
+  key: ""
+
+data_mcp:
+  enabled: true
+  signing_key: ""
+  # Match the service number and MCP address on each assigned Admin source record.
+  server_id: main
+  public_url: http://127.0.0.1:8002/mcp
+  # Business-source pools only; separate from the platform database's db.pool_size.
+  max_pool_capacity: 96
+  max_active_pools: 32
+  idle_pool_seconds: 300
+  shutdown_timeout_seconds: 30

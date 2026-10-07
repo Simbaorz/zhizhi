@@ -5,14 +5,16 @@ import GitRepositoryManagementView from "@/views/GitRepositoryManagementView.vue
 import ModelManagementView from "@/views/ModelManagementView.vue";
 import OrganizationView from "@/views/OrganizationView.vue";
 import RolesView from "@/views/RolesView.vue";
+import DataSourcesView from "@/views/DataSourcesView.vue";
 
-type GlobalTab = "organization" | "roles" | "models" | "sceneGit";
+type GlobalTab = "organization" | "roles" | "models" | "sceneGit" | "dataSources";
 
 const activeTab = ref<GlobalTab>("organization");
 const tabs = [
   { value: "organization" as const, label: "组织管理" },
   { value: "roles" as const, label: "角色管理" },
   { value: "models" as const, label: "模型管理" },
+  { value: "dataSources" as const, label: "数据源管理" },
   { value: "sceneGit" as const, label: "场景 Git" },
 ];
 const activeTabLabel = computed(
@@ -45,6 +47,7 @@ const activeTabLabel = computed(
       <RolesView v-if="activeTab === 'roles'" />
       <OrganizationView v-else-if="activeTab === 'organization'" mode="global" />
       <ModelManagementView v-else-if="activeTab === 'models'" mode="global" />
+      <DataSourcesView v-else-if="activeTab === 'dataSources'" mode="global" />
       <GitRepositoryManagementView v-else mode="global" />
     </section>
   </div>

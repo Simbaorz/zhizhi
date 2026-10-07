@@ -103,6 +103,7 @@ const navigationIcon: Record<string, Component> = {
   org: Connection,
   accounts: Avatar,
   models: Cpu,
+  "data-sources": Connection,
   "scene-git": Share,
   users: UserRound,
   roles: ShieldCheck,

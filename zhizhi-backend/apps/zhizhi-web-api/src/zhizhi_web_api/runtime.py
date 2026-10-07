@@ -42,6 +42,9 @@ from zhizhi_platform.adapters.mysql import (
     MysqlModelRuntimeRepository,
 )
 from zhizhi_platform.chat_media import ZhizhiChatMediaStore
+from zhizhi_platform.data_source.mcp_client import DataMcpClient
+from zhizhi_platform.data_source.repository import DataSourceRepository
+from zhizhi_platform.data_source.resolution import DataSourceResolver
 from zhizhi_platform.iam.adapters.mysql import MysqlOrganizationDirectory
 from zhizhi_platform.llm import ConfiguredLLMCredentialCipher
 from zhizhi_platform.llm.capability import ZhizhiModelCapabilityBuilder
@@ -73,6 +76,7 @@ class ZhizhiApiRuntime:
         self._model_factory: DefaultProviderChatModelFactory | None = None
         self._agent_runtime: AgentRuntime | None = None
         self._media_store: ZhizhiChatMediaStore | None = None
+        self._data_mcp_client: DataMcpClient | None = None
         self.service: AgentWorkbenchService | None = None
         self.catalog: MysqlSlashCatalog | None = None
         self._started = False
@@ -211,6 +215,8 @@ class ZhizhiApiRuntime:
             settings.media,
             self.bootstrap.project_home,
         )
+        if settings.data_mcp.enabled:
+            self._data_mcp_client = DataMcpClient(settings.data_mcp)
         provider = ZhizhiRuntimeProvider(
             subscriber_id=SUBSCRIBER_ID,
             scopes=scopes,
@@ -218,6 +224,8 @@ class ZhizhiApiRuntime:
                 models=model_resolver,  # noqa
                 catalogs=catalog_resolver,
                 workspace_backends=workspace_backends,
+                data_sources=DataSourceResolver(DataSourceRepository(sessions)),
+                data_mcp_client=self._data_mcp_client,
                 max_iterations=settings.agent.max_iterations,
                 ask_timeout_seconds=settings.agent.ask_user_timeout_seconds,
             ),
@@ -248,6 +256,9 @@ class ZhizhiApiRuntime:
         self._media_store = None
         if media_store is not None:
             await media_store.close()
+        if self._data_mcp_client is not None:
+            await self._data_mcp_client.close()
+            self._data_mcp_client = None
         if self._model_factory is not None:
             await self._model_factory.aclose()
             self._model_factory = None

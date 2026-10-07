@@ -16,6 +16,7 @@ from zhizhi_platform import (
     ZhizhiDatabaseSettings,
     ZhizhiRedisSettings,
 )
+from zhizhi_platform.data_source.settings import DataMcpClientSettings
 from zhizhi_platform.git import ZhizhiGitSettings
 from zhizhi_platform.iam import IamLimitsSettings, JwtSettings, LoginThrottleSettings
 from zhizhi_platform.llm import OutboundHttpSettings
@@ -73,6 +74,7 @@ class AdminApiSettings(HttpInfrastructureSettings):
     """Admin process settings loaded from one Bootstrap-selected YAML file."""
 
     db: ZhizhiDatabaseSettings = Field(default_factory=ZhizhiDatabaseSettings)
+    data_mcp: DataMcpClientSettings = Field(default_factory=DataMcpClientSettings)
     password_transport: PasswordTransportSettings = Field(default_factory=PasswordTransportSettings)
     http_ingress: AdminHttpIngressSettings = Field(default_factory=AdminHttpIngressSettings)
     jwt: JwtSettings = Field(default_factory=JwtSettings)

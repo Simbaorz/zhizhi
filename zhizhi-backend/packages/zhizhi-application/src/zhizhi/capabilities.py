@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, SkipValidation
 
 from gewu_agent_runtime.builtins import ask_user_tool, skill
 from gewu_agent_runtime.builtins.files import FileToolDescriptionProfile, build_file_tools
-from gewu_agent_runtime.tools import ToolSet
+from gewu_agent_runtime.tools import Tool, ToolSet
 from gewu_agent_runtime.workspace import (
     AccessMode,
     WorkspaceBackend,
@@ -64,7 +64,9 @@ def build_read_only_workspace(backends: ReadOnlyWorkspaceBackends) -> WorkspaceS
     return WorkspaceSession(tuple(mounts), default_root=default_root)
 
 
-def build_read_only_tool_set(*, ask_timeout_seconds: int = 300) -> ToolSet:
+def build_read_only_tool_set(
+    *, ask_timeout_seconds: int = 300, business_data: Tool | None = None
+) -> ToolSet:
     """Build the explicit server-safe tool whitelist."""
 
     file_tools = {tool.name: tool for tool in build_file_tools(_FILE_TOOL_DESCRIPTION_PROFILE)}
@@ -76,4 +78,8 @@ def build_read_only_tool_set(*, ask_timeout_seconds: int = 300) -> ToolSet:
         skill,
         ask_user_tool(timeout_seconds=ask_timeout_seconds),
     ]
+    if business_data is not None:
+        if business_data.name != "query_business_data" or business_data.writes_workspace:
+            raise ValueError("Only the read-only MCP query_business_data capability may be added.")
+        tools.append(business_data)
     return ToolSet(tuple(tools), name="zhizhi-read-only", version="v1")

@@ -4,6 +4,15 @@
 # MODE, TIMEZONE, and CONFIG_FILE through .env, .env.local, or process environment.
 # Replace secret placeholders before production deployment.
 
+# MCP client for Agent queries. Routing (server_id/endpoint_url) is read from
+# Admin-managed source records; the client may call multiple MCP servers.
+# Set DATA_MCP_ENABLED=true and DATA_MCP_SIGNING_KEY to enable governed SQL tools.
+data_mcp:
+  enabled: false
+  signing_key: ""
+  token_ttl_seconds: 60
+  max_client_connections: 64
+
 blocking_io:
   cpu:
     max_workers: 4
@@ -93,7 +102,7 @@ redis:
     celery: 0
 
 storage_encryption:
-  # Web API, Admin API, and Worker must share this key.
+  # Web API, Admin API, Worker, and Data MCP must share this key.
   key: ""
 
 media:

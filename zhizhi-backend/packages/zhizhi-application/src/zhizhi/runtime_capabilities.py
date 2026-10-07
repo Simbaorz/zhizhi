@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Protocol
 
 from gewu_agent_runtime.builtins import SceneCatalog, SkillCatalog
 from gewu_agent_runtime.prompts import WorkspacePromptContext
 from gewu_agent_runtime.tools import ToolRuntimeBindings
+from gewu_core.errors import ApplicationError
+from zhizhi.business_data_tool import build_business_data_tool
 from zhizhi.capabilities import ReadOnlyWorkspaceBackends
 from zhizhi.provider import ResolvedTurnCapabilities
 from zhizhi.scope import AgentScope
+from zhizhi_platform.data_source.mcp_client import DataMcpClient
+from zhizhi_platform.data_source.resolution import DataSourceResolver
 from zhizhi_platform.iam import AccessScope, ScopeType
 from zhizhi_platform.prompt import build_zhizhi_system_prompt
 from zhizhi_platform.runtime_contracts import (
@@ -35,6 +40,8 @@ class ZhizhiCapabilityResolver:
         models: ZhizhiTurnModelResolver,
         catalogs: AgentCatalogResolver,
         workspace_backends: ScopedBackendFactory,
+        data_sources: DataSourceResolver | None = None,
+        data_mcp_client: DataMcpClient | None = None,
         tool_runtime: ToolRuntimeBindings | None = None,
         max_iterations: int = 50,
         ask_timeout_seconds: int = 300,
@@ -42,6 +49,8 @@ class ZhizhiCapabilityResolver:
         self._models = models
         self._catalogs = catalogs
         self._workspace_backends = workspace_backends
+        self._data_sources = data_sources
+        self._data_mcp_client = data_mcp_client
         self._tool_runtime = tool_runtime or ToolRuntimeBindings()
         self._max_iterations = max_iterations
         self._ask_timeout_seconds = ask_timeout_seconds
@@ -53,6 +62,22 @@ class ZhizhiCapabilityResolver:
             raise ZhizhiModelNotConfiguredError()
         skill_catalog, scene_catalog = await self._catalogs.resolve(scope)
         shared = access.shared_ancestor_scopes()
+        data_tool = None
+        if self._data_sources is not None and self._data_mcp_client is not None:
+            try:
+                selection = await self._data_sources.resolve(access)
+            except ApplicationError as exc:
+                # Optional SQL access must not disable the caller's authorized Wiki tools.
+                logging.getLogger(__name__).warning(
+                    "Data-source capability unavailable tenant_id=%s error_kind=%s",
+                    scope.tenant_id,
+                    exc.kind.value,
+                )
+                selection = None
+            if selection is not None:
+                data_tool = build_business_data_tool(
+                    selection, self._data_sources, self._data_mcp_client, access
+                )
         return ResolvedTurnCapabilities(
             model=resolved_model.model,
             prompt=build_zhizhi_system_prompt(
@@ -63,6 +88,7 @@ class ZhizhiCapabilityResolver:
                 organization=tuple(self._workspace_backends(item) for item in shared[1:]),
             ),
             skill_catalog=skill_catalog,
+            business_data_tool=data_tool,
             scene_catalog=scene_catalog,
             tool_runtime=self._tool_runtime,
             max_iterations=self._max_iterations,

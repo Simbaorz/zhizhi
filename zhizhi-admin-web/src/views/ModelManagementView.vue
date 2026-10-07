@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { CirclePlus, Delete, EditPen, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
+import { CirclePlus, Delete, EditPen, Key, MagicStick, Refresh as RotateCcw, Search } from "@element-plus/icons-vue";
 
 import {
   createLLMBinding,
@@ -16,19 +16,24 @@ import {
   listLLMModelPage,
   listOrganizationUnits,
   listOrgTenants,
+  testLLMModel,
   updateLLMBinding,
   updateLLMEntitlement,
+  updateLLMCredentials,
   updateLLMModel,
 } from "@/api/admin";
 import { ApiError } from "@/api/http";
 import FormDrawer from "@/components/FormDrawer.vue";
 import ManagementEmptyState from "@/components/ManagementEmptyState.vue";
 import { RESOURCE_PAGE_SIZE } from "@/utils/pagination";
+import { buildModelConfigs, modelConfigFields } from "@/utils/modelConfigForm";
+import { formatDate } from "@/utils/format";
 import { useScopeStore } from "@/stores/scope";
 import type {
   LLMBindingScopeType,
   LLMProtocol,
   LLMProvider,
+  LLMTestResult,
   ManagedLLMBinding,
   ManagedLLMConfig,
   ManagedLLMEntitlement,
@@ -38,12 +43,19 @@ import type {
 
 const props = withDefaults(defineProps<{ mode?: "global" | "tenant" }>(), { mode: "tenant" });
 type ActiveTab = "models" | "availability" | "bindings";
-type DrawerMode = "model-create" | "model-edit" | "availability-create" | "binding-create" | "binding-edit";
+type DrawerMode = "model-create" | "model-edit" | "model-test" | "model-credentials" | "availability-create" | "binding-create" | "binding-edit";
 
 const scopeStore = useScopeStore();
 const activeTab = ref<ActiveTab>(props.mode === "global" ? "models" : "availability");
 const loading = ref(false);
 const saving = ref(false);
+const testing = ref(false);
+const testResult = ref<LLMTestResult | null>(null);
+const testError = ref("");
+const testForm = reactive({
+  systemPrompt: "你是一个模型连通性测试助手。",
+  prompt: "你好，请用一句话介绍自己。",
+});
 const tenants = ref<ManagedTenant[]>([]);
 const units = ref<ManagedOrganizationUnit[]>([]);
 const models = ref<ManagedLLMConfig[]>([]);
@@ -52,6 +64,12 @@ const bindings = ref<ManagedLLMBinding[]>([]);
 const tenantId = ref("");
 const drawerMode = ref<DrawerMode | null>(null);
 const selectedModel = ref<ManagedLLMConfig | null>(null);
+const CREDENTIAL_MASK = "********";
+const credentialApiKey = ref("");
+const credentialChanged = ref(false);
+const credentialError = ref("");
+const credentialConfigured = computed(() => selectedModel.value?.credential_fields?.includes("api_key") ?? selectedModel.value?.has_credentials ?? false);
+const credentialsDirty = computed(() => credentialChanged.value && !!credentialApiKey.value.trim() && credentialApiKey.value.trim() !== CREDENTIAL_MASK);
 const selectedBinding = ref<ManagedLLMBinding | null>(null);
 const MODEL_PAGE_SIZE = RESOURCE_PAGE_SIZE;
 const modelPage = ref(1);
@@ -75,9 +93,8 @@ const modelForm = reactive({
   supportVision: false,
   supportThinking: false,
   timeoutSeconds: 600,
-  generationConfigText: "{}",
-  providerConfigText: "{}",
-  credentialsText: "{}",
+  ...modelConfigFields(),
+  apiKey: "",
 });
 const protocolByProvider: Record<LLMProvider, LLMProtocol> = {
   openai: "openai-chat",
@@ -92,13 +109,15 @@ watch(() => modelForm.provider, (provider) => {
 const drawerTitle = computed(() => ({
   "model-create": "新建模型配置",
   "model-edit": "编辑模型配置",
+  "model-test": "模型连通测试",
+  "model-credentials": "修改模型凭据",
   "availability-create": "分配可用模型",
   "binding-create": "绑定默认模型",
   "binding-edit": "修改默认模型",
 })[drawerMode.value ?? "model-create"]);
 const drawerSubtitle = computed(() => {
   if (drawerMode.value === "model-create") return "添加一个可供平台分配的模型配置";
-  if (drawerMode.value === "model-edit") {
+  if (drawerMode.value?.startsWith("model")) {
     return selectedModel.value?.display_name || selectedModel.value?.alias || "";
   }
   if (drawerMode.value === "availability-create") {
@@ -192,8 +211,7 @@ function openCreateModel(): void {
     alias: "", displayName: "", provider: "openai", protocol: "openai-chat",
     modelName: "", endpointUrl: "", status: "active", supportStream: true,
     supportTools: true, supportVision: false, supportThinking: false,
-    timeoutSeconds: 600, generationConfigText: "{}", providerConfigText: "{}",
-    credentialsText: "{}",
+    timeoutSeconds: 600, ...modelConfigFields(), apiKey: "",
   });
   drawerMode.value = "model-create";
 }
@@ -213,11 +231,84 @@ function openEditModel(model: ManagedLLMConfig): void {
     supportVision: model.support_vision,
     supportThinking: model.support_thinking,
     timeoutSeconds: model.timeout_seconds,
-    generationConfigText: JSON.stringify(model.generation_config ?? {}, null, 2),
-    providerConfigText: JSON.stringify(model.provider_config ?? {}, null, 2),
-    credentialsText: "{}",
+    ...modelConfigFields(model.generation_config, model.provider_config),
+    apiKey: "",
   });
   drawerMode.value = "model-edit";
+}
+
+function openTestModel(model: ManagedLLMConfig): void {
+  selectedModel.value = model;
+  testResult.value = null;
+  testError.value = "";
+  testForm.systemPrompt = "你是一个模型连通性测试助手。";
+  testForm.prompt = "你好，请用一句话介绍自己。";
+  drawerMode.value = "model-test";
+}
+
+function openModelCredentials(model: ManagedLLMConfig): void {
+  selectedModel.value = model;
+  credentialApiKey.value = credentialConfigured.value ? CREDENTIAL_MASK : "";
+  credentialChanged.value = false;
+  credentialError.value = "";
+  drawerMode.value = "model-credentials";
+}
+
+function editCredential(): void {
+  if (credentialChanged.value || saving.value) return;
+  credentialApiKey.value = "";
+  credentialChanged.value = true;
+}
+
+async function submitModelCredentials(): Promise<void> {
+  if (!selectedModel.value || !credentialsDirty.value || saving.value) return;
+  saving.value = true;
+  credentialError.value = "";
+  try {
+    selectedModel.value = await updateLLMCredentials(selectedModel.value.id, {
+      api_key: credentialApiKey.value.trim(),
+    });
+  } catch (error) {
+    credentialError.value = error instanceof ApiError ? error.message : "更新模型凭据失败，请稍后重试。";
+    return;
+  } finally {
+    saving.value = false;
+  }
+  closeDrawer();
+  ElMessage.success("模型凭据已更新");
+  try { await loadModels(); }
+  catch (error) { notifyError(error, "刷新模型列表失败"); }
+}
+
+async function submitModelTest(): Promise<void> {
+  if (!selectedModel.value || testing.value) return;
+  testResult.value = null;
+  testError.value = "";
+  if (!testForm.prompt.trim()) {
+    testError.value = "测试输入不能为空。";
+    return;
+  }
+  testing.value = true;
+  try {
+    testResult.value = await testLLMModel(selectedModel.value.id, {
+      prompt: testForm.prompt.trim(),
+      systemPrompt: testForm.systemPrompt,
+    });
+  } catch (error) {
+    testError.value = error instanceof ApiError ? error.message : "模型测试请求失败，请稍后重试。";
+  } finally {
+    testing.value = false;
+  }
+  if (testResult.value) {
+    try { await loadModels(); }
+    catch (error) { notifyError(error, "刷新模型测试状态失败"); }
+  }
+}
+
+function testStatusLabel(status: string): string {
+  if (status === "success") return "测试成功";
+  if (status === "failed") return "测试失败";
+  return "未测试";
 }
 
 function openAvailability(): void {
@@ -238,6 +329,14 @@ function openBinding(binding?: ManagedLLMBinding): void {
 
 async function saveDrawer(): Promise<void> {
   if (!drawerMode.value || saving.value) return;
+  if (drawerMode.value === "model-test") {
+    await submitModelTest();
+    return;
+  }
+  if (drawerMode.value === "model-credentials") {
+    await submitModelCredentials();
+    return;
+  }
   saving.value = true;
   try {
     if (drawerMode.value === "model-create") {
@@ -279,6 +378,10 @@ async function saveDrawer(): Promise<void> {
       await loadTenantResources();
     }
     drawerMode.value = null;
+    modelForm.apiKey = "";
+    credentialApiKey.value = "";
+    credentialChanged.value = false;
+    credentialError.value = "";
     ElMessage.success("保存成功");
   } catch (error) {
     notifyError(error, "保存失败");
@@ -289,27 +392,19 @@ async function saveDrawer(): Promise<void> {
 
 function modelPayload() {
   if (!modelForm.alias.trim() || !modelForm.modelName.trim()) throw new Error("请填写别名与模型名称");
+  if (!Number.isSafeInteger(modelForm.timeoutSeconds) || modelForm.timeoutSeconds < 1) {
+    throw new Error("超时秒数必须是大于零的整数");
+  }
   return {
     alias: modelForm.alias.trim(), displayName: modelForm.displayName.trim(),
     provider: modelForm.provider, protocol: modelForm.protocol, modelName: modelForm.modelName.trim(),
     endpointUrl: modelForm.endpointUrl.trim(), status: modelForm.status,
     supportStream: modelForm.supportStream, supportTools: modelForm.supportTools,
     supportVision: modelForm.supportVision, supportThinking: modelForm.supportThinking,
-    timeoutSeconds: Number(modelForm.timeoutSeconds) || 600,
-    generationConfig: parseObject(modelForm.generationConfigText, "生成配置"),
-    providerConfig: parseObject(modelForm.providerConfigText, "供应商配置"),
-    credentials: parseObject(modelForm.credentialsText, "凭据"),
+    timeoutSeconds: modelForm.timeoutSeconds,
+    ...buildModelConfigs(modelForm, selectedModel.value?.generation_config, selectedModel.value?.provider_config),
+    credentials: modelForm.apiKey.trim() ? { api_key: modelForm.apiKey.trim() } : {},
   };
-}
-
-function parseObject(text: string, label: string): Record<string, unknown> {
-  try {
-    const value: unknown = JSON.parse(text || "{}");
-    if (!value || Array.isArray(value) || typeof value !== "object") throw new Error();
-    return value as Record<string, unknown>;
-  } catch {
-    throw new Error(`${label}必须是合法的 JSON 对象`);
-  }
 }
 
 function validateScope(): void {
@@ -388,7 +483,13 @@ function notifyError(error: unknown, fallback: string): void {
 }
 
 function closeDrawer(): void {
-  if (!saving.value) drawerMode.value = null;
+  if (!saving.value && !testing.value) {
+    drawerMode.value = null;
+    modelForm.apiKey = "";
+    credentialApiKey.value = "";
+    credentialChanged.value = false;
+    credentialError.value = "";
+  }
 }
 
 watch(tenantId, loadTenantResources);
@@ -507,9 +608,21 @@ onMounted(loadAll);
               <el-tag :type="row.status === 'active' ? 'success' : 'info'">{{ row.status === "active" ? "启用" : "停用" }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="170" fixed="right" align="right">
+          <el-table-column label="测试" min-width="210">
+            <template #default="{ row }">
+              <div class="model-test-cell">
+                <el-tag :type="row.last_test_status === 'success' ? 'success' : row.last_test_status === 'failed' ? 'danger' : 'info'" :title="row.last_test_time ? `最近测试：${formatDate(row.last_test_time)}` : '尚未执行测试'">
+                  {{ testStatusLabel(row.last_test_status) }}
+                </el-tag>
+                <small :title="row.last_test_message">{{ row.last_test_message || "尚未执行测试" }}</small>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="300" fixed="right" align="right">
             <template #default="{ row }">
               <div class="model-row-actions global-resource-row-actions">
+                <el-button link type="primary" :icon="MagicStick" :disabled="row.status !== 'active'" :title="row.status === 'active' ? '用当前配置发起一次模型调用' : '请先启用模型再测试'" @click="openTestModel(row)">测试</el-button>
+                <el-button link type="primary" :icon="Key" title="修改模型 API Key" @click="openModelCredentials(row)">凭据</el-button>
                 <el-button link type="primary" :icon="EditPen" @click="openEditModel(row)">编辑</el-button>
                 <el-button link type="danger" :icon="Delete" @click="removeModel(row)">删除</el-button>
               </div>
@@ -622,70 +735,142 @@ onMounted(loadAll);
 
     <FormDrawer
       :open="drawerMode !== null"
+      :class="{ 'global-resource-form-dialog': props.mode === 'global' }"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
-      :saving="saving"
-      size="wide"
+      :saving="saving || testing"
+      :submit-text="drawerMode === 'model-test' ? '开始测试' : drawerMode === 'model-credentials' ? '保存凭据' : '保存'"
+      :submit-disabled="drawerMode === 'model-credentials' && !credentialsDirty"
+      :placement="drawerMode?.startsWith('model') ? 'modal' : 'drawer'"
+      :size="drawerMode?.startsWith('model') ? 'default' : 'wide'"
       @close="closeDrawer"
       @submit="saveDrawer"
     >
       <el-form
-        v-if="drawerMode?.startsWith('model')"
-        class="model-drawer-form"
+        v-if="drawerMode === 'model-create' || drawerMode === 'model-edit'"
+        class="model-config-form"
+        tag="div"
         label-position="top"
       >
         <div class="model-form-grid">
           <el-form-item label="别名" required>
-            <el-input v-model="modelForm.alias" :disabled="drawerMode === 'model-edit'" />
+            <el-input v-model="modelForm.alias" placeholder="main-chat" :disabled="drawerMode === 'model-edit'" />
           </el-form-item>
           <el-form-item label="显示名称">
-            <el-input v-model="modelForm.displayName" />
+            <el-input v-model="modelForm.displayName" placeholder="主力对话模型" />
           </el-form-item>
-          <el-form-item label="供应商">
+          <el-form-item label="模型来源">
             <el-select v-model="modelForm.provider" :disabled="drawerMode === 'model-edit'">
-              <el-option value="openai" label="OpenAI" />
+              <el-option value="openai" label="OpenAI Compatible" />
               <el-option value="anthropic" label="Anthropic" />
             </el-select>
           </el-form-item>
           <el-form-item label="协议">
-            <el-select v-model="modelForm.protocol" disabled>
-              <el-option value="openai-chat" label="OpenAI Chat" />
-              <el-option value="anthropic-messages" label="Anthropic Messages" />
-            </el-select>
+            <el-input v-model="modelForm.protocol" disabled />
           </el-form-item>
           <el-form-item label="模型名称" required>
-            <el-input v-model="modelForm.modelName" />
+            <el-input v-model="modelForm.modelName" placeholder="gpt-4.1 / claude-sonnet" />
           </el-form-item>
-          <el-form-item label="超时时间（秒）">
-            <el-input-number v-model="modelForm.timeoutSeconds" :min="1" controls-position="right" />
+          <el-form-item label="接口地址">
+            <el-input v-model="modelForm.endpointUrl" placeholder="https://api.example.com/v1" />
           </el-form-item>
-        </div>
-        <el-form-item label="Endpoint">
-          <el-input v-model="modelForm.endpointUrl" placeholder="留空时使用供应商默认地址" />
-        </el-form-item>
-        <el-form-item label="能力">
-          <el-checkbox v-model="modelForm.supportStream">流式</el-checkbox>
-          <el-checkbox v-model="modelForm.supportTools">工具调用</el-checkbox>
-          <el-checkbox v-model="modelForm.supportVision">视觉</el-checkbox>
-          <el-checkbox v-model="modelForm.supportThinking">思考</el-checkbox>
-        </el-form-item>
-        <div class="model-form-grid">
-          <el-form-item label="生成配置 JSON">
-            <el-input v-model="modelForm.generationConfigText" type="textarea" :rows="5" />
+          <el-form-item label="状态">
+            <el-select v-model="modelForm.status">
+              <el-option value="active" label="启用" />
+              <el-option value="inactive" label="停用" />
+            </el-select>
           </el-form-item>
-          <el-form-item label="供应商配置 JSON">
-            <el-input v-model="modelForm.providerConfigText" type="textarea" :rows="5" />
+          <el-form-item label="超时秒数">
+            <el-input-number v-model="modelForm.timeoutSeconds" :min="1" :precision="0" :controls="false" />
+          </el-form-item>
+          <el-form-item label="上下文窗口" required>
+            <el-input v-model="modelForm.contextWindow" type="number" min="1" />
           </el-form-item>
         </div>
-        <el-form-item v-if="drawerMode === 'model-create'" label="凭据 JSON">
-          <el-input v-model="modelForm.credentialsText" type="textarea" :rows="5" />
+        <section class="model-capability-section" aria-label="模型能力">
+          <h3>模型能力</h3>
+          <div class="model-capability-grid">
+            <el-checkbox v-model="modelForm.supportStream">流式输出</el-checkbox>
+            <el-checkbox v-model="modelForm.supportTools">工具调用</el-checkbox>
+            <el-checkbox v-model="modelForm.supportVision">视觉输入</el-checkbox>
+            <el-checkbox v-model="modelForm.supportThinking">思考能力</el-checkbox>
+          </div>
+        </section>
+        <div class="model-form-grid model-generation-grid">
+          <el-form-item label="temperature">
+            <el-input v-model="modelForm.temperature" placeholder="0 至 2，留空使用模型默认值" />
+          </el-form-item>
+          <el-form-item label="top_p">
+            <el-input v-model="modelForm.topP" placeholder="0 至 1" />
+          </el-form-item>
+          <el-form-item label="max_tokens">
+            <el-input v-model="modelForm.maxTokens" placeholder="正整数" />
+          </el-form-item>
+          <el-form-item label="presence_penalty">
+            <el-input v-model="modelForm.presencePenalty" placeholder="-2 至 2" />
+          </el-form-item>
+          <el-form-item label="frequency_penalty">
+            <el-input v-model="modelForm.frequencyPenalty" placeholder="-2 至 2" />
+          </el-form-item>
+          <el-form-item label="seed">
+            <el-input v-model="modelForm.seed" placeholder="可选，非负整数" />
+          </el-form-item>
+        </div>
+        <el-form-item v-if="modelForm.provider === 'anthropic'" label="Anthropic Version">
+          <el-input model-value="2023-06-01" disabled />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-radio-group v-model="modelForm.status">
-            <el-radio-button value="active">启用</el-radio-button>
-            <el-radio-button value="inactive">停用</el-radio-button>
-          </el-radio-group>
+        <div v-if="drawerMode === 'model-create'" class="model-form-grid">
+          <el-form-item label="API Key">
+            <el-input v-model="modelForm.apiKey" type="password" autocomplete="new-password" />
+          </el-form-item>
+        </div>
+      </el-form>
+
+      <el-form v-else-if="drawerMode === 'model-credentials'" class="model-credentials-form" tag="div" label-position="top">
+        <div class="model-credential-summary" :class="{ dirty: credentialChanged }">
+          <strong>{{ credentialChanged ? '有未保存变更' : '凭据未变更' }}</strong>
+          <small>{{ credentialConfigured ? '已配置字段显示为 ********，点击输入框后可重新填写并保存。' : '尚未配置 API Key，请填写后保存。' }}</small>
+        </div>
+        <el-form-item label="API Key" required>
+          <el-input
+            v-model="credentialApiKey"
+            type="password" autocomplete="new-password"
+            :disabled="saving"
+            placeholder="输入新的 API Key"
+            @focus="editCredential"
+            @update:model-value="credentialChanged = true"
+          />
+          <small class="model-form-hint">{{ credentialChanged ? '请填写完整的新凭据后保存' : credentialConfigured ? '未变更' : '未配置' }}</small>
         </el-form-item>
+        <el-alert v-if="credentialError" :title="credentialError" type="error" show-icon :closable="false" />
+      </el-form>
+
+      <el-form v-else-if="drawerMode === 'model-test'" class="model-test-form" tag="div" label-position="top">
+        <el-form-item label="System Prompt">
+          <el-input v-model="testForm.systemPrompt" type="textarea" :rows="3" :disabled="testing" />
+        </el-form-item>
+        <el-form-item label="测试输入" required>
+          <el-input v-model="testForm.prompt" type="textarea" :rows="4" :disabled="testing" />
+        </el-form-item>
+        <div v-if="testing" class="model-test-progress" role="status">
+          <el-icon class="is-loading"><RotateCcw /></el-icon>
+          正在调用模型，请稍候…
+        </div>
+        <el-alert v-if="testError" :title="testError" type="error" show-icon :closable="false" />
+        <section v-if="testResult" class="model-test-result" aria-label="模型测试结果" aria-live="polite">
+          <el-alert
+            :type="testResult.ok ? 'success' : 'error'"
+            :title="`${testResult.ok ? '测试成功' : '测试失败'} · ${testResult.latency_ms} ms`"
+            :description="testResult.ok ? (testResult.content || '模型调用成功，未返回文本内容。') : testResult.error"
+            show-icon
+            :closable="false"
+          />
+          <div v-if="testResult.usage" class="model-test-usage">
+            <span>输入 Token：{{ testResult.usage.input_tokens }}</span>
+            <span>输出 Token：{{ testResult.usage.output_tokens }}</span>
+            <span>总计 Token：{{ testResult.usage.total_tokens }}</span>
+          </div>
+        </section>
       </el-form>
 
       <el-form v-else class="model-drawer-form" label-position="top">
@@ -1005,15 +1190,80 @@ onMounted(loadAll);
 }
 
 .model-drawer-form :deep(.el-select),
-.model-drawer-form :deep(.el-input-number) {
+.model-drawer-form :deep(.el-input-number),
+.model-config-form :deep(.el-select),
+.model-config-form :deep(.el-input-number) {
   width: 100%;
 }
+
+.model-config-form :deep(.el-form-item) { margin-bottom: 12px; }
+.model-config-form :deep(.el-form-item__label) {
+  height: auto;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.model-config-form :deep(.el-input-number .el-input__inner) { text-align: left; }
+.model-test-cell { display: grid; justify-items: start; gap: 4px; }
+.model-test-cell small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.model-test-form { width: 100%; }
+.model-credentials-form { width: 100%; }
+.model-credential-summary {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-weak);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.model-credential-summary small { font-size: 12px; line-height: 1.5; }
+.model-credential-summary.dirty { border-color: var(--accent); }
+.model-credentials-form :deep(.el-form-item__label) { color: var(--text-secondary); font-size: 12px; }
+.model-test-form :deep(.el-form-item__label) { color: var(--text-secondary); font-size: 12px; }
+.model-test-progress, .model-test-usage {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.model-test-result :deep(.el-alert__description) { white-space: pre-wrap; overflow-wrap: anywhere; }
+.model-test-usage { margin-top: 12px; border: 1px solid var(--border-weak); border-radius: 8px; padding: 12px; }
+.model-capability-section {
+  margin: 4px 0 16px;
+  border: 1px solid var(--border-weak);
+  border-radius: 8px;
+  padding: 12px;
+}
+.model-capability-section h3 {
+  margin: 0 0 12px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.model-capability-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.model-capability-grid :deep(.el-checkbox) { margin-right: 0; }
+.model-capability-grid :deep(.el-checkbox__label) { font-size: 12px; }
 
 .model-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 1rem;
+  gap: 0 12px;
 }
+
+.model-generation-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .model-form-hint {
   display: block;
@@ -1058,5 +1308,7 @@ onMounted(loadAll);
   .model-form-grid {
     grid-template-columns: 1fr;
   }
+
+  .model-capability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 </style>

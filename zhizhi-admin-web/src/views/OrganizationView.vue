@@ -717,6 +717,8 @@ onMounted(loadPage);
 
     <FormDrawer
       :open="drawerMode !== null"
+      :class="{ 'global-resource-form-dialog': props.mode === 'global' }"
+      :placement="props.mode === 'global' ? 'modal' : 'drawer'"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
       :saving="saving"

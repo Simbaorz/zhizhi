@@ -217,7 +217,7 @@ onMounted(async () => { if (props.mode === "tenant" && !scopes.nodes.length) awa
       <template v-else><p>状态：{{ binding.status === 'active' ? '启用' : '停用' }} · 默认数据源：{{ label(binding.default_source_id) }}</p><el-tag v-for="id in binding.source_ids" :key="id" class="source-chip">{{ label(id) }}{{ id === binding.default_source_id ? '（默认）' : '' }}</el-tag></template>
       <p class="muted">模型依据 Wiki 表字典中的标签选择绑定源；未指定标签时使用默认源，指定标签不可用时不自动换源。</p>
     </div>
-    <FormDrawer :open="drawer !== null" :title="title" :saving="saving" size="wide" @close="drawer = null; password = ''" @submit="submit">
+    <FormDrawer :open="drawer !== null" :class="{ 'global-resource-form-dialog': props.mode === 'global' }" :placement="props.mode === 'global' ? 'modal' : 'drawer'" :title="title" :saving="saving" :size="props.mode === 'global' ? 'default' : 'wide'" @close="drawer = null; password = ''" @submit="submit">
       <template v-if="drawer === 'source'">
         <h3>资源信息</h3><div class="form-grid">
           <label>资源编号<el-input v-model="form.source_key" :disabled="editing !== null" placeholder="orders-primary" /></label>

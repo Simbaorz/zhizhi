@@ -441,6 +441,8 @@ onMounted(async () => {
 
     <FormDrawer
       :open="drawerMode === 'create' || drawerMode === 'edit'"
+      class="global-resource-form-dialog"
+      placement="modal"
       :title="drawerTitle"
       :subtitle="selectedRole?.role_code"
       :saving="roleRefs.saving.value"
@@ -488,6 +490,7 @@ onMounted(async () => {
 
     <FormModal
       :open="drawerMode === 'permissions'"
+      class="global-resource-form-dialog"
       title="分配权限点"
       :subtitle="permissionDialogSubtitle"
       :saving="roleRefs.saving.value"

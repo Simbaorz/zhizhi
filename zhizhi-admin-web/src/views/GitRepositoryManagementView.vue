@@ -607,6 +607,8 @@ onMounted(refresh);
 
     <FormDrawer
       :open="drawerOpen"
+      :class="{ 'global-resource-form-dialog': isGlobalMode }"
+      :placement="isGlobalMode ? 'modal' : 'drawer'"
       :title="drawerTitle"
       :subtitle="drawerSubtitle"
       :saving="saving"

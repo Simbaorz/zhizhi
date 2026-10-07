@@ -37,7 +37,7 @@ describe("organization management layout", () => {
     assert.doesNotMatch(organizationSource, /class="management-kicker"/);
   });
 
-  it("uses the shared structured drawer for tenant and organization forms", () => {
+  it("uses the shared form surface for tenant and organization forms", () => {
     assert.match(organizationSource, /import FormDrawer from "@\/components\/FormDrawer\.vue"/);
     assert.match(organizationSource, /<FormDrawer/);
     assert.match(organizationSource, /class="organization-drawer-form"/);

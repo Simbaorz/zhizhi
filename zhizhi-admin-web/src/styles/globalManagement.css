@@ -1,4 +1,43 @@
 /* Platform resource catalogs share one visual contract inside Global Management. */
+.global-resource-form-dialog.app-form-dialog .app-form-surface-body .el-form-item {
+  margin-bottom: 12px;
+}
+
+.global-resource-form-dialog.app-form-dialog .app-form-surface-body .el-form-item__label {
+  height: auto;
+  margin-bottom: 4px;
+  padding-bottom: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.global-resource-form-dialog .form-grid > label,
+.global-resource-form-dialog .app-form-surface-body > label {
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.global-resource-form-dialog .form-grid {
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.global-resource-form-dialog .app-form-surface-body > label {
+  margin-bottom: 16px;
+}
+
+.global-resource-form-dialog .app-form-surface-body > h3 {
+  margin: 4px 0 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .global-management-page .global-management-body {
   background: #fff;
   --resource-table-header-bg: #f4f8f8;
@@ -125,7 +164,8 @@
   --el-table-text-color: var(--text-primary);
   --el-table-border-color: var(--resource-list-border);
   --el-table-tr-bg-color: #fff;
-  --el-table-row-hover-bg-color: rgba(91, 91, 214, 0.05);
+  /* Fixed cells must cover the columns that scroll underneath them. */
+  --el-table-row-hover-bg-color: #f7f7fd;
 }
 
 .global-management-page .global-management-body .global-resource-table.el-table th.el-table__cell {

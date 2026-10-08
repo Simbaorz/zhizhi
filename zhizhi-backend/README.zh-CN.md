@@ -95,7 +95,7 @@ Runtime 知识采用另一种组合方式：租户 Workspace 与当前完整组�
 Zhizhi 自己定义只读 Wiki 助手提示词，要求根据来源回答，并在使用选中 Scene 时加载其绑定 Skill。
 用户在试用客户端选择 Scene，Agent 在该 Wiki 内导航，不自主发现或切换 Scene。
 Runtime reminder 提供 Skills 列表和用户显式选中的 Scene 上下文。System Prompt 只装配实际提供的
-Workspace、额外上下文及 Memory；空段落整体省略，不自动注入时间。本提示词改动不新增默认 Scene 配置。
+Workspace、配置的回复语言、额外上下文及 Memory；空段落整体省略，不自动注入时间。本提示词改动不新增默认 Scene 配置。
 
 ## Runtime 能力
 
@@ -175,6 +175,18 @@ Agent 根据 Wiki 表字典中的标签选择源；Zhizhi 校验授权并使用�
 - [`conf/worker.example.yml`](../conf/worker.example.yml)
 
 真实配置与凭证不会提交到 Git。
+
+在 `conf/web.yml` 中配置 Agent 名称与默认回复语言：
+
+```yaml
+agent:
+  assistant_name: 致知
+  language: zh-CN
+```
+
+未填写这两个字段时，也使用以上默认值。名称进入静态 System Prompt；语言进入动态
+`Current User Language` 段，例如 `en-US` 表示英语。用户明确要求其他语言时可以切换。
+修改后重启 Web API 生效，企业集成 API 与测试 Portal 的 Agent 回复共用这套配置；前端品牌文案独立管理。
 
 Web API、Admin API 与 Worker 必须使用兼容的：
 

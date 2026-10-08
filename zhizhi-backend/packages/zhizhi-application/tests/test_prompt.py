@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from gewu_agent_runtime import AgentRuntime, PrincipalRef, PrincipalType, TurnBindings, TurnRequest
 from gewu_agent_runtime.builtins import SceneDocument
 from gewu_agent_runtime.invocation import InvocationTarget, InvocationTargetKind
@@ -28,12 +30,12 @@ def test_knowledge_prompt_uses_only_supplied_context() -> None:
     assert "/workspace/tenant" in prompt.full
     assert "/workspace/organization-2" in prompt.full
     assert "Writable:\n- None" in prompt.full
+    assert "# Current User Language\n\n- Language: zh-CN" in prompt.full
     for title in (
         "# Memory",
         "# Default Scene",
         "# Available Scenes",
         "# Environment",
-        "# Current User Language",
     ):
         assert title not in prompt.full
     assert "Use `edit`" not in prompt.full
@@ -44,7 +46,10 @@ def test_empty_context_omits_titles_and_memory_profile() -> None:
     prompt = build_zhizhi_system_prompt(
         workspace=WorkspacePromptContext(), extra_dynamic_sections=(" \n ",)
     )
-    assert prompt.dynamic_sections == (ZHIZHI_DYNAMIC_BOUNDARY,)
+    assert prompt.dynamic_sections == (
+        ZHIZHI_DYNAMIC_BOUNDARY,
+        "# Current User Language\n\n- Language: zh-CN",
+    )
     assert "# Workspace" not in prompt.full
 
 
@@ -60,6 +65,8 @@ def test_explicit_context_precedes_memory_and_prefix_is_stable() -> None:
 
     assert prompt.full.startswith(get_zhizhi_static_prompt("Wiki Assistant"))
     assert prompt.full.index("# Workspace") < prompt.full.index("# Default Scene")
+    assert prompt.full.index("# Workspace") < prompt.full.index("# Current User Language")
+    assert prompt.full.index("# Current User Language") < prompt.full.index("# Default Scene")
     assert prompt.full.index("# Default Scene") < prompt.full.index("# Memory")
     assert "Use concise answers." in prompt.full
     assert "private workspace" not in prompt.full
@@ -69,6 +76,25 @@ def test_explicit_context_precedes_memory_and_prefix_is_stable() -> None:
         extra_dynamic_sections=extras,
         assistant_name="Wiki Assistant",
     )
+
+
+def test_language_changes_only_dynamic_context_and_user_can_override_it() -> None:
+    english = build_zhizhi_system_prompt(assistant_name="Knowledge Assistant", language=" en-US ")
+    chinese = build_zhizhi_system_prompt(assistant_name="Knowledge Assistant", language="zh-CN")
+
+    assert english.static_sections == chinese.static_sections
+    assert english.full.startswith("You are Knowledge Assistant,")
+    assert "# Current User Language\n\n- Language: en-US" in english.full
+    assert "specified below unless the user requests another language" in english.full
+    assert "# Environment" not in english.full
+
+
+@pytest.mark.parametrize("blank", ["", " \n "])
+def test_blank_name_and_language_fall_back_to_defaults(blank: str) -> None:
+    prompt = build_zhizhi_system_prompt(assistant_name=blank, language=blank)
+
+    assert prompt.full.startswith("You are 致知,")
+    assert "# Current User Language\n\n- Language: zh-CN" in prompt.full
 
 
 async def test_runtime_receives_knowledge_rules_and_only_the_selected_scene() -> None:
@@ -100,7 +126,11 @@ async def test_runtime_receives_knowledge_rules_and_only_the_selected_scene() ->
             model=model,
             workspace=workspace,
             scene_catalog=SelectedSceneCatalog(),
-            prompt=build_zhizhi_system_prompt(workspace=_workspace_prompt(0)),
+            prompt=build_zhizhi_system_prompt(
+                workspace=_workspace_prompt(0),
+                assistant_name="Knowledge Assistant",
+                language="en-US",
+            ),
         ),
     )
     async for _event in session.stream():
@@ -110,6 +140,8 @@ async def test_runtime_receives_knowledge_rules_and_only_the_selected_scene() ->
     assert request[0].role.value == "system"
     assert "Wiki" in request[0].content
     assert "The workspace is read-only" in request[0].content
+    assert request[0].content.startswith("You are Knowledge Assistant,")
+    assert "# Current User Language\n\n- Language: en-US" in request[0].content
     assert "# Available Scenes" not in request[0].content
     context = "\n".join(message.content for message in request[1:])
     assert "<system-reminder>" in context

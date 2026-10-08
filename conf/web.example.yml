@@ -139,6 +139,9 @@ outbound_http:
   pool_timeout_seconds: 5.0
 
 agent:
+  # Assistant identity and default response language; users may request another language.
+  assistant_name: 致知
+  language: zh-CN
   max_iterations: 50
   max_concurrent_turns_per_process: 32
   queue_capacity: 128

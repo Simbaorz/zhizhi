@@ -15,6 +15,7 @@ from zhizhi_platform import (
 )
 from zhizhi_platform.data_source.settings import DataMcpClientSettings
 from zhizhi_platform.llm import OutboundHttpSettings
+from zhizhi_platform.prompt import ZHIZHI_ASSISTANT_NAME, ZHIZHI_DEFAULT_LANGUAGE
 from zhizhi_platform.workspace import ZhizhiWorkspaceSettings
 
 WEB_CONFIG_FILE = Path("conf/web.yml")
@@ -29,6 +30,8 @@ class WebApiBootstrapSettings(ZhizhiBootstrapSettings):
 
 
 class AgentSettings(SettingsModel):
+    assistant_name: str = ZHIZHI_ASSISTANT_NAME
+    language: str = Field(default=ZHIZHI_DEFAULT_LANGUAGE, min_length=1)
     max_iterations: int = Field(default=50, ge=1)
     max_concurrent_turns_per_process: int = Field(default=32, ge=1)
     queue_capacity: int = Field(default=128, ge=0)

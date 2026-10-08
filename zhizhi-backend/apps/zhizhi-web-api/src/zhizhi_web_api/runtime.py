@@ -228,6 +228,8 @@ class ZhizhiApiRuntime:
                 data_mcp_client=self._data_mcp_client,
                 max_iterations=settings.agent.max_iterations,
                 ask_timeout_seconds=settings.agent.ask_user_timeout_seconds,
+                assistant_name=settings.agent.assistant_name,
+                language=settings.agent.language,
             ),
             attachment_loader=self._media_store,
         )

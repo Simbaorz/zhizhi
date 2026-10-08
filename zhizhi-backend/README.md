@@ -97,7 +97,7 @@ Zhizhi owns a read-only Wiki assistant prompt, including source-based answers an
 loading a selected Scene's bound Skill. The user selects Scenes in the trial client; the Agent
 navigates within that Wiki instead of discovering or switching Scenes autonomously. Runtime
 reminders carry the Skills listing and explicitly selected Scene context. The System Prompt
-contains actual Workspace context and any explicitly supplied extra context or memory, with
+contains actual Workspace context, the configured response language, and any explicitly supplied extra context or memory, with
 empty sections omitted and no automatic timestamp injection. No default Scene configuration
 is added by this prompt preset.
 
@@ -183,6 +183,20 @@ The tracked examples are:
 - [`conf/worker.example.yml`](../conf/worker.example.yml)
 
 Real configuration files and credentials are ignored by Git.
+
+Configure the Agent identity and default response language in `conf/web.yml`:
+
+```yaml
+agent:
+  assistant_name: 致知
+  language: zh-CN
+```
+
+These are also the defaults when the fields are omitted. The name is part of the static
+System Prompt; the language is supplied in the dynamic `Current User Language` section
+(for example, `en-US` for English). Users can explicitly request another language.
+Restart the Web API after changing these settings. They apply to Agent responses through
+both the integration API and the test Portal; frontend brand labels are managed separately.
 
 The Web API, Admin API, and Worker must use compatible values for:
 

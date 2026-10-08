@@ -12,6 +12,7 @@ from gewu_agent_runtime.prompts import (
 )
 
 ZHIZHI_ASSISTANT_NAME = "致知"
+ZHIZHI_DEFAULT_LANGUAGE = "zh-CN"
 ZHIZHI_DYNAMIC_BOUNDARY = "__ZHIZHI_PROMPT_DYNAMIC_BOUNDARY__"
 ZHIZHI_STATIC_SECTIONS = (
     """\
@@ -26,7 +27,7 @@ configuration, or business data.
 # System Rules
 
 ## Responses
-- Respond in the user's language unless they request another language.
+- Respond in the current user language specified below unless the user requests another language.
 - Answer directly and use Markdown when it improves clarity.
 - Distinguish verified findings from inferences and unresolved questions.
 - Explain missing evidence or blockers without inventing an answer.
@@ -148,6 +149,7 @@ def build_zhizhi_system_prompt(
     workspace: WorkspacePromptContext | None = None,
     extra_dynamic_sections: Mapping[str, str] | Sequence[str] | None = None,
     assistant_name: str = ZHIZHI_ASSISTANT_NAME,
+    language: str = ZHIZHI_DEFAULT_LANGUAGE,
 ) -> SystemPrompt:
     """Compose Wiki rules with actual host context, keeping memory last."""
 
@@ -159,7 +161,8 @@ def build_zhizhi_system_prompt(
         or any(rule.strip() for rule in workspace.rules)
     ):
         workspace = None
-    sections = list(
+    sections = [_language_section(language)]
+    sections.extend(
         extra_dynamic_sections.values()
         if isinstance(extra_dynamic_sections, Mapping)
         else extra_dynamic_sections or ()
@@ -192,3 +195,8 @@ def _static_sections(assistant_name: str) -> tuple[str, ...]:
 
 def _resolve_zhizhi_assistant_name(value: str) -> str:
     return value.strip() or ZHIZHI_ASSISTANT_NAME
+
+
+def _language_section(language: str) -> str:
+    resolved = language.strip() or ZHIZHI_DEFAULT_LANGUAGE
+    return f"# Current User Language\n\n- Language: {resolved}"

@@ -16,7 +16,11 @@ from zhizhi.scope import AgentScope
 from zhizhi_platform.data_source.mcp_client import DataMcpClient
 from zhizhi_platform.data_source.resolution import DataSourceResolver
 from zhizhi_platform.iam import AccessScope, ScopeType
-from zhizhi_platform.prompt import build_zhizhi_system_prompt
+from zhizhi_platform.prompt import (
+    ZHIZHI_ASSISTANT_NAME,
+    ZHIZHI_DEFAULT_LANGUAGE,
+    build_zhizhi_system_prompt,
+)
 from zhizhi_platform.runtime_contracts import (
     ZhizhiModelNotConfiguredError,
     ZhizhiTurnModelResolver,
@@ -45,6 +49,8 @@ class ZhizhiCapabilityResolver:
         tool_runtime: ToolRuntimeBindings | None = None,
         max_iterations: int = 50,
         ask_timeout_seconds: int = 300,
+        assistant_name: str = ZHIZHI_ASSISTANT_NAME,
+        language: str = ZHIZHI_DEFAULT_LANGUAGE,
     ) -> None:
         self._models = models
         self._catalogs = catalogs
@@ -54,6 +60,8 @@ class ZhizhiCapabilityResolver:
         self._tool_runtime = tool_runtime or ToolRuntimeBindings()
         self._max_iterations = max_iterations
         self._ask_timeout_seconds = ask_timeout_seconds
+        self._assistant_name = assistant_name
+        self._language = language
 
     async def resolve(self, scope: AgentScope) -> ResolvedTurnCapabilities:
         access = agent_access_scope(scope)
@@ -81,7 +89,9 @@ class ZhizhiCapabilityResolver:
         return ResolvedTurnCapabilities(
             model=resolved_model.model,
             prompt=build_zhizhi_system_prompt(
-                workspace=_workspace_prompt(len(access.organization_path))
+                workspace=_workspace_prompt(len(access.organization_path)),
+                assistant_name=self._assistant_name,
+                language=self._language,
             ),
             workspace_backends=ReadOnlyWorkspaceBackends(
                 tenant=self._workspace_backends(shared[0]),

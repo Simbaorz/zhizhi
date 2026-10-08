@@ -42,6 +42,8 @@ def test_tracked_example_configs_match_current_settings_models() -> None:
     assert isinstance(admin_settings, AdminApiSettings)
     assert isinstance(web_settings, WebApiSettings)
     assert isinstance(worker_settings, ZhizhiWorkerSettings)
+    assert web_settings.agent.assistant_name == "致知"
+    assert web_settings.agent.language == "zh-CN"
 
     expected_workspace_root = (project_home / "volume/workspace").resolve()
     assert (

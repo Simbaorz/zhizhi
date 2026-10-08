@@ -29,7 +29,7 @@ def write_configs(root, *, db=None, redis=None):
             },
         },
     }
-    for name in ("admin", "web", "worker"):
+    for name in ("admin", "web", "worker", "data-mcp"):
         (directory / f"{name}.yml").write_text(yaml.safe_dump(configuration))
 
 
@@ -98,7 +98,7 @@ def test_conflicting_local_credentials_are_rejected_before_starting_docker(
     assert "test-only" not in str(caught.value)
 
 
-def test_optional_data_mcp_uses_platform_mysql_without_adding_redis(tmp_path, launcher):
+def test_data_mcp_uses_platform_mysql_without_adding_redis(tmp_path, launcher):
     db = {
         "use_sqlite": False,
         "url": "mysql+aiomysql://reader:test-only@127.0.0.1/zhizhi",
@@ -109,6 +109,30 @@ def test_optional_data_mcp_uses_platform_mysql_without_adding_redis(tmp_path, la
         redis={"enabled": True, "connection": {"password": "test-only"}},
     )
     (tmp_path / "conf" / "data-mcp.yml").write_text(yaml.safe_dump({"db": db}))
-    dependencies = launcher.resolve_dependencies(tmp_path, {"DATA_MCP_ENABLED": "true"})
+    dependencies = launcher.resolve_dependencies(tmp_path, {})
     assert dependencies.mysql is not None
     assert dependencies.redis_connection == (6379, "test-only")
+
+
+def test_data_mcp_database_is_checked_without_an_enable_flag(tmp_path, launcher):
+    write_configs(tmp_path, redis={"enabled": True, "connection": {"host": "redis.example.test"}})
+    (tmp_path / "conf" / "data-mcp.yml").write_text(
+        yaml.safe_dump(
+            {
+                "db": {
+                    "use_sqlite": False,
+                    "url": "mysql+aiomysql://reader:test-only@127.0.0.1:3307/zhizhi",
+                }
+            }
+        )
+    )
+    dependencies = launcher.resolve_dependencies(tmp_path, {})
+    assert dependencies.mysql is not None
+    assert dependencies.mysql.port == 3307
+
+
+def test_missing_data_mcp_config_is_rejected_before_starting_docker(tmp_path, launcher):
+    write_configs(tmp_path, redis={"enabled": True, "connection": {"host": "redis.example.test"}})
+    (tmp_path / "conf" / "data-mcp.yml").unlink()
+    with pytest.raises(ValueError, match="Missing local Data MCP configuration"):
+        launcher.resolve_dependencies(tmp_path, {})

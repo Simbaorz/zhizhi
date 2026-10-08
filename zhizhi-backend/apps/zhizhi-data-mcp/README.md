@@ -23,8 +23,12 @@ uv sync --all-packages --all-extras --all-groups --frozen
 CONFIG_FILE=conf/data-mcp.yml uv run zhizhi-data-mcp --host 127.0.0.1 --port 8002
 ```
 
-`scripts/start-local.sh` also starts this service when `DATA_MCP_ENABLED=true`. Real credentials
-are deployment configuration; the checked-in example deliberately contains no usable keys.
+`scripts/start-local.sh` starts this service together with the APIs and Worker; no extra startup
+flag is needed. Prepare `conf/data-mcp.yml` with `data_mcp.enabled: true` and configure the
+Web/Admin query clients before running the launcher. `DATA_MCP_ENABLED` remains an optional
+environment override for the processes' `data_mcp.enabled` configuration, not a launcher switch.
+Real credentials are deployment configuration; the checked-in example deliberately contains no
+usable keys.
 
 ## Configuration ownership
 

@@ -114,6 +114,7 @@ trap 'exit 143' TERM HUP
 
 require_command uv
 require_command corepack
+require_file "${DATA_MCP_CONFIG}"
 if [[ "${CONFIG_SOURCE}" == "apollo" ]]; then
   require_value "APOLLO_BASE_URL" "${APOLLO_BASE_URL:-}"
   require_value "WEB_APOLLO_APP_ID" "${WEB_APOLLO_APP_ID}"
@@ -191,13 +192,10 @@ start_service \
   --beat \
   --loglevel="${WORKER_LOG_LEVEL}"
 
-if [[ "${DATA_MCP_ENABLED:-false}" == "true" || "${DATA_MCP_ENABLED:-0}" == "1" ]]; then
-  require_file "${DATA_MCP_CONFIG}"
-  start_service "Data MCP (127.0.0.1:${DATA_MCP_PORT})" \
-    run_in_directory "${BACKEND_ROOT}" \
-    env CONFIG_FILE="${DATA_MCP_CONFIG}" \
-    uv run --no-sync zhizhi-data-mcp --host 127.0.0.1 --port "${DATA_MCP_PORT}"
-fi
+start_service "Data MCP (127.0.0.1:${DATA_MCP_PORT})" \
+  run_in_directory "${BACKEND_ROOT}" \
+  env CONFIG_FILE="${DATA_MCP_CONFIG}" \
+  uv run --no-sync zhizhi-data-mcp --host 127.0.0.1 --port "${DATA_MCP_PORT}"
 
 start_service \
   "Admin Web (127.0.0.1:5173)" \
@@ -215,6 +213,7 @@ echo "  Admin Web: http://127.0.0.1:5173"
 echo "  Web:       http://127.0.0.1:5174"
 echo "  Web API:   http://${WEB_API_HOST}:${WEB_API_PORT}"
 echo "  Admin API: http://${ADMIN_API_HOST}:${ADMIN_API_PORT}"
+echo "  Data MCP:  http://127.0.0.1:${DATA_MCP_PORT}/mcp"
 echo "Press Ctrl+C to stop all of them."
 
 while true; do

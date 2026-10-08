@@ -106,7 +106,8 @@ Requirements:
 
 The repository root is the deployment `PROJECT_HOME`. Shared backend configuration lives in
 `conf/`, while `scripts/` contains cross-project development orchestration. After preparing the
-backend bootstrap environment and three local YAML files as described in the
+backend bootstrap environment and local YAML files (`web.yml`, `admin.yml`, `worker.yml`,
+and `data-mcp.yml`) as described in the
 [Backend guide](zhizhi-backend/README.md), then start the complete local stack from the repository
 root:
 
@@ -124,7 +125,9 @@ Admin API.
 ./scripts/start-local.sh
 ```
 
-This starts both APIs, the Worker, Admin Web, and the integration workbench.
+This starts both APIs, the Worker, Data MCP, Admin Web, and the integration workbench.
+Configure Data MCP's shared signing key and storage encryption key as described in the
+[Data MCP guide](zhizhi-backend/apps/zhizhi-data-mcp/README.md).
 
 Start with the [Backend guide](zhizhi-backend/README.md), then choose the interface you need:
 

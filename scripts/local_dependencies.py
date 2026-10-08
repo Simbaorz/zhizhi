@@ -83,11 +83,6 @@ def resolve_dependencies(root: Path, environment: Mapping[str, str]) -> LocalDep
     dependencies = LocalDependencies()
     for name in ("admin", "web", "worker", "data-mcp"):
         path = root / "conf" / f"{name}.yml"
-        if name == "data-mcp" and environment.get("DATA_MCP_ENABLED", "false").lower() not in {
-            "true",
-            "1",
-        }:
-            continue
         if not path.is_file():
             if name == "data-mcp":
                 raise ValueError("Missing local Data MCP configuration.")

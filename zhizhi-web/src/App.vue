@@ -317,8 +317,10 @@ function scrollToBottom(): void {
     <div v-if="restoring" class="portal-loading">正在恢复登录…</div>
     <main v-else-if="!account" class="portal-login-page">
       <aside class="portal-login-brand">
-        <img :src="assistantIconUrl" alt="致知助手" class="portal-login-icon" />
-        <h1>致知助手</h1>
+        <div class="portal-login-lockup">
+          <span class="portal-brand-mark"><img :src="assistantIconUrl" alt="" class="portal-login-icon" /></span>
+          <div><span class="portal-brand-eyebrow">格物致知</span><h1>致知助手</h1></div>
+        </div>
         <p>在场景中提问，在知识中求证</p>
       </aside>
       <section class="portal-login-main">
@@ -344,8 +346,12 @@ function scrollToBottom(): void {
     <el-container v-else class="chat-shell portal-shell">
       <el-aside width="264px" class="portal-sidebar">
         <header class="portal-sidebar-head">
-          <img :src="assistantIconUrl" alt="" />
-          <div class="portal-sidebar-brand-copy"><strong>致知助手</strong></div>
+          <span class="portal-brand-mark"><img :src="assistantIconUrl" alt="" /></span>
+          <div class="portal-sidebar-brand-copy">
+            <span class="portal-brand-eyebrow">格物致知</span>
+            <strong>致知助手</strong>
+            <small>知识驱动行动</small>
+          </div>
         </header>
         <div class="portal-create">
           <el-select v-if="scopes.length > 1" v-model="selectedScopeId" placeholder="选择租户与组织范围" :disabled="streaming" aria-label="租户与组织范围">

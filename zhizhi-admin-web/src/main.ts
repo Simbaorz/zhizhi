@@ -10,6 +10,7 @@ import { router } from "@/router";
 import { useAuthStore } from "@/stores/auth";
 import "@/style.css";
 import "@/styles/globalManagement.css";
+import "@/styles/brand.css";
 
 const app = createApp(AppRoot);
 const pinia = createPinia();

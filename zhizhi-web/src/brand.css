@@ -1,0 +1,73 @@
+.portal-sidebar-head {
+  justify-content: flex-start;
+  gap: 13px;
+  height: 112px;
+  margin-inline: -12px;
+  padding: 20px 18px;
+  border-bottom: 1px solid #e9e5f5;
+  background: #f5f2ff url("./assets/zhizhi-brand-background.png") right center / cover no-repeat;
+}
+
+.portal-brand-mark {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 5px 15px rgba(86, 69, 151, 0.08);
+}
+
+.portal-sidebar-head .portal-brand-mark img { width: 40px; height: 40px; }
+.portal-sidebar-brand-copy { display: grid; gap: 4px; min-width: 0; }
+.portal-brand-eyebrow { color: #7767a9; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; }
+.portal-sidebar-brand-copy strong { font-size: 21px; font-weight: 750; line-height: 1.2; letter-spacing: 0.01em; }
+.portal-sidebar-brand-copy small { color: #77718c; font-size: 11px; line-height: 1.4; letter-spacing: 0.06em; }
+.portal-create { padding-top: 16px; }
+.portal-create .el-button { height: 40px; border-radius: 9px; box-shadow: 0 3px 9px rgba(97, 87, 217, 0.13); }
+
+.chat-header {
+  background-color: #fff;
+  background-image: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0) 35%), url("./assets/zhizhi-brand-background.png");
+  background-position: right center;
+  background-size: 440px 100%, 440px auto;
+  background-repeat: no-repeat;
+}
+.chat-brand-lockup > img { padding: 5px; border: 1px solid #eeeaf6; border-radius: 12px; background: #fff; }
+
+.portal-login-brand {
+  align-items: flex-start;
+  padding: clamp(28px, 6vw, 88px);
+  background-color: #f6f3ff;
+  background-image: linear-gradient(90deg, rgba(248, 246, 255, 0.82), rgba(248, 246, 255, 0.1)), url("./assets/zhizhi-brand-background.png");
+  background-position: center, right center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.portal-login-lockup { display: flex; align-items: center; gap: 20px; }
+.portal-login-lockup .portal-brand-mark { width: 78px; height: 78px; border-radius: 20px; }
+.portal-login-lockup .portal-login-icon { width: 58px; height: 58px; }
+.portal-login-lockup h1 { margin-top: 6px; letter-spacing: 0.01em; }
+.portal-login-lockup .portal-brand-eyebrow { font-size: 12px; }
+.portal-login-brand > p { font-size: 14px; line-height: 1.8; }
+
+@media (max-width: 900px) {
+  .portal-sidebar-head { gap: 10px; padding-inline: 14px; }
+  .portal-sidebar-brand-copy strong { font-size: 18px; }
+  .portal-sidebar-head .portal-brand-mark { width: 46px; height: 46px; border-radius: 12px; }
+  .portal-sidebar-head .portal-brand-mark img { width: 34px; height: 34px; }
+  .portal-login-brand { background-size: cover; padding: 32px 24px; }
+}
+
+@media (max-width: 600px) {
+  .portal-sidebar-head { height: 76px; padding: 10px 16px; }
+  .portal-sidebar-brand-copy { gap: 2px; }
+  .portal-sidebar-brand-copy small { display: none; }
+  .portal-create { padding-top: 8px; }
+  .chat-header { background-size: 320px 100%, 320px auto; }
+  .portal-login-lockup .portal-brand-mark { width: 60px; height: 60px; border-radius: 16px; }
+  .portal-login-lockup .portal-login-icon { width: 44px; height: 44px; }
+  .portal-login-lockup h1 { font-size: 27px; }
+}

@@ -1,0 +1,18 @@
+.brand { justify-content: flex-start; gap: 13px; background: #f5f2ff url("./assets/zhizhi-brand-background.png") right center / cover no-repeat; }
+.brand img { width: 46px; height: 46px; flex: 0 0 auto; padding: 5px; border: 1px solid rgba(255,255,255,0.95); border-radius: 13px; background: rgba(255,255,255,0.84); box-shadow: 0 4px 12px rgba(86,69,151,0.08); }
+.brand strong { font-size: 21px; font-weight: 750; letter-spacing: 0.04em; }
+.brand small { font-size: 11px; color: #77718c; margin-top: 5px; letter-spacing: 0.06em; }
+.topbar .brand { align-self: stretch; width: 264px; padding: 12px 20px; margin-left: -28px; border-right: 1px solid #e7e2f3; }
+.login-card .brand { margin: -32px -32px 0; padding: 24px 28px; border-bottom: 1px solid #e7e2f3; border-radius: 12px 12px 0 0; }
+
+@media (max-width: 850px) {
+  .topbar .brand { width: 220px; padding: 12px 16px; margin-left: -16px; }
+  .brand small { max-width: none; }
+}
+@media (max-width: 480px) {
+  .topbar .brand { width: auto; flex: 1; margin-right: 10px; }
+  .topbar .brand img { width: 40px; height: 40px; border-radius: 11px; }
+  .topbar .brand strong { font-size: 19px; }
+  .topbar .brand small { font-size: 10px; }
+  .admin-info { gap: 6px; }
+}

@@ -477,7 +477,7 @@ onMounted(async () => {
         <img class="sidebar-logo" :src="assistantIconUrl" alt="" />
         <span v-if="sidebarTextVisible" class="sidebar-brand-text">
           <strong>致知</strong>
-          <small>管理后台</small>
+          <small>管理后台<span class="sidebar-brand-divider">·</span>格物致知</small>
         </span>
       </RouterLink>
 

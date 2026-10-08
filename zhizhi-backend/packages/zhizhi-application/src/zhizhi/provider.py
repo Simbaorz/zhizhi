@@ -98,7 +98,9 @@ class ZhizhiRuntimeProvider:
             owner=principal,
             content=command.content,
             attachments=attachments,
-            conversation_id=self.conversation_id(command.conversation_id, command.principal_id),
+            conversation_id=self.conversation_id(
+                command.conversation_id, command.principal_id, tenant_code=scope.tenant_code
+            ),
             request_id=command.request_id,
             input_message_id=command.request_id,
             idempotency_key=command.request_id,
@@ -107,7 +109,8 @@ class ZhizhiRuntimeProvider:
                 **command.metadata,
                 "zhizhi": {
                     "conversation_id": command.conversation_id,
-                    "tenant_id": command.tenant_id,
+                    "tenant_id": scope.tenant_id,
+                    "tenant_code": scope.tenant_code,
                     "active_organization_unit_id": command.active_organization_unit_id,
                     "principal_id": command.principal_id,
                     "principal_type": command.principal_type,
@@ -121,12 +124,14 @@ class ZhizhiRuntimeProvider:
             bindings_factory=lambda: self.prepare_bindings(scope),
         )
 
-    def conversation_id(self, conversation_id: str, principal_id: str) -> str:
-        return runtime_conversation_id(self.subscriber_id, conversation_id, principal_id)
+    def conversation_id(self, conversation_id: str, principal_id: str, *, tenant_code: str) -> str:
+        return runtime_conversation_id(
+            self.subscriber_id, conversation_id, principal_id, tenant_code=tenant_code
+        )
 
     async def resolve_scope(self, command: AgentContext) -> AgentScope:
         scope = await self._scopes.resolve(
-            tenant_id=command.tenant_id,
+            tenant_code=command.tenant_code,
             active_organization_unit_id=command.active_organization_unit_id,
             principal_id=command.principal_id,
             principal_type=command.principal_type,

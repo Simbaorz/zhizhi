@@ -67,7 +67,7 @@ The Web API receives:
 ```json
 {
   "conversation_id": "conversation-123",
-  "tenant_id": "tenant-123",
+  "tenant_code": "cBSS",
   "active_organization_unit_id": "team-456",
   "principal_id": "user-789",
   "principal_type": "user"
@@ -75,6 +75,10 @@ The Web API receives:
 ```
 
 The active organization unit is optional for tenant-level operation. When present, the backend validates the complete root-to-leaf path before resolving any capability.
+
+`tenant_code` is the stable code registered in Admin. The API resolves it case-insensitively to
+an active tenant's internal ID; database access and resource permissions use that resolved ID.
+Conversation identity includes the tenant so identical caller/conversation IDs remain isolated.
 
 ## Entitlements, bindings, and inheritance
 

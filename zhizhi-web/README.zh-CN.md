@@ -54,7 +54,7 @@
 | 字段 | 含义 |
 | --- | --- |
 | `conversation_id` | 由宿主系统定义的当前会话标识 |
-| `tenant_id` | 致知的租户隔离边界 |
+| `tenant_code` | Admin 中登记的租户编码，例如 `cBSS`；API 解析为内部租户 ID |
 | `active_organization_unit_id` | 可选的当前组织节点；为空表示租户级 |
 | `principal_id` | 宿主系统定义的调用方标识 |
 | `principal_type` | 调用方类型，默认是 `user` |

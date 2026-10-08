@@ -11,7 +11,7 @@ def _command(**updates: object) -> AgentTurnCommand:
         "conversation_id": "conversation-1",
         "content": "question",
         "request_id": "request-1",
-        "tenant_id": "tenant-1",
+        "tenant_code": "TENANT",
         "active_organization_unit_id": "team-1",
         "principal_id": "user-1",
         "principal_type": "user",
@@ -25,7 +25,7 @@ def test_command_uses_flattened_zhizhi_contract() -> None:
     command = _command()
 
     assert command.conversation_id == "conversation-1"
-    assert command.tenant_id == "tenant-1"
+    assert command.tenant_code == "TENANT"
     assert command.active_organization_unit_id == "team-1"
     assert command.principal_id == "user-1"
 
@@ -33,6 +33,8 @@ def test_command_uses_flattened_zhizhi_contract() -> None:
 def test_command_rejects_legacy_or_untrusted_identity_fields() -> None:
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         _command(role="admin")
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        _command(tenant_id="internal-id")
 
 
 def test_command_keeps_bounded_turn_metadata() -> None:
@@ -55,9 +57,18 @@ def test_command_rejects_duplicate_or_excessive_images() -> None:
 
 
 def test_runtime_conversation_id_is_stable_for_conversation_and_principal() -> None:
-    first = runtime_conversation_id("online", "conversation-1", "user-1")
+    first = runtime_conversation_id("online", "conversation-1", "user-1", tenant_code="TENANT")
 
-    assert first == runtime_conversation_id("online", "conversation-1", "user-1")
-    assert first != runtime_conversation_id("online", "conversation-1", "user-2")
-    assert first != runtime_conversation_id("online", "conversation-2", "user-1")
+    assert first == runtime_conversation_id(
+        "online", "conversation-1", "user-1", tenant_code=" tenant "
+    )
+    assert first != runtime_conversation_id(
+        "online", "conversation-1", "user-2", tenant_code="TENANT"
+    )
+    assert first != runtime_conversation_id(
+        "online", "conversation-2", "user-1", tenant_code="TENANT"
+    )
+    assert first != runtime_conversation_id(
+        "online", "conversation-1", "user-1", tenant_code="OTHER"
+    )
     assert len(first) == 64

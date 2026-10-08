@@ -17,10 +17,13 @@ from zhizhi_platform.iam import OrganizationUnitRef
 
 
 class _Scopes:
-    async def resolve(self, **_: str) -> AgentScope:
+    async def resolve(self, **context: str) -> AgentScope | None:
+        code = context["tenant_code"].strip().upper()
+        if code not in {"TENANT", "OTHER"}:
+            return None
         return AgentScope(
-            tenant_id="tenant-id",
-            tenant_code="TENANT",
+            tenant_id=f"{code.lower()}-id",
+            tenant_code=code,
             tenant_storage_key="tenant-key",
             organization_path=(
                 OrganizationUnitRef(
@@ -92,7 +95,7 @@ async def test_first_turn_persists_trusted_conversation_metadata() -> None:
         conversation_id="conversation-1",
         content="question",
         request_id="request-1",
-        tenant_id="tenant-id",
+        tenant_code="TENANT",
         active_organization_unit_id="team-id",
         principal_id="user-1",
         principal_type="user",
@@ -108,6 +111,7 @@ async def test_first_turn_persists_trusted_conversation_metadata() -> None:
     assert conversation.metadata["zhizhi"] == {
         "conversation_id": "conversation-1",
         "tenant_id": "tenant-id",
+        "tenant_code": "TENANT",
         "active_organization_unit_id": "team-id",
         "principal_id": "user-1",
         "principal_type": "user",
@@ -117,7 +121,7 @@ async def test_first_turn_persists_trusted_conversation_metadata() -> None:
 def _context() -> AgentContext:
     return AgentContext(
         conversation_id="conversation-1",
-        tenant_id="tenant-id",
+        tenant_code="TENANT",
         active_organization_unit_id="team-id",
         principal_id="user-1",
         principal_type="user",
@@ -159,7 +163,7 @@ async def test_image_upload_creates_workbench_conversation_and_can_be_reused_by_
         )
     )
 
-    assert result == provider.conversation_id("conversation-1", "user-1")
+    assert result == provider.conversation_id("conversation-1", "user-1", tenant_code="TENANT")
     stored = await store.get_active_attachment(attachment.attachment_id, attachment.owner)
     assert isinstance(stored, StoredAttachment)
     assert await service.read_attachment_data(stored) == b"\x89PNG\r\n\x1a\nimage-data"
@@ -190,4 +194,53 @@ async def test_image_upload_rejects_model_without_vision_support() -> None:
                 request_id="request-image-1",
                 data=b"\x89PNG\r\n\x1a\nimage-data",
             )
+        )
+
+
+async def test_unknown_tenant_does_not_create_a_conversation() -> None:
+    store = InMemoryRuntimeStore()
+    provider = ZhizhiRuntimeProvider(
+        subscriber_id="zhizhi",
+        scopes=_Scopes(),
+        capabilities=_UnusedCapabilities(),
+    )
+    service = AgentWorkbenchService(runtime=cast(Any, _Runtime()), store=store, provider=provider)
+    command = AgentTurnCommand(
+        **_context().model_copy(update={"tenant_code": "MISSING"}).model_dump(),
+        request_id="request-1",
+        content="question",
+    )
+    with pytest.raises(ApplicationError, match="invalid or inactive"):
+        await service.start_turn(command)
+    assert (
+        await store.get_conversation(
+            provider.conversation_id("conversation-1", "user-1", tenant_code="MISSING")
+        )
+        is None
+    )
+
+
+async def test_attachment_cannot_be_reused_by_same_principal_in_another_tenant() -> None:
+    provider = ZhizhiRuntimeProvider(
+        subscriber_id="zhizhi",
+        scopes=_Scopes(),
+        capabilities=_UnusedCapabilities(),
+    )
+    service = AgentWorkbenchService(
+        runtime=cast(Any, _Runtime()),
+        store=InMemoryRuntimeStore(),
+        provider=provider,
+        media=_Media(),
+    )
+    attachment = await service.upload_attachment(
+        AgentUploadAttachmentCommand(
+            **_context().model_dump(),
+            request_id="image-1",
+            data=b"\x89PNG\r\n\x1a\nimage-data",
+        )
+    )
+    with pytest.raises(ApplicationError, match="does not exist"):
+        await service.resolve_attachment(
+            _context().model_copy(update={"tenant_code": "OTHER"}),
+            attachment.attachment_id,
         )

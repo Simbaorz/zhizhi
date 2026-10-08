@@ -13,7 +13,7 @@ describe("temporary Agent sessions", () => {
   it("requires trusted caller fields and normalizes whitespace", () => {
     const session = normalizeSession({
       conversation_id: " conversation-1 ",
-      tenant_id: " tenant-1 ",
+      tenant_code: " cBSS ",
       active_organization_unit_id: " sales-east ",
       principal_id: " user-1 ",
       principal_type: " user ",
@@ -21,7 +21,9 @@ describe("temporary Agent sessions", () => {
 
     assert.equal(session.conversation_id, "conversation-1");
     assert.equal(session.principal_id, "user-1");
+    assert.equal(session.tenant_code, "cBSS");
     assert.equal(isValidAgentSession(session), true);
-    assert.equal(isValidAgentSession({ ...session, tenant_id: "" }), false);
+    assert.equal(isValidAgentSession({ ...session, tenant_code: "" }), false);
+    assert.equal(isValidAgentSession({ ...session, tenant_code: undefined, tenant_id: "old-id" }), false);
   });
 });

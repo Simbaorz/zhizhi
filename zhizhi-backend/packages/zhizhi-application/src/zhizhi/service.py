@@ -263,7 +263,9 @@ class AgentWorkbenchService:
         )
 
     def _conversation_id(self, context: AgentContext) -> str:
-        return self._provider.conversation_id(context.conversation_id, context.principal_id)
+        return self._provider.conversation_id(
+            context.conversation_id, context.principal_id, tenant_code=context.tenant_code
+        )
 
     async def _inspect(
         self,
@@ -283,6 +285,7 @@ class AgentWorkbenchService:
         command: AgentContext,
         principal: PrincipalRef,
     ) -> None:
+        scope = await self._provider.resolve_scope(command)
         conversation_id = self._conversation_id(command)
         existing = await self._store.get_conversation(conversation_id)
         if existing is None:
@@ -294,7 +297,8 @@ class AgentWorkbenchService:
                     **command.metadata,
                     "zhizhi": {
                         "conversation_id": command.conversation_id,
-                        "tenant_id": command.tenant_id,
+                        "tenant_id": scope.tenant_id,
+                        "tenant_code": scope.tenant_code,
                         "active_organization_unit_id": (command.active_organization_unit_id),
                         "principal_id": command.principal_id,
                         "principal_type": command.principal_type,

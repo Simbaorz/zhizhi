@@ -46,7 +46,7 @@ class MysqlSlashCatalog:
 
     async def _require_scope(self, context: AgentContext) -> AgentScope:
         scope = await self._scopes.resolve(
-            tenant_id=context.tenant_id,
+            tenant_code=context.tenant_code,
             active_organization_unit_id=context.active_organization_unit_id,
             principal_id=context.principal_id,
             principal_type=context.principal_type,

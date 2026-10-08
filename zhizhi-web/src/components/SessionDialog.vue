@@ -31,7 +31,7 @@ function submit(): void {
   const normalized = normalizeSession(form);
   const missing = [
     ["会话 ID", normalized.conversation_id],
-    ["租户 ID", normalized.tenant_id],
+    ["租户编码", normalized.tenant_code],
     ["调用方 ID", normalized.principal_id],
     ["调用方类型", normalized.principal_type],
   ].find(([, value]) => !value);
@@ -72,8 +72,9 @@ function submit(): void {
       <el-form-item class="session-form-wide" label="会话 ID" required>
         <el-input v-model="form.conversation_id" placeholder="例如：conversation-20260902" maxlength="255" />
       </el-form-item>
-      <el-form-item label="租户 ID" required>
-        <el-input v-model="form.tenant_id" placeholder="tenant_id" maxlength="64" />
+      <el-form-item label="租户编码" required>
+        <el-input v-model="form.tenant_code" placeholder="例如：cBSS" maxlength="64" />
+        <el-text size="small" type="info">填写 Admin 中登记的租户编码，例如 cBSS；不需要内部 ID。</el-text>
       </el-form-item>
       <el-form-item label="调用方 ID" required>
         <el-input v-model="form.principal_id" placeholder="principal_id" maxlength="128">

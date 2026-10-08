@@ -54,7 +54,7 @@ The workbench sends these values with Agent requests:
 | Field | Meaning |
 | --- | --- |
 | `conversation_id` | Host-owned identifier for the current conversation |
-| `tenant_id` | Zhizhi tenant isolation boundary |
+| `tenant_code` | Admin-registered tenant code, such as `cBSS`; resolved to the internal tenant ID by the API |
 | `active_organization_unit_id` | Optional active organization node; empty means tenant-level |
 | `principal_id` | Host-owned caller identifier |
 | `principal_type` | Caller kind, `user` by default |

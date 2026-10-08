@@ -7,11 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from zhizhi import AgentScope
 from zhizhi_platform.iam import OrganizationUnitRef
+from zhizhi_platform.iam.codes import canonical_stable_code
 
 _TENANT_SQL = text("""
     SELECT id, tenant_code, storage_key
     FROM zhizhi_tenant
-    WHERE id = :tenant_id AND status = 'active'
+    WHERE normalized_tenant_code = :tenant_code AND status = 'active'
     LIMIT 1
     """)
 
@@ -35,14 +36,18 @@ class MysqlAgentScopeResolver:
     async def resolve(
         self,
         *,
-        tenant_id: str,
+        tenant_code: str,
         active_organization_unit_id: str,
         principal_id: str,
         principal_type: str,
     ) -> AgentScope | None:
         async with self._engine.connect() as connection:
             tenant = (
-                (await connection.execute(_TENANT_SQL, {"tenant_id": tenant_id.strip()}))
+                (
+                    await connection.execute(
+                        _TENANT_SQL, {"tenant_code": canonical_stable_code(tenant_code)}
+                    )
+                )
                 .mappings()
                 .first()
             )
@@ -60,7 +65,7 @@ class MysqlAgentScopeResolver:
                         await connection.execute(
                             _ORGANIZATION_UNIT_SQL,
                             {
-                                "tenant_id": tenant_id.strip(),
+                                "tenant_id": str(tenant["id"]),
                                 "organization_unit_id": current_id,
                             },
                         )

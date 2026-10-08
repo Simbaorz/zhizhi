@@ -27,7 +27,7 @@ async def test_resolves_an_active_arbitrary_depth_organization_path() -> None:
 
     resolver = MysqlAgentScopeResolver(engine)
     scope = await resolver.resolve(
-        tenant_id="t1",
+        tenant_code=" tp001 ",
         active_organization_unit_id="squad",
         principal_id="user-1",
         principal_type="user",
@@ -68,13 +68,13 @@ async def test_rejects_cross_tenant_or_cyclic_organization_paths() -> None:
 
     resolver = MysqlAgentScopeResolver(engine)
     cyclic = await resolver.resolve(
-        tenant_id="t1",
+        tenant_code="TP001",
         active_organization_unit_id="one",
         principal_id="user-1",
         principal_type="user",
     )
     foreign = await resolver.resolve(
-        tenant_id="t1",
+        tenant_code="TP001",
         active_organization_unit_id="foreign",
         principal_id="user-1",
         principal_type="user",
@@ -82,4 +82,39 @@ async def test_rejects_cross_tenant_or_cyclic_organization_paths() -> None:
 
     assert cyclic is None
     assert foreign is None
+    await engine.dispose()
+
+
+async def test_tenant_code_does_not_fall_back_to_internal_id_or_inactive_tenant() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as connection:
+        await connection.exec_driver_sql(
+            "CREATE TABLE zhizhi_tenant (id TEXT, tenant_code TEXT, normalized_tenant_code TEXT, "
+            "storage_key TEXT, status TEXT)"
+        )
+        await connection.exec_driver_sql(
+            "INSERT INTO zhizhi_tenant VALUES "
+            "('internal-id','cBSS','CBSS','CBSS','active'),"
+            "('inactive-id','DISABLED','DISABLED','DISABLED','inactive')"
+        )
+    resolver = MysqlAgentScopeResolver(engine)
+    for code in ("internal-id", "DISABLED", "unknown"):
+        assert (
+            await resolver.resolve(
+                tenant_code=code,
+                active_organization_unit_id="",
+                principal_id="user-1",
+                principal_type="user",
+            )
+            is None
+        )
+    scope = await resolver.resolve(
+        tenant_code=" cbss ",
+        active_organization_unit_id="",
+        principal_id="user-1",
+        principal_type="user",
+    )
+    assert scope is not None
+    assert scope.tenant_id == "internal-id"
+    assert scope.tenant_code == "cBSS"
     await engine.dispose()

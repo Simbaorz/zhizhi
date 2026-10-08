@@ -67,7 +67,7 @@ Web API 接收以下上下文：
 ```json
 {
   "conversation_id": "conversation-123",
-  "tenant_id": "tenant-123",
+  "tenant_code": "cBSS",
   "active_organization_unit_id": "team-456",
   "principal_id": "user-789",
   "principal_type": "user"
@@ -75,6 +75,9 @@ Web API 接收以下上下文：
 ```
 
 租户级运行可以不传当前组织节点；如果传入，后端会先验证完整的根到叶路径，再解析任何 Agent 能力。
+
+`tenant_code` 是 Admin 中登记的稳定租户编码，后端按编码忽略大小写查找启用的租户，
+数据库访问与资源权限使用解析后的内部 ID。会话标识包含租户边界，同一调用方使用相同会话 ID 也不会串租户。
 
 ## 可用资源、绑定资源与继承
 

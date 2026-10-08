@@ -49,8 +49,8 @@ const sessionScope = computed(() => {
   const value = session.value;
   if (!value) return "尚未创建";
   return value.active_organization_unit_id
-    ? `${value.tenant_id} · ${value.active_organization_unit_id}`
-    : `${value.tenant_id} · 租户级`;
+    ? `${value.tenant_code} · ${value.active_organization_unit_id}`
+    : `${value.tenant_code} · 租户级`;
 });
 const sessionInitial = computed(() => session.value?.principal_id.trim().slice(0, 1) || "知");
 const conversationRunning = computed(

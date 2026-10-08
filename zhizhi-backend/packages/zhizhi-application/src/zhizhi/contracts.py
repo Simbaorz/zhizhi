@@ -28,7 +28,7 @@ class AgentContext(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     conversation_id: str = Field(min_length=1, max_length=255)
-    tenant_id: str = Field(min_length=1, max_length=64)
+    tenant_code: str = Field(min_length=1, max_length=64)
     active_organization_unit_id: str = Field(default="", max_length=64)
     principal_id: str = Field(min_length=1, max_length=128)
     principal_type: str = Field(default="user", min_length=1, max_length=32)
@@ -37,7 +37,7 @@ class AgentContext(BaseModel):
 
     @field_validator(
         "conversation_id",
-        "tenant_id",
+        "tenant_code",
         "active_organization_unit_id",
         "principal_id",
         "principal_type",

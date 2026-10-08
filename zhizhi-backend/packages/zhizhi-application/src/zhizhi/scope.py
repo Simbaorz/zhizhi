@@ -28,7 +28,7 @@ class AgentScopeResolver(Protocol):
     async def resolve(
         self,
         *,
-        tenant_id: str,
+        tenant_code: str,
         active_organization_unit_id: str,
         principal_id: str,
         principal_type: str,

@@ -35,7 +35,7 @@ function apiUrl(path: string, query?: Record<string, string | number | undefined
 
 function contextQuery(session: AgentSession): Record<string, string> {
   return {
-    tenant_id: session.tenant_id,
+    tenant_code: session.tenant_code,
     active_organization_unit_id: session.active_organization_unit_id,
     principal_id: session.principal_id,
     principal_type: session.principal_type,
@@ -125,7 +125,7 @@ export async function uploadAttachment(
 ): Promise<ChatAttachment> {
   const form = new FormData();
   form.set("conversation_id", session.conversation_id);
-  form.set("tenant_id", session.tenant_id);
+  form.set("tenant_code", session.tenant_code);
   form.set("active_organization_unit_id", session.active_organization_unit_id);
   form.set("principal_id", session.principal_id);
   form.set("principal_type", session.principal_type);

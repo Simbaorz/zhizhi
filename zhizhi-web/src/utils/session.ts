@@ -1,6 +1,6 @@
 import type { AgentSession } from "@/types";
 
-const STORAGE_KEY = "zhizhi-web-temporary-session-v1";
+const STORAGE_KEY = "zhizhi-web-temporary-session-v2";
 
 export function createDefaultSession(now = new Date()): AgentSession {
   const stamp = now
@@ -9,7 +9,7 @@ export function createDefaultSession(now = new Date()): AgentSession {
     .slice(0, 14);
   return {
     conversation_id: `conversation-${stamp}`,
-    tenant_id: "",
+    tenant_code: "",
     active_organization_unit_id: "",
     principal_id: "",
     principal_type: "user",
@@ -19,7 +19,7 @@ export function createDefaultSession(now = new Date()): AgentSession {
 export function normalizeSession(value: AgentSession): AgentSession {
   return {
     conversation_id: value.conversation_id.trim(),
-    tenant_id: value.tenant_id.trim(),
+    tenant_code: value.tenant_code.trim(),
     active_organization_unit_id: value.active_organization_unit_id.trim(),
     principal_id: value.principal_id.trim(),
     principal_type: value.principal_type.trim() || "user",
@@ -30,7 +30,7 @@ export function isValidAgentSession(value: unknown): value is AgentSession {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const session = value as Record<string, unknown>;
   return (
-    ["conversation_id", "tenant_id", "principal_id", "principal_type"].every(
+    ["conversation_id", "tenant_code", "principal_id", "principal_type"].every(
       (key) => typeof session[key] === "string" && session[key].trim().length > 0,
     )
     && typeof session.active_organization_unit_id === "string"

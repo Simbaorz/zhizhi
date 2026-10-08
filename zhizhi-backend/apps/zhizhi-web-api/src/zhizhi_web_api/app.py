@@ -237,12 +237,12 @@ def create_app(
     async def upload_attachment(
         request: Request,
         conversation_id: Annotated[str, Form(min_length=1, max_length=255)],
-        tenant_id: Annotated[str, Form(min_length=1, max_length=64)],
-        active_organization_unit_id: Annotated[str, Form(max_length=64)],
+        tenant_code: Annotated[str, Form(min_length=1, max_length=64)],
         principal_id: Annotated[str, Form(min_length=1, max_length=128)],
         principal_type: Annotated[str, Form(min_length=1, max_length=32)],
         request_id: Annotated[str, Form(min_length=1, max_length=64)],
         file: Annotated[UploadFile, File()],
+        active_organization_unit_id: Annotated[str, Form(max_length=64)] = "",
     ) -> ChatAttachmentResponse:
         service_ = _service(app_)
         async with buffered_limited_upload_file(
@@ -253,7 +253,7 @@ def create_app(
             attachment = await service_.upload_attachment(
                 AgentUploadAttachmentCommand(
                     conversation_id=conversation_id,
-                    tenant_id=tenant_id,
+                    tenant_code=tenant_code,
                     active_organization_unit_id=active_organization_unit_id,
                     principal_id=principal_id,
                     principal_type=principal_type,
@@ -354,14 +354,14 @@ def _catalog(app_: FastAPI) -> SlashCatalog:
 
 def agent_context(
     request: Request,
-    tenant_id: Annotated[str, Query(min_length=1, max_length=64)],
-    active_organization_unit_id: Annotated[str, Query(max_length=64)],
+    tenant_code: Annotated[str, Query(min_length=1, max_length=64)],
     principal_id: Annotated[str, Query(min_length=1, max_length=128)],
     principal_type: Annotated[str, Query(min_length=1, max_length=32)],
+    active_organization_unit_id: Annotated[str, Query(max_length=64)] = "",
 ) -> AgentContext:
     return AgentContext(
         conversation_id=request.path_params.get("conversation_id", "catalog"),
-        tenant_id=tenant_id,
+        tenant_code=tenant_code,
         active_organization_unit_id=active_organization_unit_id,
         principal_id=principal_id,
         principal_type=principal_type,

@@ -7,7 +7,7 @@
   --el-color-primary-light-8: #ddd6fe;
   --el-color-primary-light-9: #f3f0ff;
   --el-color-primary-dark-2: #3730a3;
-  --bg-canvas: #f3f3fa;
+  --bg-canvas: #f5f6fa;
   --bg-panel: #faf9ff;
   --border-weak: #ddddea;
   --border-strong: #b9b8cf;
@@ -70,13 +70,7 @@ select {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(139, 92, 246, 0.16), transparent 28%),
-    radial-gradient(circle at 92% 12%, rgba(56, 189, 248, 0.12), transparent 24%),
-    linear-gradient(rgba(91, 91, 214, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(91, 91, 214, 0.03) 1px, transparent 1px),
-    var(--bg-canvas);
-  background-size: 28px 28px;
+  background: var(--bg-canvas);
 }
 
 .chat-panel.el-main {
@@ -95,9 +89,9 @@ select {
   grid-template-rows: minmax(0, 1fr) auto;
   overflow: hidden;
   border: 1px solid var(--border-weak);
-  border-radius: 18px;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 24px 70px rgba(49, 46, 129, 0.1);
+  box-shadow: none;
 }
 
 .chat-content-card.el-card {
@@ -132,7 +126,7 @@ select {
   gap: 16px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--border-weak);
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 255, 0.98));
+  background: #fff;
 }
 
 .chat-brand-lockup {
@@ -143,12 +137,10 @@ select {
 }
 
 .chat-brand-lockup > img {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
-  border-radius: 11px;
-  object-fit: cover;
-  filter: drop-shadow(0 8px 16px rgba(91, 91, 214, 0.12));
+  object-fit: contain;
 }
 
 .chat-brand-lockup > div {

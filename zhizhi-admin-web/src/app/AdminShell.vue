@@ -473,8 +473,8 @@ onMounted(async () => {
     }"
   >
     <el-aside class="admin-sidebar" :width="sidebarWidth">
-      <RouterLink to="/" class="sidebar-brand">
-        <img class="sidebar-logo" :src="assistantIconUrl" alt="致知" />
+      <RouterLink to="/" class="sidebar-brand" aria-label="致知管理后台首页">
+        <img class="sidebar-logo" :src="assistantIconUrl" alt="" />
         <span v-if="sidebarTextVisible" class="sidebar-brand-text">
           <strong>致知</strong>
           <small>管理后台</small>

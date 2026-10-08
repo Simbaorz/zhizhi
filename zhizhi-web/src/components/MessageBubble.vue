@@ -25,6 +25,8 @@ const isUser = computed(() => props.message.kind === "input" || props.message.ro
 const isAssistant = computed(() => props.message.kind === "assistant");
 const isTool = computed(() => props.message.kind === "tool_use" || props.message.kind === "tool_result");
 const isAsk = computed(() => props.message.kind === "ask");
+const askThread = computed(() => recordValue(props.message.payload.ask_history_thread));
+const askHistory = computed(() => Array.isArray(askThread.value.questions) ? askThread.value.questions.map(recordValue) : []);
 const isError = computed(() => props.message.kind === "error");
 const isCompaction = computed(() => props.message.kind === "memory_compaction");
 const compactionStarted = computed(
@@ -33,6 +35,7 @@ const compactionStarted = computed(
 const attachments = computed(() => parseAttachments(props.message.payload.attachments));
 const slashTarget = computed(() => parseSlashTarget(props.message.payload.slash_target));
 const toolName = computed(() => textValue(props.message.payload.tool_name) || "工具");
+const toolTitle = computed(() => ({ list: "浏览目录", read: "读取文件", glob: "查找文件", grep: "搜索内容", skill: "调用技能", query_business_data: "查询业务数据" } as Record<string, string>)[toolName.value] || toolName.value);
 const toolArguments = computed(() => recordValue(props.message.payload.arguments));
 const toolResult = computed(() => recordValue(props.message.payload.tool_result ?? props.message.payload.result));
 const hasToolResult = computed(
@@ -42,8 +45,12 @@ const toolFailed = computed(() => Boolean(props.message.payload.tool_is_error ||
 const toolSummary = computed(() => {
   if (!hasToolResult.value) return "智能体正在执行";
   if (toolFailed.value) return "执行未完成";
+  if (toolName.value === "query_business_data" && typeof toolResult.value.row_count === "number") return `返回 ${toolResult.value.row_count} 行${toolResult.value.truncated ? '（已截断）' : ''}`;
+  if (toolName.value === "read" && typeof toolResult.value.num_lines === "number") return `读取 ${toolResult.value.num_lines} 行`;
   return "执行完成";
 });
+const queryColumns = computed(() => Array.isArray(toolResult.value.columns) ? toolResult.value.columns.filter((item): item is string => typeof item === 'string') : []);
+const queryRows = computed(() => Array.isArray(toolResult.value.rows) ? toolResult.value.rows.filter(Array.isArray).slice(0, 50) : []);
 const askQuestions = computed(() => (Array.isArray(props.message.payload.questions) ? props.message.payload.questions : []));
 const attachmentViews = computed(() =>
   attachments.value.map((attachment) => ({
@@ -174,7 +181,7 @@ function numberValue(value: unknown): number {
     >
       <el-button class="tool-message-summary" @click="expanded = !expanded">
         <span class="tool-message-copy">
-          <strong>{{ toolName }}</strong>
+          <strong>{{ toolTitle }}</strong>
           <small>{{ toolSummary }}</small>
         </span>
         <el-icon>
@@ -189,14 +196,16 @@ function numberValue(value: unknown): number {
         </section>
         <section v-if="hasToolResult">
           <span>执行结果</span>
-          <pre>{{ prettyJson(toolResult) }}</pre>
+          <div v-if="toolName === 'query_business_data' && queryColumns.length" class="business-result"><table><thead><tr><th v-for="column in queryColumns" :key="column">{{ column }}</th></tr></thead><tbody><tr v-for="(row, index) in queryRows" :key="index"><td v-for="(cell, column) in row" :key="column">{{ cell == null ? '—' : typeof cell === 'object' ? JSON.stringify(cell) : cell }}</td></tr></tbody></table><small v-if="(toolResult.rows as unknown[]).length > 50">仅展示前 50 行</small></div>
+          <pre v-else>{{ prettyJson(toolResult) }}</pre>
         </section>
       </div>
     </el-card>
 
     <el-card v-else-if="isAsk" class="ask-message-card" shadow="never">
-      <strong>需要补充信息</strong>
-      <span>智能体正在询问 {{ askQuestions.length || 1 }} 个问题</span>
+      <strong>{{ askThread.status === 'answered' ? '已补充信息' : askThread.status === 'skipped' ? '已跳过补充' : '需要补充信息' }}</strong>
+      <section v-for="(item, index) in askHistory" :key="index"><p>{{ item.question }}</p><span>{{ item.answer || (item.status === 'pending' ? '等待回答' : '已跳过') }}</span></section>
+      <span v-if="!askHistory.length">智能体正在询问 {{ askQuestions.length || 1 }} 个问题</span>
     </el-card>
 
     <el-card v-else class="system-message-card" :class="{ danger: isError }" shadow="never">
@@ -205,3 +214,7 @@ function numberValue(value: unknown): number {
     </el-card>
   </article>
 </template>
+
+<style scoped>
+.business-result { max-height: 280px; overflow: auto; }.business-result table { border-collapse: collapse; min-width: 100%; font-size: 12px; }.business-result th,.business-result td { padding: 8px 12px; text-align: left; border: 1px solid var(--border-weak); white-space: nowrap; }.business-result th { background: #f4f8f8; }.business-result small { color: var(--text-secondary); }.ask-message-card section { padding: 8px 0; border-top: 1px solid var(--border-weak); }.ask-message-card section p { font-size: 13px; }.ask-message-card section span { color: var(--text-secondary); font-size: 12px; }
+</style>

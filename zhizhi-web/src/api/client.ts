@@ -9,8 +9,33 @@ import type {
   StreamEvent,
 } from "@/types";
 import { readSseStream } from "@/utils/sse";
+import { encryptPasswords, type PasswordKey } from "@/api/passwordCrypto";
 
 const API_BASE = String(import.meta.env.VITE_ZHIZHI_API_BASE_URL || "").replace(/\/$/, "");
+let unauthorizedHandler: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null): void { unauthorizedHandler = handler; }
+
+export interface PortalAccount {
+  id: string;
+  username: string;
+  display_name: string;
+  email: string;
+}
+
+export interface PortalScope {
+  id: string;
+  tenant_name: string;
+  organization_path: string[];
+}
+
+export interface PortalConversation {
+  id: string;
+  scope_id: string;
+  title: string;
+  archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -33,13 +58,12 @@ function apiUrl(path: string, query?: Record<string, string | number | undefined
   return API_BASE ? url.toString() : `${url.pathname}${url.search}`;
 }
 
-function contextQuery(session: AgentSession): Record<string, string> {
-  return {
-    tenant_code: session.tenant_code,
-    active_organization_unit_id: session.active_organization_unit_id,
-    principal_id: session.principal_id,
-    principal_type: session.principal_type,
-  };
+function conversationPath(session: AgentSession): string {
+  return `/api/conversations/${encodeURIComponent(session.conversation_id)}`;
+}
+
+function csrfToken(): string {
+  return decodeURIComponent(document.cookie.match(/(?:^|; )zhizhi_portal_user_csrf=([^;]*)/)?.[1] || "");
 }
 
 async function responseError(response: Response, fallback: string): Promise<ApiError> {
@@ -65,34 +89,80 @@ async function fetchJson<T>(
     headers.set("Content-Type", "application/json");
   }
   headers.set("Accept", "application/json");
+  if (init.method && init.method.toUpperCase() !== "GET") {
+    headers.set("x-csrf-token", csrfToken());
+  }
   const response = await fetch(apiUrl(path, query), { ...init, headers });
+  if (response.status === 401) unauthorizedHandler?.();
   if (!response.ok) throw await responseError(response, "请求失败，请稍后重试。");
   return (await response.json()) as T;
 }
 
-export function getCapabilities(session: AgentSession): Promise<ChatCapabilities> {
-  return fetchJson<ChatCapabilities>("/api/agent/capabilities", {
-    query: contextQuery(session),
+async function passwordKey(): Promise<PasswordKey> {
+  return fetchJson<PasswordKey>("/api/auth/password-key");
+}
+
+export async function login(username: string, password: string): Promise<PortalAccount> {
+  const [encrypted_password] = await encryptPasswords(await passwordKey(), [password]);
+  return fetchJson<PortalAccount>("/api/auth/login", {
+    method: "POST", body: JSON.stringify({ username, encrypted_password }),
   });
 }
 
-async function getCatalog(
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ ok: boolean }> {
+  const [encrypted_current_password, encrypted_new_password] = await encryptPasswords(
+    await passwordKey(), [currentPassword, newPassword],
+  );
+  return fetchJson<{ ok: boolean }>("/api/auth/password", {
+    method: "POST", body: JSON.stringify({ encrypted_current_password, encrypted_new_password }),
+  });
+}
+
+export function currentAccount(): Promise<PortalAccount> {
+  return fetchJson<PortalAccount>("/api/auth/me");
+}
+
+export function logout(): Promise<{ ok: boolean }> {
+  return fetchJson<{ ok: boolean }>("/api/auth/logout", { method: "POST" });
+}
+
+export function listScopes(): Promise<PortalScope[]> {
+  return fetchJson<PortalScope[]>("/api/scopes");
+}
+
+export function listConversations(offset = 0, archived = false): Promise<{ items: PortalConversation[]; has_more: boolean }> {
+  return fetchJson<{ items: PortalConversation[]; has_more: boolean }>("/api/conversations", {
+    query: { limit: 50, offset, archived: archived ? "true" : undefined },
+  });
+}
+
+export function createConversation(scopeId: string): Promise<PortalConversation> {
+  return fetchJson<PortalConversation>("/api/conversations", {
+    method: "POST", body: JSON.stringify({ scope_id: scopeId }),
+  });
+}
+
+export function getConversation(id: string): Promise<PortalConversation> {
+  return fetchJson<PortalConversation>(`/api/conversations/${encodeURIComponent(id)}`);
+}
+
+export function updateConversation(id: string, patch: { title?: string; archived?: boolean }): Promise<PortalConversation> {
+  return fetchJson<PortalConversation>(`/api/conversations/${encodeURIComponent(id)}`, {
+    method: "PATCH", body: JSON.stringify(patch),
+  });
+}
+
+export function getCapabilities(session: AgentSession): Promise<ChatCapabilities> {
+  return fetchJson<ChatCapabilities>(`${conversationPath(session)}/capabilities`);
+}
+
+export async function getSlashCandidates(
   session: AgentSession,
-  kind: "skills" | "scenes",
 ): Promise<SlashCandidate[]> {
   const response = await fetchJson<{ items: SlashCandidate[] }>(
-    `/api/agent/${kind}`,
-    { query: contextQuery(session) },
+    `${conversationPath(session)}/slash-candidates`,
   );
   return response.items;
-}
-
-export function getSkills(session: AgentSession): Promise<SlashCandidate[]> {
-  return getCatalog(session, "skills");
-}
-
-export function getScenes(session: AgentSession): Promise<SlashCandidate[]> {
-  return getCatalog(session, "scenes");
 }
 
 export function getMessages(
@@ -100,10 +170,9 @@ export function getMessages(
   beforeSequence?: number,
 ): Promise<MessagePage> {
   return fetchJson<MessagePage>(
-    `/api/agent/conversations/${encodeURIComponent(session.conversation_id)}/messages`,
+    `${conversationPath(session)}/messages`,
     {
       query: {
-        ...contextQuery(session),
         limit: 100,
         before_sequence: beforeSequence,
       },
@@ -113,8 +182,7 @@ export function getMessages(
 
 export function getConversationState(session: AgentSession): Promise<ConversationState> {
   return fetchJson<ConversationState>(
-    `/api/agent/conversations/${encodeURIComponent(session.conversation_id)}/pending-ask`,
-    { query: contextQuery(session) },
+    `${conversationPath(session)}/pending-ask`,
   );
 }
 
@@ -124,14 +192,9 @@ export async function uploadAttachment(
   file: File,
 ): Promise<ChatAttachment> {
   const form = new FormData();
-  form.set("conversation_id", session.conversation_id);
-  form.set("tenant_code", session.tenant_code);
-  form.set("active_organization_unit_id", session.active_organization_unit_id);
-  form.set("principal_id", session.principal_id);
-  form.set("principal_type", session.principal_type);
   form.set("request_id", requestId);
   form.set("file", file);
-  return fetchJson<ChatAttachment>("/api/agent/chat/attachments", {
+  return fetchJson<ChatAttachment>(`${conversationPath(session)}/attachments`, {
     method: "POST",
     body: form,
   });
@@ -139,8 +202,7 @@ export async function uploadAttachment(
 
 export function attachmentUrl(session: AgentSession, attachmentId: string): string {
   return apiUrl(
-    `/api/agent/chat/attachments/${encodeURIComponent(attachmentId)}`,
-    { ...contextQuery(session), conversation_id: session.conversation_id },
+    `${conversationPath(session)}/attachments/${encodeURIComponent(attachmentId)}`,
   );
 }
 
@@ -155,10 +217,12 @@ async function streamRequest(
     headers: {
       Accept: "text/event-stream",
       "Content-Type": "application/json",
+      "x-csrf-token": csrfToken(),
     },
     body: JSON.stringify(body),
     signal,
   });
+  if (response.status === 401) unauthorizedHandler?.();
   if (!response.ok) throw await responseError(response, "智能体请求失败。");
   await readSseStream(response, onEvent);
 }
@@ -173,14 +237,12 @@ export function streamChat(payload: {
   onEvent: (event: StreamEvent) => void;
 }): Promise<void> {
   return streamRequest(
-    "/api/agent/chat/stream",
+    `${conversationPath(payload.session)}/chat/stream`,
     {
-      ...payload.session,
       content: payload.content,
       attachment_ids: payload.attachmentIds,
       request_id: payload.requestId,
       slash_target: payload.slashTarget,
-      metadata: {},
     },
     payload.signal,
     payload.onEvent,
@@ -197,14 +259,12 @@ export function answerAsk(payload: {
   onEvent: (event: StreamEvent) => void;
 }): Promise<void> {
   return streamRequest(
-    "/api/agent/chat/ask-answer",
+    `${conversationPath(payload.session)}/chat/ask-answer`,
     {
-      ...payload.session,
       request_id: payload.requestId,
       ask_id: payload.askId,
       status: payload.status,
       answers: payload.answers,
-      metadata: {},
     },
     payload.signal,
     payload.onEvent,
@@ -213,23 +273,10 @@ export function answerAsk(payload: {
 
 export async function interruptConversation(session: AgentSession): Promise<boolean> {
   const response = await fetchJson<{ interrupted: boolean }>(
-    `/api/agent/conversations/${encodeURIComponent(session.conversation_id)}/interrupt`,
+    `${conversationPath(session)}/chat/interrupt`,
     {
       method: "POST",
-      body: JSON.stringify(session),
     },
   );
   return response.interrupted;
-}
-
-export function interruptConversationKeepalive(session: AgentSession): void {
-  const path = `/api/agent/conversations/${encodeURIComponent(session.conversation_id)}/interrupt`;
-  const body = new Blob([JSON.stringify(session)], { type: "application/json" });
-  if (navigator.sendBeacon?.(apiUrl(path), body)) return;
-  void fetch(apiUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-    keepalive: true,
-  }).catch(() => undefined);
 }

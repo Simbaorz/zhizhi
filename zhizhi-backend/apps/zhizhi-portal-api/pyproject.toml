@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zhizhi-portal-api"
+version = "0.1.0"
+description = "Test-only account and conversation gateway for Zhizhi"
+requires-python = ">=3.12"
+dependencies = ["zhizhi-application", "gewu-core[database,http]", "httpx==0.28.1", "aiomysql>=0.3.2", "aiosqlite>=0.22.1", "python-multipart==0.0.30"]
+
+[project.scripts]
+zhizhi-portal-api = "zhizhi_portal_api.__main__:main"
+
+[tool.uv.sources]
+zhizhi-application = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zhizhi_portal_api"]

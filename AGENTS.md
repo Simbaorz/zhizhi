@@ -10,11 +10,12 @@
 
 ## Repository Model
 
-This is one Git repository containing three independently buildable and deployable projects:
+This is one Git repository containing four independently buildable and deployable projects:
 
-- `zhizhi-backend/`: Python `uv workspace` containing the application layer, Web API, Admin API, Worker, and independently deployed Data MCP service.
+- `zhizhi-backend/`: Python `uv workspace` containing the application layer, Web API, Admin API, Worker, independently deployed Data MCP, and optional test Portal service.
 - `zhizhi-admin-web/`: Vue management console for platform and tenant administrators.
 - `zhizhi-web/`: Lightweight Web API trial client and enterprise integration reference.
+- `zhizhi-portal-admin-web/`: Optional test-account console for the separate test Portal host.
 
 The repository root is the deployment `PROJECT_HOME`. It owns shared runtime configuration under
 `conf/` and cross-project development orchestration under `scripts/`. Project-specific build and
@@ -55,7 +56,7 @@ Do not create nested Git repositories. Do not commit dependency directories, vir
 
 ## Verification
 
-Run checks only for the projects affected by the change. Run all three project suites for cross-cutting changes.
+Run checks only for the projects affected by the change. Run all four project suites for cross-cutting changes.
 
 From `zhizhi-admin-web/`:
 
@@ -67,6 +68,15 @@ corepack pnpm run build
 ```
 
 From `zhizhi-web/`:
+
+```bash
+corepack pnpm install --frozen-lockfile
+corepack pnpm test
+corepack pnpm run typecheck
+corepack pnpm run build
+```
+
+From `zhizhi-portal-admin-web/`:
 
 ```bash
 corepack pnpm install --frozen-lockfile

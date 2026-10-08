@@ -7,10 +7,8 @@ import {
   getCapabilities,
   getConversationState,
   getMessages,
-  getScenes,
-  getSkills,
+  getSlashCandidates,
   interruptConversation,
-  interruptConversationKeepalive,
   streamChat,
   uploadAttachment,
 } from "@/api/client";
@@ -26,6 +24,7 @@ import type {
   SlashTarget,
   StreamEvent,
 } from "@/types";
+import { normalizeToolResultEvent } from "@/utils/messages";
 
 const DEFAULT_CAPABILITIES: ChatCapabilities = {
   support_vision: false,
@@ -37,8 +36,7 @@ const DEFAULT_CAPABILITIES: ChatCapabilities = {
 export function useChat() {
   const session = ref<AgentSession | null>(null);
   const messages = ref<ChatMessage[]>([]);
-  const skills = ref<SlashCandidate[]>([]);
-  const scenes = ref<SlashCandidate[]>([]);
+  const targets = ref<SlashCandidate[]>([]);
   const capabilities = ref<ChatCapabilities>(DEFAULT_CAPABILITIES);
   const capabilitiesLoaded = ref(false);
   const pendingAsk = ref<PendingAsk | null>(null);
@@ -50,8 +48,24 @@ export function useChat() {
   const hasMoreMessages = ref(false);
   const nextBeforeSequence = ref<number | null>(null);
   let activeController: AbortController | null = null;
+  let recoveryTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const targets = computed(() => [...skills.value, ...scenes.value]);
+  function stopRecovery(): void {
+    if (recoveryTimer !== null) clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+  }
+
+  function scheduleRecovery(): void {
+    stopRecovery();
+    const current = session.value;
+    if (!current || streaming.value || !["pending", "running"].includes(runState.value ?? "")) return;
+    recoveryTimer = setTimeout(async () => {
+      recoveryTimer = null;
+      await refreshAuthoritativeState();
+      if (session.value?.conversation_id === current.conversation_id) scheduleRecovery();
+    }, 2000);
+  }
+
   const imageSupportStatus = computed<"loading" | "supported" | "unsupported" | "error">(
     () => {
       if (!capabilitiesLoaded.value) return errorMessage.value ? "error" : "loading";
@@ -60,10 +74,10 @@ export function useChat() {
   );
 
   async function bootstrap(nextSession: AgentSession): Promise<void> {
+    stopRecovery();
     session.value = nextSession;
     messages.value = [];
-    skills.value = [];
-    scenes.value = [];
+    targets.value = [];
     pendingAsk.value = null;
     runState.value = null;
     errorMessage.value = "";
@@ -71,11 +85,10 @@ export function useChat() {
     capabilitiesLoaded.value = false;
     loading.value = true;
 
-    const [capabilityResult, skillsResult, scenesResult, messagesResult, stateResult] =
+    const [capabilityResult, targetsResult, messagesResult, stateResult] =
       await Promise.allSettled([
         getCapabilities(nextSession),
-        getSkills(nextSession),
-        getScenes(nextSession),
+        getSlashCandidates(nextSession),
         getMessages(nextSession),
         getConversationState(nextSession),
       ]);
@@ -87,10 +100,8 @@ export function useChat() {
     } else {
       errors.push(errorText(capabilityResult.reason, "模型能力加载失败"));
     }
-    if (skillsResult.status === "fulfilled") skills.value = skillsResult.value;
-    else errors.push(errorText(skillsResult.reason, "Skill 加载失败"));
-    if (scenesResult.status === "fulfilled") scenes.value = scenesResult.value;
-    else errors.push(errorText(scenesResult.reason, "Scene 加载失败"));
+    if (targetsResult.status === "fulfilled") targets.value = targetsResult.value;
+    else errors.push(errorText(targetsResult.reason, "Skill 与 Scene 加载失败"));
     if (messagesResult.status === "fulfilled") applyMessagePage(messagesResult.value);
     else errors.push(errorText(messagesResult.reason, "历史消息加载失败"));
     if (stateResult.status === "fulfilled") {
@@ -101,17 +112,17 @@ export function useChat() {
     }
     errorMessage.value = unique(errors).join("；");
     loading.value = false;
+    scheduleRecovery();
   }
 
   async function refreshCatalogs(): Promise<void> {
     const current = session.value;
     if (!current) return;
-    const [skillResult, sceneResult] = await Promise.allSettled([
-      getSkills(current),
-      getScenes(current),
-    ]);
-    if (skillResult.status === "fulfilled") skills.value = skillResult.value;
-    if (sceneResult.status === "fulfilled") scenes.value = sceneResult.value;
+    try {
+      targets.value = await getSlashCandidates(current);
+    } catch {
+      // Keep the last successfully loaded catalog when a background refresh fails.
+    }
   }
 
   async function loadOlderMessages(): Promise<void> {
@@ -142,6 +153,7 @@ export function useChat() {
   ): Promise<void> {
     const current = session.value;
     if (!current || streaming.value) return;
+    stopRecovery();
     const requestId = createClientId();
     errorMessage.value = "";
     streaming.value = true;
@@ -198,6 +210,7 @@ export function useChat() {
       activeController = null;
       streaming.value = false;
       if (runState.value === "running") runState.value = "completed";
+      scheduleRecovery();
     }
   }
 
@@ -208,6 +221,7 @@ export function useChat() {
     const current = session.value;
     const ask = pendingAsk.value;
     if (!current || !ask || streaming.value) return;
+    stopRecovery();
     const requestId = createClientId();
     pendingAsk.value = null;
     errorMessage.value = "";
@@ -233,6 +247,7 @@ export function useChat() {
     } finally {
       activeController = null;
       streaming.value = false;
+      scheduleRecovery();
     }
   }
 
@@ -241,6 +256,7 @@ export function useChat() {
     if (!current) return;
     activeController?.abort();
     activeController = null;
+    stopRecovery();
     try {
       await interruptConversation(current);
       runState.value = "cancelled";
@@ -252,20 +268,14 @@ export function useChat() {
     }
   }
 
-  function interruptKeepalive(): void {
-    const current = session.value;
-    if (!current || (!streaming.value && !pendingAsk.value)) return;
-    activeController?.abort();
-    interruptConversationKeepalive(current);
-  }
 
   function reset(): void {
+    stopRecovery();
     activeController?.abort();
     activeController = null;
     session.value = null;
     messages.value = [];
-    skills.value = [];
-    scenes.value = [];
+    targets.value = [];
     pendingAsk.value = null;
     runState.value = null;
     loading.value = false;
@@ -283,6 +293,7 @@ export function useChat() {
       getMessages(current),
       getConversationState(current),
     ]);
+    if (session.value?.conversation_id !== current.conversation_id) return;
     if (messageResult.status === "fulfilled") applyMessagePage(messageResult.value);
     if (stateResult.status === "fulfilled") {
       runState.value = stateResult.value.run_state;
@@ -343,7 +354,7 @@ export function useChat() {
     }
     if (streamEvent.event === "tool_result") {
       const call = recordValue(data.call);
-      const result = recordValue(data.result);
+      const { result, isError } = normalizeToolResultEvent(data.result);
       messages.value.push({
         ...base,
         role: "tool",
@@ -353,7 +364,7 @@ export function useChat() {
           tool_call_id: stringValue(call.tool_call_id),
           tool_name: stringValue(call.name),
           result,
-          is_error: Boolean(result.is_error || result.error),
+          is_error: isError,
         },
       });
       return;
@@ -397,7 +408,13 @@ export function useChat() {
     }
     if (streamEvent.event === "error") {
       const message = stringValue(data.message) || "智能体执行失败。";
-      appendErrorMessage(message, requestId, messageId);
+      appendErrorMessage(
+        message,
+        requestId,
+        messageId,
+        stringValue(data.code),
+        stringValue(data.error_id),
+      );
     }
   }
 
@@ -433,14 +450,24 @@ export function useChat() {
     });
   }
 
-  function appendErrorMessage(content: string, requestId: string, messageId = createClientId()): void {
+  function appendErrorMessage(
+    content: string,
+    requestId: string,
+    messageId = createClientId(),
+    code = "",
+    errorId = "",
+  ): void {
     messages.value.push({
       message_id: messageId,
       conversation_id: session.value?.conversation_id ?? "",
       role: "assistant",
       kind: "error",
       content,
-      payload: { error: content },
+      payload: {
+        error: content,
+        ...(code ? { code } : {}),
+        ...(errorId ? { error_id: errorId } : {}),
+      },
       run_id: "",
       request_id: requestId,
       created_at: new Date().toISOString(),
@@ -448,13 +475,11 @@ export function useChat() {
     });
   }
 
-  onBeforeUnmount(() => activeController?.abort());
+  onBeforeUnmount(() => { stopRecovery(); activeController?.abort(); });
 
   return {
     session,
     messages,
-    skills,
-    scenes,
     targets,
     capabilities,
     imageSupportStatus,
@@ -471,7 +496,6 @@ export function useChat() {
     sendMessage,
     submitAsk,
     interrupt,
-    interruptKeepalive,
     reset,
   };
 }

@@ -5,6 +5,7 @@ from typing import Any, cast
 import pytest
 from fastapi.testclient import TestClient
 
+from zhizhi import MessagePage
 from zhizhi_web_api import runtime as runtime_module
 from zhizhi_web_api.app import create_app
 from zhizhi_web_api.runtime import ZhizhiApiRuntime
@@ -28,7 +29,7 @@ class _Service:
 
     async def list_messages(self, context: Any, **_kwargs: Any) -> object:
         self.contexts.append(context)
-        return {"conversation_id": context.conversation_id, "messages": []}
+        return MessagePage(conversation_id=context.conversation_id)
 
     async def state(self, context: Any) -> object:
         self.contexts.append(context)

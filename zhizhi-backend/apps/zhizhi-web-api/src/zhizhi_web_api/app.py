@@ -49,6 +49,7 @@ from zhizhi import (
     AskAnswerCommand,
     SlashCatalog,
 )
+from zhizhi_web_api.error_messages import localized_error_message, localized_message_page
 from zhizhi_web_api.runtime import ZhizhiApiRuntime
 from zhizhi_web_api.settings import WebApiBootstrapSettings
 from zhizhi_web_api.sse import encode_sse_event, encode_stream_end, encode_stream_error
@@ -310,11 +311,12 @@ def create_app(
         limit: Annotated[int, Query(ge=1, le=200)] = 50,
         before_sequence: Annotated[int | None, Query(ge=1)] = None,
     ) -> object:
-        return await _service(app_).list_messages(
+        page = await _service(app_).list_messages(
             _path_context(context, conversation_id),
             limit=limit,
             before_sequence=before_sequence,
         )
+        return localized_message_page(page)
 
     @app_.get("/api/agent/conversations/{conversation_id}/pending-ask")
     async def pending_ask(
@@ -455,7 +457,7 @@ def _safe_stream_error(
     )
     return encode_stream_error(
         code=code,
-        message=message,
+        message=localized_error_message(code, message),
         run_id=run_id,
         request_id=request_id,
         conversation_id=conversation_id,

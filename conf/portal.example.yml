@@ -1,0 +1,12 @@
+# Optional TEST host. Production applications continue to own user authentication.
+portal:
+  # Reuse the platform DB and RSA password transport settings without duplicating keys.
+  # This connection performs SELECT only and never creates platform tables.
+  platform_config_file: conf/admin.yml
+  # Separate Portal-owned database: test accounts, sessions and conversation directory.
+  database_file: var/portal/portal.db
+  agent_api_url: http://127.0.0.1:8000
+  # Local HTTP only. Use true when deploying the test Portal with HTTPS.
+  cookie_secure: false
+  session_hours: 12
+  max_image_bytes: 8388608

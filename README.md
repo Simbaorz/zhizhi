@@ -125,9 +125,25 @@ Admin API.
 ./scripts/start-local.sh
 ```
 
-This starts both APIs, the Worker, Data MCP, Admin Web, and the integration workbench.
+This starts both APIs, the Worker, Data MCP, Admin Web, the test Portal, Portal Admin,
+and the Web test client. Portal Admin is available at `http://127.0.0.1:5175` and uses
+the existing Super Admin login; it manages test users and their authorized scopes.
+The script starts configured local MySQL/Redis Docker containers, installs dependencies,
+and creates `conf/portal.yml` from its example when missing. It checks ports before launching,
+waits for backend readiness before starting the pages, and wires their API proxies automatically.
+Use Ctrl+C to stop the application processes; Docker containers and their data are retained.
+The browser entries are Admin Web on `5173`, Web on `5174`, and Portal Admin on `5175`;
+backend ports are Web API `8000`, Admin API `8001`, Data MCP `8002`, and Portal `8003`.
+For local Runtime development, the script installs the adjacent
+`../gewu/packages/agent-runtime` checkout in editable mode after synchronizing dependencies.
+Set `GEWU_RUNTIME_SOURCE` to an absolute path if the checkout is elsewhere. Without that
+checkout, it uses the Git revision pinned by the backend; deployment dependencies remain pinned.
 Configure Data MCP's shared signing key and storage encryption key as described in the
 [Data MCP guide](zhizhi-backend/apps/zhizhi-data-mcp/README.md).
+
+The [optional test Portal](zhizhi-backend/apps/zhizhi-portal-api/README.md) supplies browser
+authentication and a conversation directory for local testing. Production enterprise hosts
+continue to construct trusted context and call the Agent API independently of Portal.
 
 Start with the [Backend guide](zhizhi-backend/README.md), then choose the interface you need:
 

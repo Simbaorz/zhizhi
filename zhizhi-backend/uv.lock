@@ -13,6 +13,7 @@ members = [
     "zhizhi-application",
     "zhizhi-backend-workspace",
     "zhizhi-data-mcp",
+    "zhizhi-portal-api",
     "zhizhi-web-api",
     "zhizhi-worker",
 ]
@@ -2364,6 +2365,29 @@ requires-dist = [
     { name = "asyncmy", specifier = ">=0.2.11,<1" },
     { name = "asyncpg", specifier = "==0.31.0" },
     { name = "uvicorn", specifier = "==0.46.0" },
+    { name = "zhizhi-application", editable = "packages/zhizhi-application" },
+]
+
+[[package]]
+name = "zhizhi-portal-api"
+version = "0.1.0"
+source = { editable = "apps/zhizhi-portal-api" }
+dependencies = [
+    { name = "aiomysql" },
+    { name = "aiosqlite" },
+    { name = "gewu-core", extra = ["database", "http"] },
+    { name = "httpx" },
+    { name = "python-multipart" },
+    { name = "zhizhi-application" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiomysql", specifier = ">=0.3.2" },
+    { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "gewu-core", extras = ["database", "http"], git = "https://github.com/Simbaorz/gewu.git?subdirectory=packages%2Fgewu-core&rev=491a90f6ce097d820f4b9cfcfbb5a212476d843a" },
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "python-multipart", specifier = "==0.0.30" },
     { name = "zhizhi-application", editable = "packages/zhizhi-application" },
 ]
 

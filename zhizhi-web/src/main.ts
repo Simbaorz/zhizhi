@@ -15,6 +15,13 @@ import {
   ElIcon,
   ElInput,
   ElMain,
+  ElAside,
+  ElSelect,
+  ElOption,
+  ElSegmented,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
   ElSkeleton,
   ElTag,
   ElTooltip,
@@ -23,6 +30,7 @@ import "element-plus/dist/index.css";
 
 import App from "@/App.vue";
 import "@/style.css";
+import "@/portal.css";
 
 const app = createApp(App);
 
@@ -42,6 +50,13 @@ const app = createApp(App);
   ElIcon,
   ElInput,
   ElMain,
+  ElAside,
+  ElSelect,
+  ElOption,
+  ElSegmented,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
   ElSkeleton,
   ElTag,
   ElTooltip,

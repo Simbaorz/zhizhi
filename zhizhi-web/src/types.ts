@@ -1,9 +1,5 @@
 export interface AgentSession {
   conversation_id: string;
-  tenant_code: string;
-  active_organization_unit_id: string;
-  principal_id: string;
-  principal_type: string;
 }
 
 export interface SlashTarget {

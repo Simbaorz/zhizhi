@@ -3,12 +3,12 @@ import { fileURLToPath, URL } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import { defineConfig, loadEnv } from "vite";
 
-const defaultApiProxyTarget = "http://127.0.0.1:8000";
+const defaultApiProxyTarget = "http://127.0.0.1:8003";
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, projectRoot, "");
-  const apiProxyTarget = env.ZHIZHI_API_PROXY_TARGET || defaultApiProxyTarget;
+  const apiProxyTarget = env.ZHIZHI_PORTAL_API_PROXY_TARGET || defaultApiProxyTarget;
 
   return {
     plugins: [vue()],

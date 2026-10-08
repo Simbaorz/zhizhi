@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from gewu_agent_runtime.compaction import FullCompactProgress
 from gewu_agent_runtime.runtime import RuntimeEvent
+from zhizhi_web_api.error_messages import localized_error_message
 
 
 def encode_sse_event(
@@ -19,6 +20,12 @@ def encode_sse_event(
 ) -> str:
     event_name = "memory_compaction" if isinstance(event, FullCompactProgress) else str(event.type)
     payload = _event_payload(event)
+    if event_name == "error":
+        payload["message"] = localized_error_message(
+            str(payload.get("code") or ""),
+            str(payload.get("message") or ""),
+            error_id=str(payload.get("error_id") or ""),
+        )
     payload.update(
         {
             "run_id": run_id,

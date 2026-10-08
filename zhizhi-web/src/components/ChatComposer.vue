@@ -18,6 +18,7 @@ import type {
 
 const props = defineProps<{
   disabled: boolean;
+  noConversation?: boolean;
   targets: SlashCandidate[];
   pendingAsk: PendingAsk | null;
   capabilities: ChatCapabilities;
@@ -80,6 +81,7 @@ const imageButtonTip = computed(() => {
   return "上传图片";
 });
 const placeholder = computed(() => {
+  if (props.noConversation) return "新建或打开会话后开始提问";
   if (props.pendingAsk) return "请先回答上方问题";
   if (props.disabled) return "智能体执行中，暂无法输入信息…";
   if (selectedTarget.value?.kind === "skill") return "输入技能参数";
